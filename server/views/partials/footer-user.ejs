@@ -1,0 +1,40 @@
+<footer class="bg-[#0a0a0a] text-white pt-12 pb-8 border-t border-white/10 mt-20">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+            
+            <div class="flex items-center gap-3 group opacity-80 hover:opacity-100 transition-opacity">
+                <img src="/images/logo1.png" alt="RIT" class="h-8 w-auto">
+                <div class="flex items-baseline">
+                    <span class="text-lg font-black text-white tracking-tighter uppercase italic">RIT</span>
+                    <span class="text-lg font-extralight tracking-tight ml-1 text-gray-400">Acade<span class="font-bold text-white">MI</span>a</span>
+                </div>
+            </div>
+
+            <div class="flex gap-6 text-[11px] font-black uppercase tracking-widest text-gray-500">
+                <a href="/dashboard" class="hover:text-white transition-colors">Dashboard</a>
+                <a href="/users/profile" class="hover:text-white transition-colors">Settings</a>
+                <a href="mailto:sohail.mihran@gmail.com" class="hover:text-white transition-colors">Support</a>
+            </div>
+
+            <div class="text-right">
+                <p class="text-[10px] text-gray-600 font-bold uppercase tracking-[0.2em]">
+                    Developed by <a href="https://github.com/CodeWithMihran" class="text-gray-400 hover:text-white transition-all underline underline-offset-4 decoration-gray-800">Mihran Sohail</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-[10px] text-gray-600 font-medium">
+                &copy; <span id="user-year"></span> RIT AcadeMIA. All rights reserved.
+            </p>
+            <div class="flex items-center gap-2">
+                <span class="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
+                <span class="text-[10px] text-gray-600 font-bold uppercase tracking-tighter">Academic Portal v1.0</span>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    document.getElementById("user-year").textContent = new Date().getFullYear();
+</script>

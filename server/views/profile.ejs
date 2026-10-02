@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | RIT AcadeMIA</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1a1a1a;
+            background-color: #fbfbfa; /* Notion off-white background */
+            scroll-behavior: smooth;
+        }
+        .notion-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+        .notion-input {
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+        .notion-input:focus {
+            border-color: #2383e2;
+            box-shadow: 0 0 0 4px rgba(35, 131, 226, 0.05);
+            outline: none;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <%- include("partials/navbar-user") %>
+
+    <div class="max-w-5xl mx-auto px-6 pt-32 pb-20" data-aos="fade-up">
+
+        <div class="mb-10 flex items-end justify-between border-b border-gray-100 pb-8">
+            <div>
+                <h1 class="text-4xl font-black tracking-tighter text-[#1a1a1a]">Account Settings</h1>
+                <p class="text-gray-500 mt-2">Manage your academic identity and personal information.</p>
+            </div>
+            <span class="hidden md:block text-xs font-bold text-gray-400 uppercase tracking-widest bg-gray-100 px-3 py-1 rounded">
+                Student ID: <%= user._id.toString().slice(-6).toUpperCase() %>
+            </span>
+        </div>
+
+        <% if (error && error.length > 0) { %>
+            <div class="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl mb-8 text-sm font-medium flex items-center gap-3">
+                <span>⚠️</span> <%= error %>
+            </div>
+        <% } %>
+
+        <% if (success && success.length > 0) { %>
+            <div class="bg-green-50 border border-green-100 text-green-600 px-4 py-3 rounded-xl mb-8 text-sm font-medium flex items-center gap-3">
+                <span>✅</span> <%= success %>
+            </div>
+        <% } %>
+
+        <div class="grid md:grid-cols-3 gap-8">
+
+            <div class="md:col-span-1">
+                <div class="notion-card rounded-2xl p-8 sticky top-28">
+                    <div class="relative w-24 h-24 mx-auto mb-6">
+                        <div class="w-full h-full rounded-2xl bg-[#0a0a0a] flex items-center justify-center text-3xl font-black text-white italic shadow-xl">
+                            <%= user.name.charAt(0).toUpperCase() %>
+                        </div>
+                        <div class="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 border-4 border-white rounded-full"></div>
+                    </div>
+
+                    <div class="text-center">
+                        <h2 class="text-xl font-bold text-[#1a1a1a]"><%= user.name %></h2>
+                        <p class="text-gray-500 text-sm mb-6"><%= user.email %></p>
+                    </div>
+
+                    <div class="space-y-4 pt-6 border-t border-gray-50">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Branch</span>
+                            <span class="text-sm font-semibold text-[#1a1a1a]"><%= user.branch %></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Year</span>
+                            <span class="text-sm font-semibold text-[#1a1a1a]"><%= user.year %></span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Semester</span>
+                            <span class="text-sm font-semibold text-[#1a1a1a]"><%= user.semester %></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 pt-6 border-t border-gray-50">
+                        <p class="text-[10px] text-center text-gray-400 uppercase tracking-widest font-bold">RIT AcadeMIA Verified</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-2">
+                <div class="notion-card rounded-2xl p-8 md:p-10">
+                    <h3 class="text-lg font-bold mb-8 flex items-center gap-2">
+                        <span class="text-blue-500">✦</span> Edit Information
+                    </h3>
+
+                    <form action="/profile/update" method="POST" class="space-y-8">
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Full Name</label>
+                                <input type="text" name="name" value="<%= user.name %>" required 
+                                    class="notion-input w-full px-4 py-3 rounded-xl focus:ring-0 text-sm font-medium">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Email Address</label>
+                                <input type="email" name="email" value="<%= user.email %>" required 
+                                    class="notion-input w-full px-4 py-3 rounded-xl focus:ring-0 text-sm font-medium bg-gray-50/50 cursor-not-allowed" readonly>
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Branch</label>
+                                <input type="text" name="branch" value="<%= user.branch %>" required 
+                                    class="notion-input w-full px-4 py-3 rounded-xl focus:ring-0 text-sm font-medium">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Year</label>
+                                <input type="number" id="yearInput" name="year" value="<%= user.year %>" min="1" max="4" required 
+                                    class="notion-input w-full px-4 py-3 rounded-xl focus:ring-0 text-sm font-medium">
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-gray-400 uppercase tracking-widest">Semester</label>
+                                <select id="semSelect" name="semester" required 
+                                    class="notion-input w-full px-4 py-3 rounded-xl focus:ring-0 text-sm font-medium bg-white">
+                                    <option value="<%= user.semester %>" selected>Sem <%= user.semester %></option>
+                                    </select>
+                            </div>
+                        </div>
+
+                        <div class="pt-6">
+                            <button type="submit" 
+                                class="w-full bg-[#0a0a0a] text-white py-4 rounded-xl font-bold hover:bg-black transition-all shadow-xl shadow-gray-200 active:scale-[0.98]">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+
+        // Logic for Dynamic Semester Dropdown
+        const yearInput = document.getElementById('yearInput');
+        const semSelect = document.getElementById('semSelect');
+        const initialSemester = "<%= user.semester %>";
+
+        function updateSemesterOptions(year, selectedSem) {
+            const val = parseInt(year);
+            semSelect.innerHTML = '';
+            
+            if (val >= 1 && val <= 4) {
+                const startSem = (val * 2) - 1;
+                const endSem = val * 2;
+
+                for (let i = startSem; i <= endSem; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = 'Sem ' + i;
+                    if (i == selectedSem) opt.selected = true;
+                    semSelect.appendChild(opt);
+                }
+            } else {
+                const opt = document.createElement('option');
+                opt.textContent = 'Enter valid year';
+                opt.disabled = true;
+                semSelect.appendChild(opt);
+            }
+        }
+
+        // Listen for changes
+        yearInput.addEventListener('input', function() {
+            updateSemesterOptions(this.value, null);
+        });
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateSemesterOptions(yearInput.value, initialSemester);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Subject | RIT AcadeMIA Console</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1a1a1a;
+            background-color: #fbfbfa;
+            scroll-behavior: smooth;
+        }
+
+        .notion-input {
+            border: 1px solid #e5e7eb;
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+        .notion-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.05);
+        }
+
+        .unit-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-left: 4px solid #0a0a0a;
+            transition: all 0.3s ease;
+        }
+
+        .section-label {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <%- include("partials/navbar-admin") %>
+
+    <div class="max-w-5xl mx-auto px-6 pt-32 pb-20">
+
+        <div class="mb-12 border-b border-gray-100 pb-10" data-aos="fade-up">
+            <h1 class="text-4xl font-black tracking-tighter text-[#1a1a1a] italic">
+                Create <span class="text-gray-400 font-light not-italic">New Subject</span>
+            </h1>
+            <p class="text-gray-500 mt-2 font-medium">Define core curriculum parameters and upload academic resources.</p>
+        </div>
+
+        <% if (error.length > 0) { %>
+            <div class="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+                ⚠️ <%= error %>
+            </div>
+        <% } %>
+
+        <% if (success.length > 0) { %>
+            <div class="bg-green-50 border border-green-100 text-green-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+                ✅ <%= success %>
+            </div>
+        <% } %>
+
+        <form action="/subjects/add" method="POST" class="space-y-10" data-aos="fade-up">
+
+            <div class="bg-white border border-gray-200 rounded-[2rem] p-8 md:p-10 shadow-sm">
+                <h2 class="section-label mb-6">Subject Parameters</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <label class="text-xs font-bold text-gray-700">Subject Name</label>
+                        <input name="name" required placeholder="e.g. Discrete Structures" class="notion-input w-full px-4 py-3 rounded-xl text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-700">Branch</label>
+                        <input name="branch" required placeholder="e.g. CSE" class="notion-input w-full px-4 py-3 rounded-xl text-sm font-medium">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-gray-700">Semester</label>
+                        <input type="number" name="semester" required placeholder="1-8" class="notion-input w-full px-4 py-3 rounded-xl text-sm font-medium">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <h2 class="section-label">Curriculum Units</h2>
+                <div class="h-[1px] flex-grow bg-gray-100"></div>
+            </div>
+
+            <div id="unitsContainer" class="space-y-8"></div>
+
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6 pt-6">
+                <button type="button" onclick="addUnit()" class="flex items-center gap-3 bg-white border-2 border-dashed border-gray-200 text-gray-500 px-8 py-4 rounded-2xl font-bold hover:border-blue-500 hover:text-blue-500 transition-all w-full md:w-auto">
+                    <span class="text-xl">+</span>
+                    <span>Append New Unit</span>
+                </button>
+
+                <button class="bg-black text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-gray-800 transition w-full md:w-auto">
+                    Finalize & Create Subject
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 800, once: true });
+
+        function addUnit() {
+            const container = document.getElementById("unitsContainer");
+            // Count current units to get correct index
+            const currentUnitsCount = document.querySelectorAll(".unit-card").length;
+            
+            const unitHTML = `
+                <div class="unit-card rounded-[2rem] p-8 md:p-10 shadow-sm space-y-8 animate-in fade-in duration-300">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-black italic unit-title">Unit ${currentUnitsCount + 1}</h3>
+                        <button type="button" onclick="deleteUnit(this)" 
+                            class="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-red-500 transition-colors py-2 px-4 border border-gray-100 rounded-xl hover:border-red-100 hover:bg-red-50">
+                            ✕ Remove Unit
+                        </button>
+                    </div>
+
+                    <input type="hidden" class="unit-number-input" name="units[${currentUnitsCount}][unitNumber]" value="${currentUnitsCount + 1}">
+
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <label class="text-xs font-bold text-gray-600">Unit Title</label>
+                            <input name="units[${currentUnitsCount}][unitTitle]" placeholder="e.g. Graph Theory" class="notion-input w-full px-4 py-3 rounded-xl text-sm">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-600">Topics</label>
+                            <input name="units[${currentUnitsCount}][topics]" placeholder="BFS, DFS, Dijkstra..." class="notion-input w-full px-4 py-3 rounded-xl text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-gray-50 p-4 rounded-xl">
+                            <p class="section-label text-blue-500">Notes</p>
+                            <input name="units[${currentUnitsCount}][notes][0][title]" placeholder="Title" class="notion-input w-full px-3 py-2 rounded-lg text-xs mb-2">
+                            <input name="units[${currentUnitsCount}][notes][0][link]" placeholder="URL" class="notion-input w-full px-3 py-2 rounded-lg text-xs">
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-xl">
+                            <p class="section-label text-purple-500">Books</p>
+                            <input name="units[${currentUnitsCount}][books][0][title]" placeholder="Title" class="notion-input w-full px-3 py-2 rounded-lg text-xs mb-2">
+                            <input name="units[${currentUnitsCount}][books][0][link]" placeholder="URL" class="notion-input w-full px-3 py-2 rounded-lg text-xs">
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-xl">
+                            <p class="section-label text-green-500">PYQs</p>
+                            <input name="units[${currentUnitsCount}][pyqs][0][title]" placeholder="Title" class="notion-input w-full px-3 py-2 rounded-lg text-xs mb-2">
+                            <input name="units[${currentUnitsCount}][pyqs][0][link]" placeholder="URL" class="notion-input w-full px-3 py-2 rounded-lg text-xs">
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-xl">
+                            <p class="section-label text-red-500">YouTube</p>
+                            <input name="units[${currentUnitsCount}][youtubeLinks][0][title]" placeholder="Title" class="notion-input w-full px-3 py-2 rounded-lg text-xs mb-2">
+                            <input name="units[${currentUnitsCount}][youtubeLinks][0][link]" placeholder="URL" class="notion-input w-full px-3 py-2 rounded-lg text-xs">
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.insertAdjacentHTML("beforeend", unitHTML);
+        }
+
+        function deleteUnit(button) {
+            const card = button.closest(".unit-card");
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                card.remove();
+                renumberUnits();
+            }, 200);
+        }
+
+        function renumberUnits() {
+            const units = document.querySelectorAll(".unit-card");
+            units.forEach((unit, index) => {
+                // Update UI Title
+                unit.querySelector(".unit-title").innerText = `Unit ${index + 1}`;
+                
+                // Update Hidden Input
+                const numberInput = unit.querySelector(".unit-number-input");
+                numberInput.name = `units[${index}][unitNumber]`;
+                numberInput.value = index + 1;
+
+                // Update All Input Names to match current index
+                const inputs = unit.querySelectorAll("input");
+                inputs.forEach(input => {
+                    const name = input.getAttribute("name");
+                    if (name) {
+                        // Replace the first bracketed index with current index
+                        const newName = name.replace(/units\[\d+\]/, `units[${index}]`);
+                        input.setAttribute("name", newName);
+                    }
+                });
+            });
+        }
+
+        window.onload = () => addUnit();
+    </script>
+
+    <%- include("partials/footer-admin") %>
+
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Progress | RIT AcadeMIA</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1a1a1a;
+            background-color: #fbfbfa;
+            scroll-behavior: smooth;
+        }
+        .progress-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .progress-card:hover {
+            transform: translateY(-10px);
+            border-color: #1a1a1a;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+        }
+        .ring-container {
+            transition: transform 0.4s ease;
+        }
+        .progress-card:hover .ring-container {
+            transform: scale(1.05);
+        }
+        .mastery-bar {
+            height: 12px;
+            background: #f3f4f6;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .mastery-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1a1a1a 0%, #3b82f6 100%);
+            transition: width 1.5s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        /* Fix for SVG dasharray calculation */
+        .progress-ring-circle {
+            transition: stroke-dashoffset 1s ease-in-out;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <%- include("partials/navbar-user") %>
+
+    <div class="max-w-7xl mx-auto px-6 pt-32 pb-20">
+
+        <div class="mb-16 border-b border-gray-100 pb-12" data-aos="fade-up">
+            <div class="flex flex-col md:flex-row justify-between items-end gap-8">
+                <div class="max-w-2xl">
+                    <h1 class="text-5xl font-black tracking-tighter text-[#1a1a1a] mb-6 italic leading-none">
+                        Semester <span class="text-gray-300 font-light not-italic">Mastery</span>
+                    </h1>
+                    <p class="text-gray-500 font-medium italic mb-8">
+                        Comprehensive tracking of your <%= user.branch %> curriculum. Total readiness across all core modules.
+                    </p>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-end">
+                            <span class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Average Readiness</span>
+                            <span class="text-2xl font-black tracking-tighter italic">Phase 01 Active</span>
+                        </div>
+                        <div class="mastery-bar">
+                            <div class="mastery-fill" style="width: 45%;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="hidden lg:block bg-[#0a0a0a] text-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                    <div class="absolute -right-2 -top-2 w-12 h-12 bg-blue-500/20 blur-xl"></div>
+                    <p class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-2">Sync Status</p>
+                    <div class="flex items-center gap-3">
+                        <span class="h-2 w-2 bg-blue-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
+                        <span class="text-sm font-bold italic">Real-time Data Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <% if (subjects && subjects.length > 0) { %>
+                <% subjects.forEach((subject, index) => { %>
+                    <% 
+                        // SAFE PROGRESS CALCULATION
+                        // If your backend isn't sending 'subjectProgressMap', default to 0 to prevent crashes
+                        let currentProgress = 0;
+                        if (typeof subjectProgressMap !== 'undefined' && subjectProgressMap[subject._id]) {
+                            currentProgress = subjectProgressMap[subject._id];
+                        }
+                        
+                        // Circle circumference = 2 * PI * R (R=72) = ~452
+                        const circumference = 452.39;
+                        const offset = circumference - (currentProgress / 100) * circumference;
+                    %>
+                    
+                    <div class="progress-card rounded-[2.5rem] p-10 flex flex-col items-center text-center relative overflow-hidden" data-aos="fade-up" data-aos-delay="<%= index * 100 %>">
+                        
+                        <div class="mb-8">
+                            <h2 class="text-2xl font-black tracking-tighter text-[#1a1a1a] leading-tight mb-2">
+                                <%= subject.name %>
+                            </h2>
+                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                Semester <%= subject.semester %> &bull; <%= subject.units ? subject.units.length : 0 %> Units
+                            </span>
+                        </div>
+
+                        <div class="ring-container relative flex items-center justify-center mb-10">
+                            <svg class="w-40 h-40">
+                                <circle cx="80" cy="80" r="72" stroke="#f3f4f6" stroke-width="12" fill="none" />
+                                <circle class="progress-ring-circle" cx="80" cy="80" r="72" stroke="#1a1a1a" stroke-width="12" fill="none" 
+                                    stroke-dasharray="<%= circumference %>" 
+                                    stroke-dashoffset="<%= offset %>" 
+                                    stroke-linecap="round" />
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-3xl font-black tracking-tighter"><%= currentProgress %>%</span>
+                                <span class="text-[8px] font-black text-gray-400 uppercase tracking-widest">Complete</span>
+                            </div>
+                        </div>
+
+                        <div class="w-full space-y-3 pt-6 border-t border-gray-50">
+                            <a href="/progress/<%= subject._id %>" 
+                               class="block w-full bg-[#0a0a0a] text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-gray-100 active:scale-95">
+                                Detailed Tracker
+                            </a>
+                            <p class="text-[9px] font-bold text-gray-300 uppercase italic">
+                                Secure Vault Access
+                            </p>
+                        </div>
+
+                        <div class="absolute -right-4 -bottom-4 text-gray-50 font-black text-8xl italic select-none -z-10">
+                            0<%= index + 1 %>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <div class="col-span-full notion-card p-24 rounded-[3rem] text-center border-dashed">
+                    <p class="text-gray-400 font-bold italic text-lg">No curriculum data detected for progress mapping.</p>
+                </div>
+            <% } %>
+        </div>
+
+        <div class="mt-32 text-center" data-aos="fade-up">
+            <div class="inline-block p-1 rounded-full bg-gray-100 mb-6">
+                <div class="flex items-center gap-3 px-4 py-2">
+                    <span class="flex h-2 w-2 rounded-full bg-blue-500 animate-ping"></span>
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Active Academic Session</span>
+                </div>
+            </div>
+            <h4 class="text-3xl font-black text-[#1a1a1a] tracking-tighter italic mb-4">Architecture of Mastery.</h4>
+            <p class="text-gray-400 max-w-md mx-auto text-sm leading-relaxed">
+                Consistency is the bridge between goals and accomplishment. Complete each unit to achieve 100% readiness.
+            </p>
+        </div>
+
+    </div>
+
+    <%- include("partials/footer-user") %>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 1000, once: true });
+    </script>
+</body>
+
+</html>

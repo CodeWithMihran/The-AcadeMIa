@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress | RIT AcadeMIA</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1a1a1a;
+            background-color: #fbfbfa;
+            scroll-behavior: smooth;
+        }
+        .notion-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        /* Custom Progress Ring Animation */
+        .progress-ring-circle {
+            transition: stroke-dashoffset 0.8s ease-in-out;
+        }
+        /* Checklist Style */
+        .topic-checkbox {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .topic-checkbox:checked {
+            background-color: #2383e2;
+            border-color: #2383e2;
+        }
+        .topic-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+            left: 3px;
+            top: -1px;
+        }
+        .topic-row {
+            transition: all 0.2s ease;
+        }
+        .topic-row:hover {
+            background-color: #f9fafb;
+        }
+        .completed-text {
+            text-decoration: line-through;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <%- include("partials/navbar-user") %>
+
+    <div class="max-w-5xl mx-auto px-6 pt-32 pb-20">
+
+        <div class="flex flex-col md:flex-row justify-between items-center mb-16 gap-8" data-aos="fade-up">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl font-black tracking-tighter text-[#1a1a1a] mb-2 italic">
+                    <%= subject.name %> <span class="text-gray-300 font-light not-italic">/</span> Mastery
+                </h1>
+                <p class="text-gray-500 font-medium">Track your exam readiness topic by topic.</p>
+            </div>
+
+            <div class="relative flex items-center justify-center">
+                <svg class="w-32 h-32 transform -rotate-90">
+                    <circle cx="64" cy="64" r="58" stroke="#f1f1f1" stroke-width="8" fill="none" />
+                    <circle cx="64" cy="64" r="58" stroke="#2383e2" stroke-width="8" fill="none" 
+                        stroke-dasharray="364.4" 
+                        stroke-dashoffset="<%= 364.4 - (364.4 * subjectProgress / 100) %>" 
+                        stroke-linecap="round" class="progress-ring-circle" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="text-2xl font-black text-[#1a1a1a] tracking-tighter"><%= subjectProgress %>%</span>
+                    <span class="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Mastery</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-12">
+            <% subject.units.forEach((unit, uIndex) => { %>
+                <div class="notion-card rounded-[2rem] overflow-hidden" data-aos="fade-up">
+                    
+                    <div class="bg-gray-50/50 p-8 border-b border-gray-100 flex justify-between items-center">
+                        <div class="flex items-center gap-6">
+                            <div class="relative flex items-center justify-center shrink-0">
+                                <svg class="w-16 h-16 transform -rotate-90">
+                                    <circle cx="32" cy="32" r="28" stroke="#e5e7eb" stroke-width="4" fill="none" />
+                                    <circle cx="32" cy="32" r="28" stroke="#1a1a1a" stroke-width="4" fill="none" 
+                                        stroke-dasharray="175.9" 
+                                        stroke-dashoffset="<%= 175.9 - (175.9 * unitProgress[uIndex] / 100) %>" 
+                                        stroke-linecap="round" class="progress-ring-circle" />
+                                </svg>
+                                <span class="absolute text-[10px] font-black"><%= unitProgress[uIndex] %>%</span>
+                            </div>
+                            <div>
+                                <h2 class="text-xs font-black text-blue-500 uppercase tracking-[0.3em] mb-1">Unit <%= unit.unitNumber %></h2>
+                                <h3 class="text-xl font-bold text-[#1a1a1a] tracking-tight"><%= unit.unitTitle %></h3>
+                            </div>
+                        </div>
+                        <span class="hidden md:block text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                            <%= unit.topics.length %> Topics total
+                        </span>
+                    </div>
+
+                    <div class="p-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
+                            <% unit.topics.forEach((topic, tIndex) => { %>
+                                <div class="topic-row rounded-xl p-3">
+                                    <form action="/progress/toggle" method="POST" class="flex items-center gap-4 group cursor-pointer">
+                                        <input type="hidden" name="subjectId" value="<%= subject._id %>">
+                                        <input type="hidden" name="unitIndex" value="<%= uIndex %>">
+                                        <input type="hidden" name="topicIndex" value="<%= tIndex %>">
+
+                                        <input 
+                                            type="checkbox" 
+                                            onchange="this.form.submit()" 
+                                            class="topic-checkbox" 
+                                            <%= completedMap[`${uIndex}-${tIndex}`] ? "checked" : "" %>
+                                        >
+
+                                        <label class="text-sm font-medium cursor-pointer flex-1 transition-all <%= completedMap[`${uIndex}-${tIndex}`] ? 'completed-text italic' : 'text-gray-700' %>">
+                                            <%= topic.title %>
+                                        </label>
+                                    </form>
+                                </div>
+                            <% }) %>
+                        </div>
+                    </div>
+
+                    <div class="px-8 py-4 bg-gray-50/30 border-t border-gray-50 flex justify-end">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            <%= unitProgress[uIndex] === 100 ? '✅ Unit Conquered' : '🚀 In Progress' %>
+                        </p>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+
+        <div class="mt-20 text-center" data-aos="fade-up">
+            <div class="inline-block p-1 rounded-full bg-gray-100 mb-6">
+                <div class="flex items-center gap-3 px-4 py-2">
+                    <span class="flex h-2 w-2 rounded-full bg-blue-500 animate-ping"></span>
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">Keep Going</span>
+                </div>
+            </div>
+            <h4 class="text-lg font-bold text-[#1a1a1a] mb-2 italic">Consistency is the key to engineering success.</h4>
+            <p class="text-sm text-gray-400">Your progress is automatically saved to your cloud profile.</p>
+        </div>
+
+    </div>
+
+    <%- include("partials/footer-user") %>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({ duration: 1000, once: true });
+    </script>
+</body>
+
+</html>

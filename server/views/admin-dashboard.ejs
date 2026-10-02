@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Console | RIT AcadeMIA</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1a1a1a;
+            background-color: #fbfbfa;
+            scroll-behavior: smooth;
+        }
+
+        .notion-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .notion-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            transform: translateY(-4px);
+        }
+
+        .admin-table th {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #9ca3af;
+            padding: 1.25rem 1rem;
+            background: #fcfcfc;
+        }
+
+        .admin-table td {
+            padding: 1.25rem 1rem;
+            font-size: 14px;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <%- include("partials/navbar-admin") %>
+
+        <div class="max-w-7xl mx-auto px-6 pt-32 pb-20">
+
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6"
+                data-aos="fade-up">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <span
+                            class="bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-widest">Master</span>
+                        <h1 class="text-4xl font-black tracking-tighter text-[#1a1a1a] italic">Console</h1>
+                    </div>
+                    <p class="text-gray-500 font-medium italic text-sm tracking-tight">Managing RIT Academic
+                        Infrastructure</p>
+                </div>
+
+                <div class="hidden lg:block text-right">
+                    <p id="current-date" class="text-xs font-black text-[#1a1a1a] uppercase tracking-widest"></p>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">System Time Local</p>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-12 gap-8">
+
+                <div class="lg:col-span-8 space-y-8">
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6" data-aos="fade-up" data-aos-delay="100">
+                        <div
+                            class="notion-card rounded-[2rem] p-8 flex flex-col justify-between h-48 bg-[#0a0a0a] text-white overflow-hidden relative">
+                            <div class="absolute -right-4 -bottom-4 text-white/5 font-black text-9xl italic">LIB</div>
+                            <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 z-10">Vault
+                                Capacity</p>
+                            <div class="z-10">
+                                <span class="text-6xl font-black tracking-tighter italic">
+                                    <%= subjects.length %>
+                                </span>
+                                <p class="text-sm font-bold text-gray-400 mt-2">Subjects currently live in system</p>
+                            </div>
+                        </div>
+
+                        <div class="notion-card rounded-[2rem] p-8 h-48 flex flex-col justify-between group">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">User Access
+                            </p>
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-2xl font-black tracking-tight">Manage Student Directory</h3>
+                                <a href="/admin/users"
+                                    class="h-12 w-12 rounded-2xl bg-gray-100 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-all">→</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="notion-card rounded-[2.5rem] overflow-hidden shadow-sm" data-aos="fade-up"
+                        data-aos-delay="200">
+                        <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-white">
+                            <h2 class="text-xs font-black text-gray-400 uppercase tracking-[0.4em]">Curriculum Index
+                            </h2>
+                            <a href="/subjects/add"
+                                class="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline">+
+                                New Entry</a>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full admin-table text-left">
+                                <thead>
+                                    <tr>
+                                        <th>Subject Entity</th>
+                                        <th>Branch</th>
+                                        <th>Sem</th>
+                                        <th class="text-center">Control</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% subjects.forEach(subject=> { %>
+                                        <tr class="border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
+                                            <td class="font-bold text-[#1a1a1a]">
+                                                <%= subject.name %>
+                                            </td>
+                                            <td><span
+                                                    class="text-[10px] font-black text-gray-500 bg-gray-100 px-2 py-1 rounded uppercase tracking-tighter">
+                                                    <%= subject.branch %>
+                                                </span></td>
+                                            <td class="font-medium text-gray-500 italic text-sm">S-<%= subject.semester
+                                                    %>
+                                            </td>
+                                            <td class="text-center flex justify-center gap-2">
+                                                <a href="/subjects/edit/<%= subject._id %>"
+                                                    class="p-2 hover:bg-gray-100 rounded-lg transition-colors">⚙️</a>
+                                                <form action="/subjects/delete/<%= subject._id %>" method="POST"
+                                                    class="inline">
+                                                    <button onclick="return confirm('Delete subject?')"
+                                                        class="p-2 hover:bg-red-50 rounded-lg transition-colors">🗑️</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-4 space-y-8">
+
+                    <div class="notion-card rounded-[2rem] p-8" data-aos="fade-left">
+                        <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">System Health</h2>
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-gray-600 uppercase">Database Sync</span>
+                                <span class="text-[10px] font-black text-green-500 uppercase">Stable</span>
+                            </div>
+                            <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-green-500 w-[100%]"></div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-gray-600 uppercase">Server Load</span>
+                                <span class="text-[10px] font-black text-blue-500 uppercase">Normal</span>
+                            </div>
+                            <div class="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-blue-500 w-[24%]"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4" data-aos="fade-left" data-aos-delay="100">
+                        <a href="/subjects/add"
+                            class="notion-card p-6 rounded-[1.5rem] flex flex-col items-center gap-2 hover:bg-blue-50">
+                            <span class="text-2xl">➕</span>
+                            <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest">Add</span>
+                        </a>
+                        <a href="/admin/users"
+                            class="notion-card p-6 rounded-[1.5rem] flex flex-col items-center gap-2 hover:bg-gray-50">
+                            <span class="text-2xl">👥</span>
+                            <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest">Users</span>
+                        </a>
+                    </div>
+
+                    <div class="notion-card rounded-[2rem] p-8" data-aos="fade-left" data-aos-delay="200">
+                        <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-6">Admin Logs</h2>
+                        <div class="space-y-4 text-[11px] font-medium text-gray-500">
+                            <div class="flex gap-3">
+                                <span class="text-blue-500">●</span>
+                                <p>Session initialized by <span class="text-black font-bold">Root</span></p>
+                            </div>
+                            <div class="flex gap-3">
+                                <span class="text-gray-300">●</span>
+                                <p>Resource Vault <%= subjects.length %> subjects synced</p>
+                            </div>
+                            <div class="flex gap-3 border-t border-gray-50 pt-4">
+                                <p class="italic">System is currently up to date.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div
+                class="mt-20 pt-10 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-[10px] font-bold text-gray-300 uppercase tracking-[0.4em]">RIT AcadeMIA Terminal v2.0</p>
+                <div class="flex gap-6">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        Active Admin: <%= typeof user !=='undefined' ? user.name : 'Administrator' %>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+        <script>
+            AOS.init({ duration: 1000, once: true });
+
+            // Pure UI: Set Current Date
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').innerText = new Date().toLocaleDateString('en-US', options);
+        </script>
+        <%- include("partials/footer-admin") %>
+</body>
+
+</html>
