@@ -127,46 +127,46 @@ module.exports.getGlobalProgress = async (req, res) => {
             if (user.semester) query.semester = user.semester;
         }
 
-        const subjects = await subjectModel.find(query);
-        const subjectProgressMap = {};
+        // 1. Fetch all matching subjects
+        const subjects = await subjectModel.find(query).lean();
+        const subjectIds = subjects.map(s => s._id);
 
+        // 2. Single DB call for all user completed records across all enrolled subjects
+        const completedRecords = await progressModel.find({
+            user: userId,
+            subject: { $in: subjectIds },
+            completed: true
+        }).lean();
+
+        const completedSet = new Set(completedRecords.map(r => r.topicId.toString()));
+
+        const subjectProgressMap = {};
         let overallTotalTopics = 0;
         let overallCompletedTopics = 0;
 
-        for (const subject of subjects) {
-            const completedRecords = await progressModel.find({
-                user: userId,
-                subject: subject._id,
-                completed: true
-            });
-
-            const completedMap = {};
-            completedRecords.forEach(r => {
-                completedMap[r.topicId.toString()] = true;
-            });
-
+        subjects.forEach(subject => {
             let subTotal = 0;
             let subCompleted = 0;
 
-            subject.units.forEach(unit => {
-                unit.topics.forEach(topic => {
-                    subTotal++;
-                    overallTotalTopics++;
-                    if (completedMap[topic._id.toString()]) {
-                        subCompleted++;
-                        overallCompletedTopics++;
+            if (subject.units) {
+                subject.units.forEach(unit => {
+                    if (unit.topics) {
+                        unit.topics.forEach(topic => {
+                            subTotal++;
+                            overallTotalTopics++;
+                            if (completedSet.has(topic._id.toString())) {
+                                subCompleted++;
+                                overallCompletedTopics++;
+                            }
+                        });
                     }
                 });
-            });
+            }
 
-            const pct = subTotal === 0 ? 0 : Math.round((subCompleted / subTotal) * 100);
-            subjectProgressMap[subject._id.toString()] = pct;
-        }
+            subjectProgressMap[subject._id.toString()] = subTotal === 0 ? 0 : Math.round((subCompleted / subTotal) * 100);
+        });
 
-        // Dynamically compute the TRUE average readiness across all enrolled subjects
-        const averageReadiness = overallTotalTopics === 0
-            ? 0
-            : Math.round((overallCompletedTopics / overallTotalTopics) * 100);
+        const averageReadiness = overallTotalTopics === 0 ? 0 : Math.round((overallCompletedTopics / overallTotalTopics) * 100);
 
         return res.status(200).json({
             success: true,
