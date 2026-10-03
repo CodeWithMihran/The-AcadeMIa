@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { adminService, subjectService } from '../services/api';
+import { adminService, subjectService, tenantService } from '../services/api';
 import { Plus, Trash2, ArrowLeft, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export const EditSubject = () => {
@@ -11,28 +11,42 @@ export const EditSubject = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [tenants, setTenants] = useState([]);
 
   const [formData, setFormData] = useState({
     name: '',
+    courseCode: '',
+    track: 'UNIVERSITY',
+    tenantId: '',
     branch: '',
     semester: 1,
+    examCategory: 'JEE_MAINS',
     units: []
   });
 
   useEffect(() => {
     const fetchSubject = async () => {
       try {
-        const res = await subjectService.getSubjectById(id);
+        const [res, tenantRes] = await Promise.all([
+          subjectService.getSubjectById(id),
+          tenantService.getTenants()
+        ]);
+        setTenants((tenantRes.data.tenants || []).filter(tenant => tenant.type === 'UNIVERSITY'));
         if (res.data.success) {
           const sub = res.data.subject;
           setFormData({
             name: sub.name || '',
+            courseCode: sub.courseCode || '',
+            track: sub.track || 'UNIVERSITY',
+            tenantId: sub.tenant?._id || sub.tenant || '',
             branch: sub.branch || '',
             semester: Number(sub.semester) || 1,
+            examCategory: sub.examCategory || 'JEE_MAINS',
             units: sub.units ? sub.units.map(u => ({
               unitNumber: Number(u.unitNumber) || 1,
               unitTitle: u.unitTitle || '',
               topics: u.topics ? u.topics.map(t => t.title).join(', ') : '',
+              originalTopics: u.topics || [],
               notes: u.notes?.length ? u.notes : [{ title: '', link: '' }],
               books: u.books?.length ? u.books : [{ title: '', link: '' }],
               pyqs: u.pyqs?.length ? u.pyqs : [{ title: '', link: '' }],
@@ -78,6 +92,7 @@ export const EditSubject = () => {
           unitNumber: prev.units.length + 1,
           unitTitle: '',
           topics: '',
+          originalTopics: [],
           notes: [{ title: '', link: '' }],
           books: [{ title: '', link: '' }],
           pyqs: [{ title: '', link: '' }],
@@ -103,13 +118,16 @@ export const EditSubject = () => {
       const formattedPayload = {
         ...formData,
         semester: Number(formData.semester),
-        units: formData.units.map(u => ({
-          ...u,
-          unitNumber: Number(u.unitNumber),
-          topics: typeof u.topics === 'string' 
-            ? u.topics.split(',').map(t => ({ title: t.trim() })).filter(t => t.title)
-            : u.topics
-        }))
+        units: formData.units.map(({ originalTopics = [], ...unit }) => {
+          const existingTopics = new Map(originalTopics.map(topic => [topic.title.trim().toLowerCase(), topic]));
+          const topics = typeof unit.topics === 'string'
+            ? unit.topics.split(',').map(title => title.trim()).filter(Boolean).map(title => {
+                const existingTopic = existingTopics.get(title.toLowerCase());
+                return existingTopic ? { ...existingTopic, title } : { title };
+              })
+            : unit.topics;
+          return { ...unit, unitNumber: Number(unit.unitNumber), topics };
+        })
       };
 
       const res = await adminService.updateSubject(id, formattedPayload);
@@ -164,6 +182,12 @@ export const EditSubject = () => {
             <h2 className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 mb-8">Base Configuration</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="space-y-2">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Track</label>
+                <select name="track" value={formData.track} onChange={handleBaseChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold bg-white">
+                  <option value="UNIVERSITY">University</option><option value="JEE">JEE</option><option value="NEET">NEET</option>
+                </select>
+              </div>
+              <div className="space-y-2">
                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Subject Name</label>
                 <input 
                   type="text" 
@@ -175,28 +199,41 @@ export const EditSubject = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Branch</label>
-                <input 
-                  type="text" 
-                  name="branch" 
-                  value={formData.branch} 
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Course Code</label>
+                <input
+                  type="text"
+                  name="courseCode"
+                  value={formData.courseCode}
                   onChange={handleBaseChange}
-                  required
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-blue-500 uppercase" 
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-blue-500"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Semester</label>
-                <input 
-                  type="number" 
-                  name="semester" 
-                  value={formData.semester} 
-                  onChange={handleBaseChange}
-                  required
-                  min="1" max="8"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-blue-500" 
-                />
-              </div>
+              {formData.track === 'UNIVERSITY' ? (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">University</label>
+                    <select name="tenantId" value={formData.tenantId} onChange={handleBaseChange} required className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold bg-white">
+                      <option value="" disabled>Select university</option>
+                      {tenants.map(tenant => <option key={tenant._id} value={tenant._id}>{tenant.name} ({tenant.shortCode})</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Branch</label>
+                    <input type="text" name="branch" value={formData.branch} onChange={handleBaseChange} required className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold uppercase" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Semester</label>
+                    <input type="number" name="semester" value={formData.semester} onChange={handleBaseChange} required min="1" max="8" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold" />
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Exam Category</label>
+                  <select name="examCategory" value={formData.examCategory} onChange={handleBaseChange} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold bg-white">
+                    <option value="JEE_MAINS">JEE Mains</option><option value="JEE_ADVANCED">JEE Advanced</option><option value="NEET">NEET</option>
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 

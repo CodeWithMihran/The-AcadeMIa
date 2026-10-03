@@ -11,6 +11,33 @@ async function seedAndMigrate() {
         await mongoose.connect(process.env.MONGO_URI);
         console.log("MongoDB Connected Successfully.");
 
+        // Convert legacy one-document-per-subject progress records before the
+        // new per-topic unique index is used by the API.
+        const progressIndexes = await progressModel.collection.indexes();
+        const legacyProgressIndex = progressIndexes.find(index =>
+            index.unique && index.key?.user === 1 && index.key?.subject === 1 && !index.key?.topicId
+        );
+        if (legacyProgressIndex) {
+            await progressModel.collection.dropIndex(legacyProgressIndex.name);
+        }
+        const legacyProgress = await progressModel.find({ topicId: { $exists: false } }).lean();
+        const topicProgressOperations = legacyProgress.flatMap(record =>
+            (record.completedTopicIds || []).map(topicId => ({
+                updateOne: {
+                    filter: { user: record.user, subject: record.subject, topicId },
+                    update: { $set: { completed: true } },
+                    upsert: true
+                }
+            }))
+        );
+        if (topicProgressOperations.length) {
+            await progressModel.collection.bulkWrite(topicProgressOperations, { ordered: false });
+        }
+        if (legacyProgress.length) {
+            await progressModel.deleteMany({ _id: { $in: legacyProgress.map(record => record._id) } });
+            console.log(`-> Migrated ${legacyProgress.length} legacy progress records.`);
+        }
+
         // 1. Seed Initial Universities / Tenants
         console.log("1. Seeding Base Tenants (Universities & Exam Track)...");
 

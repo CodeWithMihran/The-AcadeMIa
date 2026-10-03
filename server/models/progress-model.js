@@ -13,6 +13,14 @@ const progressSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    topicId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
+    },
+    completed: {
+        type: Boolean,
+        default: true
+    },
     completedTopicIds: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "topic" // Strictly ObjectIds grouped in an array
@@ -25,7 +33,7 @@ const progressSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-// CRITICAL INDEX: Ensure a user can only have ONE progress tracker per subject
-progressSchema.index({ user: 1, subject: 1 }, { unique: true });
+// Each user tracks completion independently for every topic in a subject.
+progressSchema.index({ user: 1, subject: 1, topicId: 1 }, { unique: true });
 
 module.exports = mongoose.model("progress", progressSchema);

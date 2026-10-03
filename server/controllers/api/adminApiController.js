@@ -2,6 +2,7 @@ const subjectModel = require("../../models/subject-model");
 const userModel = require("../../models/user-model");
 const tenantModel = require("../../models/tenant-model");
 const progressModel = require("../../models/progress-model");
+const mongoose = require("mongoose");
 
 // 1. Admin System Overview
 module.exports.getAdminOverview = async (req, res) => {
@@ -70,13 +71,28 @@ module.exports.createSubject = async (req, res) => {
             });
         }
 
+        const subjectTrack = track || "UNIVERSITY";
+        let tenant = null;
+        if (subjectTrack === "UNIVERSITY") {
+            if (!tenantId || !mongoose.isValidObjectId(tenantId)) {
+                return res.status(400).json({ success: false, message: "Select a valid university for this subject." });
+            }
+            if (!branch?.trim() || !Number.isInteger(Number(semester)) || Number(semester) < 1 || Number(semester) > 8) {
+                return res.status(400).json({ success: false, message: "University subjects require a branch and semester from 1 to 8." });
+            }
+            tenant = await tenantModel.findOne({ _id: tenantId, type: "UNIVERSITY", active: true }).select("_id");
+            if (!tenant) return res.status(400).json({ success: false, message: "The selected university is unavailable." });
+        } else if (!["JEE", "NEET"].includes(subjectTrack)) {
+            return res.status(400).json({ success: false, message: "Invalid subject track." });
+        }
+
         const newSubject = await subjectModel.create({
             name,
             courseCode,
-            track: track || "UNIVERSITY",
-            tenant: tenantId || null,
-            branch: branch ? branch.toUpperCase().trim() : undefined,
-            semester: semester ? Number(semester) : undefined,
+            track: subjectTrack,
+            tenant: tenant?._id || null,
+            branch: subjectTrack === "UNIVERSITY" ? branch.toUpperCase().trim() : undefined,
+            semester: subjectTrack === "UNIVERSITY" ? Number(semester) : undefined,
             examCategory,
             units: units || []
         });
@@ -100,10 +116,46 @@ module.exports.createSubject = async (req, res) => {
 module.exports.updateSubject = async (req, res) => {
     try {
         const { id } = req.params;
-        const updateData = req.body;
+        if (!mongoose.isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: "Invalid subject id." });
+        }
+        const existing = await subjectModel.findById(id);
+        if (!existing) return res.status(404).json({ success: false, message: "Subject not found." });
+
+        const updateData = { ...req.body };
+        const requestedTenantId = updateData.tenantId;
+        delete updateData.tenantId;
+        const nextTrack = updateData.track || existing.track;
+
+        if (nextTrack === "UNIVERSITY") {
+            const tenantId = requestedTenantId || updateData.tenant || existing.tenant;
+            if (!tenantId || !mongoose.isValidObjectId(tenantId)) {
+                return res.status(400).json({ success: false, message: "Select a valid university for this subject." });
+            }
+            if (requestedTenantId !== undefined || updateData.tenant !== undefined || !existing.tenant) {
+                const tenant = await tenantModel.findOne({ _id: tenantId, type: "UNIVERSITY", active: true }).select("_id");
+                if (!tenant) return res.status(400).json({ success: false, message: "The selected university is unavailable." });
+                updateData.tenant = tenant._id;
+            }
+            const branch = updateData.branch ?? existing.branch;
+            const semester = updateData.semester ?? existing.semester;
+            if (!branch?.trim() || !Number.isInteger(Number(semester)) || Number(semester) < 1 || Number(semester) > 8) {
+                return res.status(400).json({ success: false, message: "University subjects require a branch and semester from 1 to 8." });
+            }
+            if (updateData.branch !== undefined) updateData.branch = branch.toUpperCase().trim();
+            if (updateData.semester !== undefined) updateData.semester = Number(semester);
+            updateData.track = "UNIVERSITY";
+        } else if (["JEE", "NEET"].includes(nextTrack)) {
+            updateData.track = nextTrack;
+            updateData.tenant = null;
+            delete updateData.branch;
+            delete updateData.semester;
+        } else {
+            return res.status(400).json({ success: false, message: "Invalid subject track." });
+        }
 
         const updated = await subjectModel
-            .findByIdAndUpdate(id, updateData, { new: true })
+            .findByIdAndUpdate(id, updateData, { returnDocument: "after", runValidators: true })
             .populate("tenant", "name shortCode");
 
         if (!updated) {

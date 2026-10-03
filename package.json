@@ -13,9 +13,12 @@
   "license": "ISC",
   "author": "Md Mihran Sohail",
   "type": "commonjs",
-  "main": "app.js",
+  "main": "server/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server/app.js",
+    "dev": "nodemon server/app.js",
+    "build": "npm --prefix client run build",
+    "lint": "npm --prefix client run lint"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

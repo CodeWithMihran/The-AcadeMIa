@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { adminService } from '../services/api';
-import { Plus, Trash2, ArrowLeft, CheckCircle2, AlertTriangle, BookOpen } from 'lucide-react';
+import { adminService, tenantService } from '../services/api';
+import { Plus, Trash2, ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export const AddSubject = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [tenants, setTenants] = useState([]);
+  const [tenantsLoading, setTenantsLoading] = useState(true);
 
   // Form State
   const [formData, setFormData] = useState({
     name: '',
+    courseCode: '',
+    tenantId: '',
     branch: '',
     semester: 1,
     units: [
@@ -26,6 +30,17 @@ export const AddSubject = () => {
       }
     ]
   });
+
+  useEffect(() => {
+    tenantService.getTenants()
+      .then(res => {
+        const universities = (res.data.tenants || []).filter(tenant => tenant.type === 'UNIVERSITY');
+        setTenants(universities);
+        setFormData(prev => ({ ...prev, tenantId: prev.tenantId || universities[0]?._id || '' }));
+      })
+      .catch(err => setError(err.response?.data?.message || 'Failed to load universities.'))
+      .finally(() => setTenantsLoading(false));
+  }, []);
 
   const handleBaseChange = (e) => {
     const { name, value } = e.target;
@@ -78,6 +93,8 @@ export const AddSubject = () => {
       // Clean and format topics string into an array of objects if needed by backend schema
       const formattedPayload = {
         ...formData,
+        track: 'UNIVERSITY',
+        semester: Number(formData.semester),
         units: formData.units.map(u => ({
           ...u,
           topics: typeof u.topics === 'string' 
@@ -85,6 +102,12 @@ export const AddSubject = () => {
             : u.topics
         }))
       };
+
+      if (!formData.tenantId) {
+        setError('Select the university this subject belongs to.');
+        setLoading(false);
+        return;
+      }
 
       const res = await adminService.createSubject(formattedPayload);
       if (res.data.success) {
@@ -130,7 +153,21 @@ export const AddSubject = () => {
           {/* Base Parameters */}
           <div className="bg-white border border-gray-200 rounded-[2rem] p-8 md:p-10 shadow-sm">
             <h2 className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 mb-6">Subject Parameters</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-2">University</label>
+                <select
+                  value={formData.tenantId}
+                  onChange={handleBaseChange}
+                  name="tenantId"
+                  required
+                  disabled={tenantsLoading || tenants.length === 0}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold bg-white focus:outline-none focus:border-blue-500"
+                >
+                  <option value="">{tenantsLoading ? 'Loading...' : 'Select university'}</option>
+                  {tenants.map(tenant => <option key={tenant._id} value={tenant._id}>{tenant.name} ({tenant.shortCode})</option>)}
+                </select>
+              </div>
               <div>
                 <label className="text-xs font-bold text-gray-700 block mb-2">Subject Name</label>
                 <input 
@@ -140,6 +177,16 @@ export const AddSubject = () => {
                   required 
                   placeholder="e.g. Discrete Structures" 
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold focus:outline-none focus:border-blue-500" 
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-2">Course Code</label>
+                <input
+                  name="courseCode"
+                  value={formData.courseCode}
+                  onChange={handleBaseChange}
+                  placeholder="e.g. BCS-101"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold focus:outline-none focus:border-blue-500"
                 />
               </div>
               <div>
@@ -298,7 +345,7 @@ export const AddSubject = () => {
 
             <button 
               type="submit" 
-              disabled={loading}
+              disabled={loading || tenantsLoading || tenants.length === 0}
               className="bg-black text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 transition-all shadow-xl active:scale-95 w-full md:w-auto"
             >
               {loading ? 'Creating Subject...' : 'Finalize & Create Subject'}

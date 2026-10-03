@@ -16,9 +16,14 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
   const [targetYear, setTargetYear] = useState('2027');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [tenantsLoading, setTenantsLoading] = useState(false);
+  const [tenantsError, setTenantsError] = useState('');
+  const [tenantReload, setTenantReload] = useState(0);
 
   useEffect(() => {
     const fetchTenants = async () => {
+      setTenantsLoading(true);
+      setTenantsError('');
       try {
         const res = await tenantService.getTenants();
         if (res.data.success) {
@@ -29,9 +34,13 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
           // If user already had a detected tenant, auto-select
           if (user?.tenant) {
             const currentTenantId = typeof user.tenant === 'object' ? user.tenant._id : user.tenant;
-            setSelectedTenantId(currentTenantId);
+            setSelectedTenantId(uniTenants.some(tenant => tenant._id === currentTenantId)
+              ? currentTenantId
+              : uniTenants[0]?._id || '');
           } else if (uniTenants.length > 0) {
             setSelectedTenantId(uniTenants[0]._id);
+          } else {
+            setSelectedTenantId('');
           }
 
           if (user?.college && user.college !== "Not Set") {
@@ -40,13 +49,16 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
         }
       } catch (err) {
         console.error("Failed to load institutions:", err);
+        setTenantsError(err.response?.data?.message || 'Could not load universities. Please try again.');
+      } finally {
+        setTenantsLoading(false);
       }
     };
 
     if (isOpen) {
       fetchTenants();
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, tenantReload]);
 
   // Dynamic affiliated colleges for chosen university
   const selectedTenant = tenants.find(t => t._id === selectedTenantId);
@@ -62,6 +74,10 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (track === 'UNIVERSITY' && !selectedTenantId) {
+      setError('Choose an affiliated university before continuing.');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -154,6 +170,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
                 </label>
                 <select
                   value={selectedTenantId}
+                  disabled={tenantsLoading || tenants.length === 0}
                   onChange={(e) => {
                     setSelectedTenantId(e.target.value);
                     setCollege('');
@@ -161,12 +178,27 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
                   required
                   className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-800 bg-white focus:outline-none focus:border-blue-500"
                 >
+                  <option value="" disabled>
+                    {tenantsLoading ? 'Loading universities...' : 'Select an affiliated university'}
+                  </option>
                   {tenants.map(t => (
                     <option key={t._id} value={t._id}>
                       {t.name} ({t.shortCode}) — {t.state}
                     </option>
                   ))}
                 </select>
+                {tenantsError ? (
+                  <div className="mt-2 flex items-center justify-between gap-3 text-xs text-red-600">
+                    <span>{tenantsError}</span>
+                    <button type="button" onClick={() => setTenantReload(value => value + 1)} className="font-bold underline">
+                      Retry
+                    </button>
+                  </div>
+                ) : !tenantsLoading && tenants.length === 0 ? (
+                  <p className="mt-2 text-xs text-amber-700">
+                    No universities are available yet. Please try again shortly or choose the Competitive Exam track.
+                  </p>
+                ) : null}
               </div>
 
               {/* College Picker or Input */}
@@ -299,7 +331,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (track === 'UNIVERSITY' && (tenantsLoading || tenants.length === 0))}
             className="w-full mt-4 bg-[#0a0a0a] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2"
           >
             {loading ? "Saving Profile..." : "Activate My Vault"}

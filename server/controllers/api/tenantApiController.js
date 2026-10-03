@@ -133,7 +133,7 @@ module.exports.completeOnboarding = async (req, res) => {
         }
 
         const updatedUser = await userModel
-            .findByIdAndUpdate(userId, updatePayload, { new: true })
+            .findByIdAndUpdate(userId, updatePayload, { returnDocument: "after", runValidators: true })
             .populate("tenant", "name shortCode type state")
             .select("-password");
 

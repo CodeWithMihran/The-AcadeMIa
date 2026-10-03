@@ -1,5 +1,6 @@
 const progressModel = require("../../models/progress-model");
 const subjectModel = require("../../models/subject-model");
+const mongoose = require("mongoose");
 
 // 1. Toggle Topic Completion (Atomic)
 module.exports.toggleTopic = async (req, res) => {
@@ -14,10 +15,18 @@ module.exports.toggleTopic = async (req, res) => {
             });
         }
 
-        let progress = await progressModel.findOne({
-            user: userId,
-            topicId
-        });
+        if (!mongoose.isValidObjectId(subjectId) || !mongoose.isValidObjectId(topicId)) {
+            return res.status(400).json({ success: false, message: "Invalid subjectId or topicId." });
+        }
+        const normalizedSubjectId = new mongoose.Types.ObjectId(subjectId);
+        const normalizedTopicId = new mongoose.Types.ObjectId(topicId);
+
+        const subject = await subjectModel.findById(normalizedSubjectId).select("units.topics._id");
+        if (!subject) return res.status(404).json({ success: false, message: "Subject not found." });
+        const topicExists = subject.units.some(unit => unit.topics.some(topic => topic._id.equals(normalizedTopicId)));
+        if (!topicExists) return res.status(404).json({ success: false, message: "Topic not found in this subject." });
+
+        let progress = await progressModel.findOne({ user: userId, subject: normalizedSubjectId, topicId: normalizedTopicId });
 
         if (progress) {
             progress.completed = !progress.completed;
@@ -25,8 +34,8 @@ module.exports.toggleTopic = async (req, res) => {
         } else {
             progress = await progressModel.create({
                 user: userId,
-                subject: subjectId,
-                topicId,
+                subject: normalizedSubjectId,
+                topicId: normalizedTopicId,
                 completed: true
             });
         }
@@ -51,6 +60,10 @@ module.exports.getSubjectProgress = async (req, res) => {
     try {
         const { subjectId } = req.params;
         const userId = req.user._id;
+
+        if (!mongoose.isValidObjectId(subjectId)) {
+            return res.status(400).json({ success: false, message: "Invalid subjectId." });
+        }
 
         const subject = await subjectModel.findById(subjectId);
         if (!subject) {

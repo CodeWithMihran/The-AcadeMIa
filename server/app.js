@@ -1,9 +1,9 @@
-require("dotenv").config();
-const express = require("express");
 const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, ".env") });
+const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
-const MongoStore = require("connect-mongo");
+const { MongoStore } = require("connect-mongo");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const passport = require("passport");
@@ -62,6 +62,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_CALLBACK_URL) {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -120,6 +121,7 @@ passport.use(new GoogleStrategy({
         return done(err, null);
     }
 }));
+}
 
 passport.serializeUser((user, done) => {
     done(null, user.id);
@@ -144,10 +146,11 @@ app.use("/api/progress", require("./routes/api/progressApiRouter"));
 app.use("/api/admin", require("./routes/api/adminApiRouter"));
 
 // Google OAuth callback bridging to React frontend
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-app.get("/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: `${clientUrl}/#auth` }),
-    (req, res) => {
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_CALLBACK_URL) {
+    app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+    app.get("/auth/google/callback",
+        passport.authenticate("google", { failureRedirect: `${clientUrl}/#auth` }),
+        (req, res) => {
         const token = generateToken(req.user);
         res.cookie("token", token, {
             httpOnly: true,
@@ -159,8 +162,15 @@ app.get("/auth/google/callback",
         // Redirect to React frontend callback
         const target = `${clientUrl}/auth/callback?token=${token}`;
         res.redirect(target);
-    }
-);
+        }
+    );
+} else {
+    app.get("/auth/google", (req, res) => res.status(503).json({
+        success: false,
+        message: "Google sign-in is not configured on this server."
+    }));
+    app.get("/auth/google/callback", (req, res) => res.redirect(`${clientUrl}/#auth`));
+}
 
 // ------------------
 // 404 & Error Handlers

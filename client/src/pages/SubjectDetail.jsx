@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import API from "../services/api";
 import {
@@ -13,34 +13,52 @@ import {
 } from "lucide-react";
 
 export default function SubjectDetail() {
-  const { id } = useParams();
+  const { id, subjectId } = useParams();
+  const subjectIdToLoad = id || subjectId;
   const [subject, setSubject] = useState(null);
   const [completedTopics, setCompletedTopics] = useState(new Set());
   const [progress, setProgress] = useState(0);
+  const [unitProgress, setUnitProgress] = useState([]);
+  const [completedTopicCount, setCompletedTopicCount] = useState(0);
+  const [totalTopicCount, setTotalTopicCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchSubjectAndProgress();
-  }, [id]);
-
-  const fetchSubjectAndProgress = async () => {
+  const fetchSubjectAndProgress = useCallback(async () => {
+    setLoading(true);
+    setError("");
     try {
-      const [subRes, progRes] = await Promise.all([
-        API.get(`/subjects/${id}`),
-        API.get(`/progress/subject/${id}`),
+      const [subjectResult, progressResult] = await Promise.allSettled([
+        API.get(`/subjects/${subjectIdToLoad}`),
+        API.get(`/progress/${subjectIdToLoad}`),
       ]);
 
-      if (subRes.data.success) setSubject(subRes.data.subject);
-      if (progRes.data.success) {
-        setCompletedTopics(new Set(progRes.data.completedTopicIds));
-        setProgress(progRes.data.subjectProgress);
+      if (subjectResult.status === "fulfilled" && subjectResult.value.data.success) {
+        setSubject(subjectResult.value.data.subject);
+      } else {
+        setError(subjectResult.reason?.response?.data?.message || "Could not load this subject.");
+      }
+      if (progressResult.status === "fulfilled" && progressResult.value.data.success) {
+        const progressData = progressResult.value.data;
+        setCompletedTopics(new Set(progressData.completedTopicIds || []));
+        setProgress(progressData.subjectProgress || 0);
+        setUnitProgress(progressData.unitProgress || []);
+        setCompletedTopicCount(progressData.completedTopics || 0);
+        setTotalTopicCount(progressData.totalTopics || 0);
+      } else {
+        setError(current => current || progressResult.reason?.response?.data?.message || "Could not load subject progress.");
       }
     } catch (err) {
       console.error("Error loading subject details:", err);
+      setError(err.response?.data?.message || "Could not load this subject.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [subjectIdToLoad]);
+
+  useEffect(() => {
+    if (subjectIdToLoad) fetchSubjectAndProgress();
+  }, [subjectIdToLoad, fetchSubjectAndProgress]);
 
   const handleTopicToggle = async (topicId) => {
     const updated = new Set(completedTopics);
@@ -53,13 +71,22 @@ export default function SubjectDetail() {
 
     try {
       const res = await API.post("/progress/toggle", {
-        subjectId: id,
+        subjectId: subjectIdToLoad,
         topicId,
       });
       if (res.data.success) {
-        const progRes = await API.get(`/progress/subject/${id}`);
+        setCompletedTopics(current => {
+          const next = new Set(current);
+          if (res.data.completed) next.add(topicId);
+          else next.delete(topicId);
+          return next;
+        });
+        const progRes = await API.get(`/progress/${subjectIdToLoad}`);
         if (progRes.data.success) {
           setProgress(progRes.data.subjectProgress);
+          setUnitProgress(progRes.data.unitProgress || []);
+          setCompletedTopicCount(progRes.data.completedTopics || 0);
+          setTotalTopicCount(progRes.data.totalTopics || 0);
         }
       }
     } catch (err) {
@@ -76,8 +103,9 @@ export default function SubjectDetail() {
     );
   if (!subject)
     return (
-      <div className="p-24 text-center font-bold text-red-500 text-sm">
-        Subject not found.
+      <div className="p-24 text-center">
+        <p className="font-bold text-red-500 text-sm">{error || "Subject not found."}</p>
+        <button type="button" onClick={fetchSubjectAndProgress} className="mt-4 text-sm font-bold text-blue-600 hover:underline">Try again</button>
       </div>
     );
 
@@ -108,6 +136,7 @@ export default function SubjectDetail() {
             <Award className="w-4 h-4 text-blue-400" /> Vault Mastery
           </div>
           <div className="text-5xl font-black text-white">{progress}%</div>
+          <p className="mt-2 text-xs text-gray-400">{completedTopicCount} of {totalTopicCount} topics completed</p>
           <div className="w-full bg-gray-800 h-2.5 rounded-full mt-4 overflow-hidden">
             <div
               className="bg-blue-500 h-full transition-all duration-700 rounded-full"
@@ -129,7 +158,11 @@ export default function SubjectDetail() {
                 U{uIdx + 1}
               </span>
               {unit.name || unit.unitTitle}
+              <span className="ml-auto text-xs font-bold text-blue-600">{unitProgress[uIdx] || 0}%</span>
             </h2>
+            <div className="-mt-3 mb-6 h-1.5 overflow-hidden rounded-full bg-gray-100">
+              <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${unitProgress[uIdx] || 0}%` }} />
+            </div>
 
             <div className="space-y-4">
               {unit.topics?.map((topic) => {

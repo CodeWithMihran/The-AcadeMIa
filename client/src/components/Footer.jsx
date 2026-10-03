@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Github, Linkedin } from 'lucide-react'; // Make sure lucide-react is installed
+import { Code2, BriefcaseBusiness } from 'lucide-react';
 
 export const Footer = () => {
   const { user, isAuthenticated } = useAuth();
@@ -34,10 +34,10 @@ export const Footer = () => {
               </p>
               <div className="flex gap-4">
                 <a href="https://github.com/CodeWithMihran" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white hover:text-black transition-all duration-300">
-                  <Github className="w-5 h-5" />
+                  <Code2 className="w-5 h-5" />
                 </a>
                 <a href="https://www.linkedin.com/in/md-mihran-sohail-321b12384/" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-[#0077b5] hover:text-white transition-all duration-300">
-                  <Linkedin className="w-5 h-5" />
+                  <BriefcaseBusiness className="w-5 h-5" />
                 </a>
               </div>
             </div>

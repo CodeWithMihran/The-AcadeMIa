@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const mongoose = require("mongoose");
 const userModel = require("../../models/user-model");
 const tenantModel = require("../../models/tenant-model");
 const { generateToken } = require("../../utils/generateToken");
@@ -178,6 +179,96 @@ module.exports.getMe = async (req, res) => {
             success: false,
             message: "Failed to fetch user: " + err.message
         });
+    }
+};
+
+// Update only fields that users are allowed to edit from their profile.
+module.exports.updateProfile = async (req, res) => {
+    try {
+        const { name, track, tenantId, college, branch, year, semester, targetExam, targetYear } = req.body;
+        const updates = {};
+
+        if (name !== undefined) {
+            if (typeof name !== "string" || name.trim().length < 2) {
+                return res.status(400).json({ success: false, message: "Name must be at least 2 characters." });
+            }
+            updates.name = name.trim();
+        }
+
+        const requestedTrack = track || req.user.track;
+        if (!(["UNIVERSITY", "JEE", "NEET"].includes(requestedTrack))) {
+            return res.status(400).json({ success: false, message: "Select a valid learning track." });
+        }
+
+        if (requestedTrack === "UNIVERSITY") {
+            if (!tenantId || !mongoose.isValidObjectId(tenantId)) {
+                return res.status(400).json({ success: false, message: "Select a valid university." });
+            }
+            const tenant = await tenantModel.findOne({ _id: tenantId, type: "UNIVERSITY", active: true }).select("_id");
+            if (!tenant) {
+                return res.status(400).json({ success: false, message: "The selected university is unavailable." });
+            }
+            if (typeof college !== "string" || !college.trim() || college.trim() === "Other") {
+                return res.status(400).json({ success: false, message: "Enter or select your college or campus." });
+            }
+            updates.track = "UNIVERSITY";
+            updates.tenant = tenant._id;
+            updates.college = college.trim();
+            if (branch !== undefined) {
+                if (typeof branch !== "string" || !branch.trim()) {
+                    return res.status(400).json({ success: false, message: "Branch is required." });
+                }
+                updates.branch = branch.trim().toUpperCase();
+            }
+            if (year !== undefined) {
+                const value = Number(year);
+                if (!Number.isInteger(value) || value < 1 || value > 4) {
+                    return res.status(400).json({ success: false, message: "Year must be between 1 and 4." });
+                }
+                updates.year = value;
+            }
+            if (semester !== undefined) {
+                const value = Number(semester);
+                if (!Number.isInteger(value) || value < 1 || value > 8) {
+                    return res.status(400).json({ success: false, message: "Semester must be between 1 and 8." });
+                }
+                updates.semester = value;
+            }
+            const effectiveYear = updates.year ?? req.user.year;
+            const effectiveSemester = updates.semester ?? req.user.semester;
+            if (effectiveYear && effectiveSemester && ![effectiveYear * 2 - 1, effectiveYear * 2].includes(effectiveSemester)) {
+                return res.status(400).json({ success: false, message: "Semester must belong to the selected year." });
+            }
+        } else {
+            const effectiveExam = targetExam || (requestedTrack === "NEET" ? "NEET" : req.user.targetExam);
+            if (!["JEE_MAINS", "JEE_ADVANCED", "NEET"].includes(effectiveExam)) {
+                return res.status(400).json({ success: false, message: "Select a valid target exam." });
+            }
+            if ((requestedTrack === "NEET") !== (effectiveExam === "NEET")) {
+                return res.status(400).json({ success: false, message: "The selected track must match the target exam." });
+            }
+            const value = Number(targetYear ?? req.user.targetYear);
+            if (!Number.isInteger(value) || value < 2020 || value > 2100) {
+                return res.status(400).json({ success: false, message: "Select a valid target year." });
+            }
+            const competitiveTenant = await tenantModel.findOne({ shortCode: "COMPETITIVE", active: true }).select("_id");
+            updates.track = requestedTrack;
+            updates.targetExam = effectiveExam;
+            updates.targetYear = value;
+            updates.tenant = competitiveTenant?._id || null;
+            updates.college = "Not Set";
+        }
+        updates.onboardingCompleted = true;
+
+        const user = await userModel.findByIdAndUpdate(req.user._id, updates, {
+            returnDocument: "after",
+            runValidators: true
+        }).populate("tenant", "name shortCode type state").select("-password");
+
+        return res.status(200).json({ success: true, message: "Profile updated successfully.", user });
+    } catch (err) {
+        console.error("Update Profile Error:", err);
+        return res.status(500).json({ success: false, message: "Failed to update profile." });
     }
 };
 

@@ -18,6 +18,8 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { AdminUsers } from './pages/AdminUsers';
 import { AddSubject } from './pages/AddSubject';
 import { EditSubject } from './pages/EditSubject';
+import { ProgressOverview } from './pages/ProgressOverview';
+import SubjectVault from './pages/SubjectVault';
 
 // ✅ OAuth Callback Handler with Error Safety
 const OAuthCallback = () => {
@@ -92,7 +94,9 @@ export default function App() {
               {/* Student Protected Routes */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/subjects" element={<ProtectedRoute><SubjectCatalog /></ProtectedRoute>} />
-              <Route path="/subjects/:id" element={<ProtectedRoute><SubjectDetail /></ProtectedRoute>} />
+              <Route path="/subjects/:id" element={<ProtectedRoute><SubjectVault /></ProtectedRoute>} />
+              <Route path="/progress" element={<ProtectedRoute><ProgressOverview /></ProtectedRoute>} />
+              <Route path="/progress/:subjectId" element={<ProtectedRoute><SubjectDetail /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
               {/* Admin Protected Routes */}

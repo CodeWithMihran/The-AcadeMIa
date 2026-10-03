@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-// import { authService } from '../services/api'; // Uncomment and adjust based on your api.js exports
+import { authService, tenantService } from "../services/api";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -8,7 +8,6 @@ import {
   User,
   Mail,
   GraduationCap,
-  Target,
   Sparkles,
 } from "lucide-react";
 
@@ -19,10 +18,16 @@ export const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [universities, setUniversities] = useState([]);
+  const [tenantLoading, setTenantLoading] = useState(false);
+  const [otherCollege, setOtherCollege] = useState("");
 
   // Form State
   const [formData, setFormData] = useState({
     name: "",
+    track: "UNIVERSITY",
+    tenantId: "",
+    college: "",
     branch: "",
     year: 1,
     semester: 1,
@@ -35,6 +40,9 @@ export const Profile = () => {
     if (user) {
       setFormData({
         name: user.name || "",
+        track: user.track || "UNIVERSITY",
+        tenantId: user.tenant?._id || user.tenant || "",
+        college: user.college && user.college !== "Not Set" ? user.college : "",
         branch: user.branch || "",
         year: user.year || 1,
         semester: user.semester || 1,
@@ -43,6 +51,13 @@ export const Profile = () => {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    setTenantLoading(true);
+    tenantService.getTenants().then((res) => {
+      if (res.data.success) setUniversities((res.data.tenants || []).filter((tenant) => tenant.type === "UNIVERSITY"));
+    }).catch((err) => setError(err.response?.data?.message || "Could not load universities.")).finally(() => setTenantLoading(false));
+  }, []);
 
   // Dynamic Semester Logic
   const handleYearChange = (e) => {
@@ -66,9 +81,12 @@ export const Profile = () => {
     setSuccess("");
 
     try {
-      // NOTE: Replace this with your actual API call from api.js
-      // await authService.updateProfile(formData);
-
+      const profile = {
+        ...formData,
+        track: formData.track === "UNIVERSITY" ? "UNIVERSITY" : (formData.targetExam === "NEET" ? "NEET" : "JEE"),
+        college: formData.college === "Other" ? otherCollege : formData.college,
+      };
+      await authService.updateProfile(profile);
       await refreshUser(); // Update global context
       setSuccess("Academic profile updated successfully!");
 
@@ -83,7 +101,8 @@ export const Profile = () => {
 
   if (!user) return null; // Prevent rendering before user context loads
 
-  const isUniversity = user.track === "UNIVERSITY";
+  const isUniversity = formData.track === "UNIVERSITY";
+  const selectedUniversity = universities.find((tenant) => tenant._id === formData.tenantId);
 
   return (
     <div className="min-h-screen bg-[#fbfbfa] pt-32 pb-20 px-6 animate-in fade-in duration-500">
@@ -236,6 +255,38 @@ export const Profile = () => {
                 <div className="h-[1px] bg-gray-100 w-full"></div>
 
                 {/* Academic Info */}
+                <div className="space-y-6 rounded-2xl border border-blue-100 bg-blue-50/40 p-5">
+                  <div>
+                    <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">Learning Track</label>
+                    <select name="track" value={formData.track} onChange={(e) => setFormData((prev) => ({ ...prev, track: e.target.value, tenantId: e.target.value === "UNIVERSITY" && !universities.some((tenant) => tenant._id === prev.tenantId) ? universities[0]?._id || "" : prev.tenantId, college: e.target.value === "UNIVERSITY" ? prev.college : "" }))} className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-gray-800 focus:border-blue-500 focus:outline-none">
+                      <option value="UNIVERSITY">University / College</option>
+                      <option value="JEE">Competitive exams</option>
+                    </select>
+                    <p className="mt-2 text-xs text-gray-500">Switching tracks changes the curriculum shown on your dashboard; your saved account and progress remain intact.</p>
+                  </div>
+                  {isUniversity ? <div className="grid gap-5 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">University</label>
+                      <select name="tenantId" value={formData.tenantId} onChange={(e) => setFormData((prev) => ({ ...prev, tenantId: e.target.value, college: "" }))} required disabled={tenantLoading || universities.length === 0} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-gray-800 focus:border-blue-500 focus:outline-none">
+                        <option value="">{tenantLoading ? "Loading universities…" : "Select university"}</option>
+                        {universities.map((tenant) => <option key={tenant._id} value={tenant._id}>{tenant.name} ({tenant.shortCode})</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">College / Campus</label>
+                      {selectedUniversity?.affiliatedColleges?.length && (!formData.college || formData.college === "Other" || selectedUniversity.affiliatedColleges.some((campus) => campus.name === formData.college)) ? <select name="college" value={formData.college} onChange={(e) => { handleInputChange(e); if (e.target.value !== "Other") setOtherCollege(""); }} required className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-gray-800 focus:border-blue-500 focus:outline-none">
+                        <option value="">Select campus</option>
+                        {selectedUniversity.affiliatedColleges.map((campus, index) => <option key={campus._id || index} value={campus.name}>{campus.name}</option>)}
+                        <option value="Other">Other / Main campus</option>
+                      </select> : <input name="college" value={formData.college} onChange={handleInputChange} required placeholder="College or campus name" className="w-full rounded-xl border border-gray-200 px-4 py-3.5 text-sm font-semibold focus:border-blue-500 focus:outline-none" />}
+                      {formData.college === "Other" && <input value={otherCollege} onChange={(e) => setOtherCollege(e.target.value)} required placeholder="Enter campus name" className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm" />}
+                    </div>
+                  </div> : <div className="grid gap-5 md:grid-cols-2">
+                    <div className="space-y-2"><label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">Target Exam</label><select name="targetExam" value={formData.targetExam} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold"><option value="JEE_MAINS">JEE Mains</option><option value="JEE_ADVANCED">JEE Advanced</option><option value="NEET">NEET (UG)</option></select></div>
+                    <div className="space-y-2"><label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">Target Year</label><select name="targetYear" value={formData.targetYear} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold">{[2026, 2027, 2028, 2029, 2030].map((year) => <option key={year} value={year}>{year}</option>)}</select></div>
+                  </div>}
+                </div>
+
                 {isUniversity ? (
                   <div className="grid md:grid-cols-3 gap-6">
                     <div className="space-y-2">
@@ -288,38 +339,7 @@ export const Profile = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <Target className="w-3 h-3" /> Target Exam
-                      </label>
-                      <select
-                        name="targetExam"
-                        value={formData.targetExam}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
-                      >
-                        <option value="JEE_MAINS">JEE Mains</option>
-                        <option value="JEE_ADVANCED">JEE Advanced</option>
-                        <option value="NEET">NEET (UG)</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <Target className="w-3 h-3" /> Target Year
-                      </label>
-                      <select
-                        name="targetYear"
-                        value={formData.targetYear}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
-                      >
-                        <option value="2026">2026</option>
-                        <option value="2027">2027</option>
-                        <option value="2028">2028</option>
-                      </select>
-                    </div>
-                  </div>
+                  <p className="text-sm text-gray-500">Your target exam preferences are set above.</p>
                 )}
 
                 <div className="pt-6">

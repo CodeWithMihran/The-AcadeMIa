@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { adminService, tenantService } from "../services/api";
 import {
   Users,
@@ -66,7 +67,7 @@ export const AdminDashboard = () => {
         setStats(overviewRes.data.stats);
       }
       if (tenantsRes.data.success) {
-        setTenants(tenantsRes.data.tenants || []);
+          setTenants((tenantsRes.data.tenants || []).filter(tenant => tenant.type === "UNIVERSITY"));
       }
     } catch (err) {
       setError(
@@ -167,7 +168,7 @@ export const AdminDashboard = () => {
       name: "",
       courseCode: "",
       track: "UNIVERSITY",
-      tenantId: tenants[0]?._id || "",
+      tenantId: tenants.find(tenant => tenant.type === "UNIVERSITY")?._id || "",
       branch: "",
       semester: "1",
       examCategory: "JEE_MAINS",
@@ -351,7 +352,16 @@ export const AdminDashboard = () => {
                         {s.tenant?.shortCode || "National Track"}
                       </td>
                       <td className="px-6 py-4 text-right">
+                        <Link
+                          to={`/subjects/edit/${s._id}`}
+                          aria-label={`Edit ${s.name}`}
+                          title="Edit subject"
+                          className="inline-flex p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </Link>
                         <button
+                          aria-label={`Delete ${s.name}`}
                           onClick={() => handleDeleteSubject(s._id)}
                           className="p-2 text-gray-400 hover:text-red-600 transition-colors"
                         >
@@ -505,6 +515,7 @@ export const AdminDashboard = () => {
                         })
                       }
                       className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold bg-white"
+                      required
                     >
                       {tenants.map((t) => (
                         <option key={t._id} value={t._id}>
@@ -553,6 +564,7 @@ export const AdminDashboard = () => {
                         })
                       }
                       className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold uppercase"
+                      required
                     />
                   </div>
                   <div>
