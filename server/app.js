@@ -4,7 +4,6 @@ const path = require("path");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
-const flash = require("connect-flash");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const passport = require("passport");
@@ -41,7 +40,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Persistent Mongo Session Store (solves in-memory leak)
+// Persistent Mongo Session Store
 app.use(session({
     secret: process.env.EXPRESS_SESSION_SECRET || "academia-secret-key-2026",
     resave: false,
@@ -56,8 +55,6 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
-
-app.use(flash());
 
 // ------------------
 // Passport Google OAuth
@@ -138,20 +135,6 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // ------------------
-// Static & Views (Legacy/SSR support)
-// ------------------
-app.use(express.static(path.join(__dirname, "public")));
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-
-app.use((req, res, next) => {
-    res.locals.currentUser = req.user || req.session.user || null;
-    res.locals.error = req.flash("error");
-    res.locals.success = req.flash("success");
-    next();
-});
-
-// ------------------
 // REST API Routes (MERN Core)
 // ------------------
 app.use("/api/auth", require("./routes/api/authApiRouter"));
@@ -163,7 +146,7 @@ app.use("/api/admin", require("./routes/api/adminApiRouter"));
 // Google OAuth callback bridging to React frontend
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 app.get("/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/#auth", failureFlash: true }),
+    passport.authenticate("google", { failureRedirect: `${clientUrl}/#auth` }),
     (req, res) => {
         const token = generateToken(req.user);
         res.cookie("token", token, {
@@ -180,38 +163,21 @@ app.get("/auth/google/callback",
 );
 
 // ------------------
-// Legacy SSR Web Routes (Preserved during migration)
-// ------------------
-app.use("/", require("./routes/index"));
-app.use("/auth", require("./routes/authRouter"));
-app.use("/", require("./routes/usersRouter"));
-app.use("/subjects", require("./routes/subjectsRouter"));
-app.use("/admin", require("./routes/adminRouter"));
-app.use("/progress", require("./routes/progressRouter"));
-
-// ------------------
 // 404 & Error Handlers
 // ------------------
 app.use((req, res) => {
-    if (req.originalUrl.startsWith("/api")) {
-        return res.status(404).json({
-            success: false,
-            message: `API endpoint not found: ${req.method} ${req.originalUrl}`
-        });
-    }
-    res.status(404).render("404", { url: req.originalUrl });
+    res.status(404).json({
+        success: false,
+        message: `Endpoint not found: ${req.method} ${req.originalUrl}`
+    });
 });
 
 app.use((err, req, res, next) => {
     console.error("Server Error:", err);
-    if (req.originalUrl.startsWith("/api")) {
-        return res.status(500).json({
-            success: false,
-            message: err.message || "Internal server error"
-        });
-    }
-    // Fixed: pass err object safely to 500.ejs
-    res.status(500).render("500", { error: err });
+    res.status(500).json({
+        success: false,
+        message: err.message || "Internal server error"
+    });
 });
 
 // ------------------

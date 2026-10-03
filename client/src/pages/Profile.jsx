@@ -1,0 +1,341 @@
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+// import { authService } from '../services/api'; // Uncomment and adjust based on your api.js exports
+import {
+  ShieldCheck,
+  AlertTriangle,
+  CheckCircle2,
+  User,
+  Mail,
+  GraduationCap,
+  Target,
+  Sparkles,
+} from "lucide-react";
+
+export const Profile = () => {
+  const { user, refreshUser } = useAuth();
+
+  // UI State
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // Form State
+  const [formData, setFormData] = useState({
+    name: "",
+    branch: "",
+    year: 1,
+    semester: 1,
+    targetExam: "JEE_MAINS",
+    targetYear: 2027,
+  });
+
+  // Sync user data to form state when component mounts or user updates
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        branch: user.branch || "",
+        year: user.year || 1,
+        semester: user.semester || 1,
+        targetExam: user.targetExam || "JEE_MAINS",
+        targetYear: user.targetYear || 2027,
+      });
+    }
+  }, [user]);
+
+  // Dynamic Semester Logic
+  const handleYearChange = (e) => {
+    const newYear = parseInt(e.target.value);
+    setFormData((prev) => ({
+      ...prev,
+      year: newYear,
+      semester: newYear * 2 - 1, // Auto-select the first semester of the newly selected year
+    }));
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      // NOTE: Replace this with your actual API call from api.js
+      // await authService.updateProfile(formData);
+
+      await refreshUser(); // Update global context
+      setSuccess("Academic profile updated successfully!");
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update profile.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!user) return null; // Prevent rendering before user context loads
+
+  const isUniversity = user.track === "UNIVERSITY";
+
+  return (
+    <div className="min-h-screen bg-[#fbfbfa] pt-32 pb-20 px-6 animate-in fade-in duration-500">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-10 flex flex-col md:flex-row items-start md:items-end justify-between border-b border-gray-200 pb-8 gap-4">
+          <div>
+            <h1 className="text-4xl font-black tracking-tighter text-[#1a1a1a]">
+              Account Settings
+            </h1>
+            <p className="text-gray-500 mt-2 font-medium">
+              Manage your academic identity and personal information.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl text-xs font-bold text-gray-500 uppercase tracking-widest shadow-sm">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            Student ID:{" "}
+            {user._id?.toString().slice(-6).toUpperCase() || "XXXXXX"}
+          </div>
+        </div>
+
+        {/* Alerts */}
+        {error && (
+          <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5" /> {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-emerald-50 border border-emerald-100 text-emerald-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5" /> {success}
+          </div>
+        )}
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Left Column: Visual Profile Card */}
+          <div className="md:col-span-1">
+            <div className="bg-white border border-gray-200 rounded-[2rem] p-8 md:sticky md:top-28 shadow-sm">
+              <div className="relative w-28 h-28 mx-auto mb-6">
+                <div className="w-full h-full rounded-3xl bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-4xl font-black text-white italic shadow-xl">
+                  {user.name?.charAt(0).toUpperCase()}
+                </div>
+                <div className="absolute -bottom-2 -right-2 bg-emerald-400 w-8 h-8 border-4 border-white rounded-full shadow-sm flex items-center justify-center">
+                  <Sparkles className="w-3 h-3 text-white" />
+                </div>
+              </div>
+
+              <div className="text-center mb-8">
+                <h2 className="text-xl font-black text-[#1a1a1a] tracking-tight">
+                  {user.name}
+                </h2>
+                <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mt-1">
+                  {user.email}
+                </p>
+              </div>
+
+              <div className="space-y-4 pt-6 border-t border-gray-100">
+                {isUniversity ? (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Branch
+                      </span>
+                      <span className="text-xs font-bold text-black uppercase">
+                        {user.branch}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Year
+                      </span>
+                      <span className="text-xs font-bold text-black">
+                        {user.year}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Semester
+                      </span>
+                      <span className="text-xs font-bold text-black">
+                        {user.semester}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Target
+                      </span>
+                      <span className="text-xs font-bold text-black uppercase">
+                        {user.targetExam}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Target Year
+                      </span>
+                      <span className="text-xs font-bold text-black">
+                        {user.targetYear}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <p className="text-[9px] text-center text-blue-500 uppercase tracking-[0.2em] font-black flex items-center justify-center gap-1">
+                  <ShieldCheck className="w-3 h-3" /> System Verified
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Edit Form */}
+          <div className="md:col-span-2">
+            <div className="bg-white border border-gray-200 rounded-[2rem] p-8 md:p-10 shadow-sm">
+              <h3 className="text-lg font-black mb-8 flex items-center gap-2 tracking-tight">
+                <span className="text-blue-500">✦</span> Edit Information
+              </h3>
+
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Personal Info */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <User className="w-3 h-3" /> Full Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Mail className="w-3 h-3" /> Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={user.email}
+                      readOnly
+                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 bg-gray-50 cursor-not-allowed focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="h-[1px] bg-gray-100 w-full"></div>
+
+                {/* Academic Info */}
+                {isUniversity ? (
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <GraduationCap className="w-3 h-3" /> Branch
+                      </label>
+                      <input
+                        type="text"
+                        name="branch"
+                        value={formData.branch}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold uppercase text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">
+                        Year
+                      </label>
+                      <select
+                        name="year"
+                        value={formData.year}
+                        onChange={handleYearChange}
+                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                      >
+                        {[1, 2, 3, 4].map((y) => (
+                          <option key={y} value={y}>
+                            Year {y}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">
+                        Semester
+                      </label>
+                      <select
+                        name="semester"
+                        value={formData.semester}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                      >
+                        <option value={formData.year * 2 - 1}>
+                          Semester {formData.year * 2 - 1}
+                        </option>
+                        <option value={formData.year * 2}>
+                          Semester {formData.year * 2}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Target className="w-3 h-3" /> Target Exam
+                      </label>
+                      <select
+                        name="targetExam"
+                        value={formData.targetExam}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                      >
+                        <option value="JEE_MAINS">JEE Mains</option>
+                        <option value="JEE_ADVANCED">JEE Advanced</option>
+                        <option value="NEET">NEET (UG)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Target className="w-3 h-3" /> Target Year
+                      </label>
+                      <select
+                        name="targetYear"
+                        value={formData.targetYear}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                      >
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-6">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[#0a0a0a] text-white py-4 rounded-xl text-xs uppercase tracking-widest font-black hover:bg-blue-600 transition-all shadow-xl shadow-gray-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Saving Changes..." : "Save Profile Changes"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -1,74 +1,73 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { subjectService, progressService } from '../services/api';
 import { OnboardingModal } from '../components/OnboardingModal';
 import { 
-  BookOpen, 
-  CheckCircle2, 
-  Sparkles, 
   ArrowUpRight, 
-  BarChart2, 
   Settings2,
   FolderOpen,
-  GraduationCap,
   Layers
 } from 'lucide-react';
 
 export const Dashboard = () => {
-  const { user, refreshUser } = useAuth();
-  const navigate = useNavigate();
-
+  const { user } = useAuth();
+  
   const [subjects, setSubjects] = useState([]);
   const [progressMap, setProgressMap] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showOnboarding, setShowOnboarding] = useState(false);
 
+  // 1. Check Onboarding Status
   useEffect(() => {
-    // If onboarding is not complete, show modal
     if (user && !user.onboardingCompleted) {
       setShowOnboarding(true);
     }
   }, [user]);
 
+  // 2. Fetch Dashboard Data
   const loadDashboardData = async () => {
     setLoading(true);
     setError('');
     try {
       const [subjectsRes, progressRes] = await Promise.all([
         subjectService.getSubjects(),
+        // Catch progress errors silently so the dashboard still loads if progress is empty
         progressService.getGlobalProgress().catch(() => ({ data: { subjectProgressMap: {} } }))
       ]);
 
       if (subjectsRes.data.success) {
         setSubjects(subjectsRes.data.subjects);
       }
-      if (progressRes.data.success) {
+      if (progressRes.data?.success) {
         setProgressMap(progressRes.data.subjectProgressMap || {});
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load courses.');
+      setError(err.response?.data?.message || 'Failed to load curriculum data.');
     } finally {
       setLoading(false);
     }
   };
 
+  // 3. Auto-load data when user session is confirmed
   useEffect(() => {
-    if (user) {
+    if (user && user.onboardingCompleted) {
       loadDashboardData();
+    } else {
+      setLoading(false); // Stop loading spinner if we are just waiting for onboarding
     }
   }, [user]);
 
   return (
     <div className="min-h-screen bg-[#fbfbfa] pt-28 pb-20 px-6">
       
-      {/* Onboarding Dialog */}
+      {/* Onboarding Dialog (Forced if incomplete, or triggered manually by Settings) */}
       <OnboardingModal 
         isOpen={showOnboarding} 
         onClose={() => {
           setShowOnboarding(false);
-          loadDashboardData();
+          loadDashboardData(); // Instantly refresh the curriculum when they pick a new semester
         }} 
       />
 
@@ -167,7 +166,7 @@ export const Dashboard = () => {
               return (
                 <div 
                   key={subject._id}
-                  className="notion-card rounded-[2rem] p-8 flex flex-col justify-between group relative overflow-hidden"
+                  className="bg-white rounded-[2rem] border border-gray-100 p-8 flex flex-col justify-between group relative overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
                 >
                   <div>
                     {/* Header: Course Code & Units */}
@@ -207,20 +206,13 @@ export const Dashboard = () => {
                     </div>
 
                     {/* Action Links */}
-                    <div className="grid grid-cols-2 gap-3 pt-2">
+                    <div className="pt-2">
                       <Link
                         to={`/subjects/${subject._id}`}
-                        className="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-xs font-bold text-gray-800 transition-all border border-gray-200 flex items-center justify-center gap-1"
+                        className="w-full py-3 rounded-xl bg-gray-50 hover:bg-[#0a0a0a] hover:text-white text-xs font-bold text-gray-800 transition-all border border-gray-200 flex items-center justify-center gap-1.5 shadow-sm"
                       >
                         <span>Open Vault</span>
                         <ArrowUpRight className="w-3.5 h-3.5" />
-                      </Link>
-
-                      <Link
-                        to={`/progress/${subject._id}`}
-                        className="text-center py-2.5 rounded-xl bg-[#0a0a0a] hover:bg-blue-600 text-xs font-bold text-white transition-all shadow-sm"
-                      >
-                        Checklist
                       </Link>
                     </div>
                   </div>

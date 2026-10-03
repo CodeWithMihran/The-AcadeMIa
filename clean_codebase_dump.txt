@@ -1,36 +1,215 @@
 ﻿========================================
+FILE: D:\Mihran\The-AcadeMIa\client\src\components\Footer.jsx
+========================================
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { Github, Linkedin } from 'lucide-react'; // Make sure lucide-react is installed
+
+export const Footer = () => {
+  const { user, isAuthenticated } = useAuth();
+  
+  const isAdmin = user?.role === 'admin';
+  const currentYear = new Date().getFullYear();
+  const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+
+  // --------------------------------------------------------
+  // SUB-COMPONENTS FOR DIFFERENT STATES
+  // --------------------------------------------------------
+
+  // 1. PUBLIC HOME FOOTER (Massive, informative, dark)
+  if (!isAuthenticated) {
+    return (
+      <footer className="bg-[#0a0a0a] text-white pt-20 pb-10 border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid md:grid-cols-12 gap-12 lg:gap-16">
+            
+            <div className="md:col-span-5 lg:col-span-4">
+              <div className="flex items-center gap-4 mb-6 group">
+                <img src="/images/logo1.png" alt="RIT" className="h-10 w-auto" />
+                <div className="flex items-baseline">
+                  <span className="text-xl font-black text-white tracking-tighter uppercase italic">RIT</span>
+                  <span className="text-xl font-extralight tracking-tight ml-1.5 text-gray-400">Acade<span className="font-bold text-white">MI</span>a</span>
+                </div>
+              </div>
+              <p className="text-gray-500 text-sm leading-relaxed mb-6 max-w-sm">
+                A centralized academic ecosystem for RIT students. We transform scattered resources into a structured learning path, helping you master your syllabus one unit at a time.
+              </p>
+              <div className="flex gap-4">
+                <a href="https://github.com/CodeWithMihran" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white hover:text-black transition-all duration-300">
+                  <Github className="w-5 h-5" />
+                </a>
+                <a href="https://www.linkedin.com/in/md-mihran-sohail-321b12384/" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-[#0077b5] hover:text-white transition-all duration-300">
+                  <Linkedin className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+
+            <div className="md:col-span-2 lg:col-span-2">
+              <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-6">Platform</h3>
+              <ul className="space-y-4 text-gray-500 text-sm">
+                <li><a href="#home" className="hover:text-white transition-colors duration-200">Home</a></li>
+                <li><a href="#features" className="hover:text-white transition-colors duration-200">Features</a></li>
+                <li><a href="#workflow" className="hover:text-white transition-colors duration-200">Workflow</a></li>
+                <li><a href="#auth" className="text-white/80 hover:text-white font-medium underline underline-offset-8 decoration-blue-500">Get Started</a></li>
+              </ul>
+            </div>
+
+            <div className="md:col-span-2 lg:col-span-3">
+              <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-6">Academic</h3>
+              <ul className="space-y-4 text-gray-500 text-sm">
+                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-blue-500"></span><span>Unit-wise Notes</span></li>
+                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-blue-500"></span><span>Video Repository</span></li>
+                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-blue-500"></span><span>PYQ Database</span></li>
+                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-blue-500"></span><span>Syllabus Tracker</span></li>
+              </ul>
+            </div>
+
+            <div className="md:col-span-3 lg:col-span-3">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-4">Developed By</h3>
+                <p className="text-white font-semibold text-base mb-1">Md Mihran Sohail</p>
+                <p className="text-gray-500 text-xs mb-4">Roorkee Institute of Technology</p>
+                <a href="mailto:sohail.mihran@gmail.com" className="text-blue-400 text-xs font-medium hover:text-blue-300 transition-colors break-all">
+                  sohail.mihran@gmail.com
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="border-t border-white/10 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-gray-600 text-[13px]">
+              &copy; {currentYear} <span className="text-gray-400 font-medium">RIT AcadeMIA</span>. All rights reserved.
+            </p>
+            <div className="flex gap-6 text-gray-600 text-[13px]">
+              <span className="hover:text-gray-400 cursor-default">Student-Led Initiative</span>
+              <span className="hover:text-gray-400 cursor-default">Privacy Policy</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+    );
+  }
+
+  // 2. ADMIN FOOTER (Minimalist, light theme)
+  if (isAdmin) {
+    return (
+      <footer className="bg-[#fbfbfa] border-t border-gray-100 py-10 mt-auto">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            
+            <div className="flex items-center gap-4">
+              <div className="flex items-baseline gap-1">
+                <span className="text-sm font-black text-[#1a1a1a] tracking-tighter italic">RIT AcadeMIa</span>
+                <span className="text-sm font-light tracking-tight text-gray-400 uppercase">Console</span>
+              </div>
+              <div className="h-4 w-[1px] bg-gray-200"></div>
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">v2.0.1 Stable</span>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <p className="text-[10px] font-bold text-gray-300 uppercase tracking-[0.3em]">
+                Infrastructure by <a href="https://github.com/CodeWithMihran" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-black transition-colors">Md Mihran Sohail</a>
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+              <span>{currentDate}</span>
+              <a href="mailto:sohail.mihran@gmail.com" className="bg-gray-100 px-3 py-1 rounded-md hover:bg-black hover:text-white transition-all">Report Bug</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    );
+  }
+
+  // 3. STUDENT FOOTER (Compact, dark theme)
+  return (
+    <footer className="bg-[#0a0a0a] text-white pt-12 pb-8 border-t border-white/10 mt-auto">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          
+          <div className="flex items-center gap-3 group opacity-80 hover:opacity-100 transition-opacity">
+            <img src="/images/logo1.png" alt="RIT" className="h-8 w-auto" />
+            <div className="flex items-baseline">
+              <span className="text-lg font-black text-white tracking-tighter uppercase italic">RIT</span>
+              <span className="text-lg font-extralight tracking-tight ml-1 text-gray-400">Acade<span className="font-bold text-white">MI</span>a</span>
+            </div>
+          </div>
+
+          <div className="flex gap-6 text-[11px] font-black uppercase tracking-widest text-gray-500">
+            <Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
+            <Link to="/profile" className="hover:text-white transition-colors">Settings</Link>
+            <a href="mailto:sohail.mihran@gmail.com" className="hover:text-white transition-colors">Support</a>
+          </div>
+
+          <div className="text-right">
+            <p className="text-[10px] text-gray-600 font-bold uppercase tracking-[0.2em]">
+              Developed by <a href="https://github.com/CodeWithMihran" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-all underline underline-offset-4 decoration-gray-800">Mihran Sohail</a>
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-[10px] text-gray-600 font-medium">
+            &copy; {currentYear} RIT AcadeMIA. All rights reserved.
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
+            <span className="text-[10px] text-gray-600 font-bold uppercase tracking-tighter">Academic Portal v2.0</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+========================================
 FILE: D:\Mihran\The-AcadeMIa\client\src\components\Navbar.jsx
 ========================================
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   BookOpen, 
   BarChart3, 
-  User, 
   LogOut, 
   ShieldCheck, 
   Menu, 
   X, 
-  Layers,
-  Sparkles
+  Library,
+  UserCircle,
+  Users,
+  PlusCircle
 } from 'lucide-react';
 
 export const Navbar = () => {
-  const { user, logout, isAuthenticated, isAdmin } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  
   const navigate = useNavigate();
   const location = useLocation();
 
+  const isAdmin = user?.role === 'admin';
   const isActive = (path) => location.pathname === path;
 
+  // Add a premium shadow when scrolling down
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <nav className="fixed w-full top-0 z-50 bg-[#0a0a0a]/95 backdrop-blur-md border-b border-white/10 text-white">
+    <nav className={`fixed w-full top-0 z-50 transition-all duration-300 backdrop-blur-md border-b border-white/10 text-white ${isScrolled ? 'bg-[#0a0a0a]/98 shadow-2xl py-0' : 'bg-[#0a0a0a]/90 py-1'}`}>
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           
           {/* Logo & Brand */}
-          <Link to={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-3.5 group">
+          <Link to={isAuthenticated ? (isAdmin ? "/admin" : "/dashboard") : "/"} className="flex items-center gap-3.5 group">
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
               <BookOpen className="w-5 h-5" />
             </div>
@@ -39,13 +218,13 @@ export const Navbar = () => {
                 The <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-white bg-clip-text text-transparent">AcadeMIa</span>
               </span>
               <span className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.25em] mt-1">
-                Academic OS
+                {isAdmin ? <span className="text-blue-500">Admin Console</span> : "Academic OS"}
               </span>
             </div>
           </Link>
 
-          {/* Institution / Track Pill */}
-          {user && (
+          {/* Institution / Track Pill (Only for Students) */}
+          {user && !isAdmin && (
             <div className="hidden lg:flex items-center gap-2 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full text-xs font-medium text-gray-300">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               {user.track === 'COMPETITIVE' || user.track === 'JEE' || user.track === 'NEET' ? (
@@ -64,29 +243,38 @@ export const Navbar = () => {
           {/* Desktop Navigation */}
           {isAuthenticated ? (
             <div className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-gray-400">
-              <Link 
-                to="/dashboard" 
-                className={`transition-colors hover:text-white ${isActive('/dashboard') ? 'text-white' : ''}`}
-              >
-                Dashboard
-              </Link>
               
-              <Link 
-                to="/progress" 
-                className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/progress') ? 'text-blue-400' : ''}`}
-              >
-                <BarChart3 className="w-3.5 h-3.5" />
-                Global Mastery
-              </Link>
+              {/* STUDENT LINKS */}
+              {!isAdmin && (
+                <>
+                  <Link to="/dashboard" className={`transition-colors hover:text-white ${isActive('/dashboard') ? 'text-white' : ''}`}>
+                    Dashboard
+                  </Link>
+                  <Link to="/subjects" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/subjects') ? 'text-blue-400' : ''}`}>
+                    <Library className="w-3.5 h-3.5" /> Subjects
+                  </Link>
+                  <Link to="/progress" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/progress') ? 'text-blue-400' : ''}`}>
+                    <BarChart3 className="w-3.5 h-3.5" /> Progress
+                  </Link>
+                  <Link to="/profile" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/profile') ? 'text-blue-400' : ''}`}>
+                    <UserCircle className="w-4 h-4" /> Profile
+                  </Link>
+                </>
+              )}
 
+              {/* ADMIN LINKS */}
               {isAdmin && (
-                <Link 
-                  to="/admin" 
-                  className={`flex items-center gap-1.5 text-purple-400 hover:text-purple-300 transition-colors ${isActive('/admin') ? 'font-black' : ''}`}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  Admin Console
-                </Link>
+                <>
+                  <Link to="/admin" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/admin') ? 'text-purple-400 font-black' : ''}`}>
+                    <ShieldCheck className="w-3.5 h-3.5" /> Dashboard
+                  </Link>
+                  <Link to="/admin/users" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/admin/users') ? 'text-purple-400 font-black' : ''}`}>
+                    <Users className="w-3.5 h-3.5" /> Manage Users
+                  </Link>
+                  <Link to="/subjects/add" className="flex items-center gap-1.5 bg-white/10 text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-colors">
+                    <PlusCircle className="w-3.5 h-3.5" /> Add Subject
+                  </Link>
+                </>
               )}
 
               <div className="h-5 w-[1px] bg-white/15"></div>
@@ -108,20 +296,26 @@ export const Navbar = () => {
               </div>
             </div>
           ) : (
-            <div className="hidden md:flex items-center gap-4">
-              <a 
-                href="#auth" 
-                className="bg-white text-black px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-100 transition-all shadow-md active:scale-95"
-              >
-                Sign In
-              </a>
+            /* UNAUTHENTICATED PUBLIC LINKS */
+            <div className="hidden md:flex items-center gap-8">
+              <div className="flex gap-8 text-[13px] font-semibold uppercase tracking-widest text-gray-400">
+                <a href="#home" className="hover:text-white transition-colors">Home</a>
+                <a href="#features" className="hover:text-white transition-colors">Features</a>
+                <a href="#workflow" className="hover:text-white transition-colors">Workflow</a>
+              </div>
+              <div className="flex items-center gap-4 ml-2">
+                <a href="#auth" className="text-[13px] font-medium text-white/70 hover:text-white transition-colors">Log in</a>
+                <a href="#auth" className="bg-white text-black px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-100 transition-all shadow-md active:scale-95">
+                  Get Started
+                </a>
+              </div>
             </div>
           )}
 
           {/* Mobile Menu Toggle */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-white hover:bg-white/10 rounded-lg"
+            className="md:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -131,61 +325,56 @@ export const Navbar = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0d0d0d] border-t border-white/10 px-6 py-6 space-y-4 animate-in fade-in duration-200">
+        <div className="md:hidden bg-[#0d0d0d] border-t border-white/10 px-6 py-6 space-y-4 shadow-2xl">
           {isAuthenticated ? (
             <>
               <div className="pb-3 border-b border-white/10">
                 <p className="font-bold text-sm text-white">{user?.name}</p>
                 <p className="text-xs text-gray-400">{user?.email}</p>
-                <p className="text-[10px] font-bold text-blue-400 uppercase mt-1">
-                  {user?.tenant?.shortCode || "University"} â€¢ {user?.college}
-                </p>
+                {!isAdmin && (
+                  <p className="text-[10px] font-bold text-blue-400 uppercase mt-1">
+                    {user?.tenant?.shortCode || "University"} â€¢ {user?.college}
+                  </p>
+                )}
               </div>
-              <Link 
-                to="/dashboard" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-sm font-semibold text-gray-300 hover:text-white"
-              >
-                Dashboard
-              </Link>
-              <Link 
-                to="/progress" 
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-sm font-semibold text-gray-300 hover:text-white"
-              >
-                Global Mastery
-              </Link>
-              {isAdmin && (
-                <Link 
-                  to="/admin" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block text-sm font-semibold text-purple-400 hover:text-purple-300"
-                >
-                  Admin Console
-                </Link>
+              
+              {!isAdmin ? (
+                <>
+                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Dashboard</Link>
+                  <Link to="/subjects" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Subjects Catalog</Link>
+                  <Link to="/progress" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Global Mastery</Link>
+                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">My Profile</Link>
+                </>
+              ) : (
+                <>
+                  <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-purple-400 hover:text-purple-300">Admin Dashboard</Link>
+                  <Link to="/admin/users" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Manage Users</Link>
+                  <Link to="/subjects/add" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">+ Add Subject</Link>
+                </>
               )}
+
               <button 
-                onClick={logout}
+                onClick={() => { logout(); setMobileMenuOpen(false); }}
                 className="w-full text-left text-sm font-semibold text-red-400 pt-2 border-t border-white/10"
               >
                 Log Out
               </button>
             </>
           ) : (
-            <a 
-              href="#auth" 
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-center bg-white text-black py-3 rounded-xl font-bold text-sm"
-            >
-              Sign In
-            </a>
+            <div className="flex flex-col gap-4 text-center">
+              <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-gray-400">Features</a>
+              <a href="#workflow" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-gray-400">Workflow</a>
+              <div className="h-[1px] bg-white/10 w-full"></div>
+              <a href="#auth" onClick={() => setMobileMenuOpen(false)} className="bg-white text-black py-3 rounded-xl font-bold text-sm">
+                Sign In
+              </a>
+            </div>
           )}
         </div>
       )}
     </nav>
   );
 };
-
 ========================================
 FILE: D:\Mihran\The-AcadeMIa\client\src\components\OnboardingModal.jsx
 ========================================
@@ -504,6 +693,264 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
 };
 
 ========================================
+FILE: D:\Mihran\The-AcadeMIa\client\src\components\SubjectCatalog.jsx
+========================================
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { subjectService } from '../services/api';
+import { 
+  Database, 
+  Cloud, 
+  ShieldCheck, 
+  FolderOpen,
+  ArrowRight,
+  BookOpen,
+  PlayCircle,
+  FileText
+} from 'lucide-react';
+
+export const SubjectCatalog = () => {
+  const { user } = useAuth();
+  
+  const [subjects, setSubjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchCatalog = async () => {
+      try {
+        const res = await subjectService.getSubjects();
+        if (res.data.success) {
+          setSubjects(res.data.subjects);
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load curriculum vault.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchCatalog();
+    }
+  }, [user]);
+
+  // Array of icons to cycle through for subject cards
+  const courseIcons = ['ðŸ““', 'âš™ï¸', 'ðŸ’»', 'ðŸ“', 'ðŸ”¬'];
+
+  if (!user) return null;
+
+  const isUniversity = user.track === 'UNIVERSITY';
+
+  return (
+    <div className="min-h-screen bg-[#fbfbfa] pt-32 pb-20 px-6 animate-in fade-in duration-500">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header Section */}
+        <div className="mb-16 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
+          <div>
+            <h1 className="text-5xl font-black tracking-tighter text-[#1a1a1a] mb-4 italic">
+              The <span className="text-gray-300 font-light not-italic">Curriculum</span> Vault
+            </h1>
+            
+            <div className="flex flex-wrap items-center gap-4">
+              <span className="bg-black/5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-500">
+                {isUniversity ? user.branch : user.targetExam}
+              </span>
+              <span className="h-1 w-1 bg-gray-300 rounded-full"></span>
+              <span className="text-xs font-bold text-gray-400">
+                {isUniversity ? `Semester ${user.semester}` : `Target ${user.targetYear}`}
+              </span>
+              {!isUniversity && (
+                <>
+                  <span className="h-1 w-1 bg-gray-300 rounded-full"></span>
+                  <span className="text-xs font-bold text-emerald-500">Competitive Track</span>
+                </>
+              )}
+            </div>
+          </div>
+          
+          <div className="bg-[#0a0a0a] text-white px-8 py-4 rounded-3xl shadow-2xl shadow-gray-200 border border-white/10">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-1 flex items-center gap-1.5">
+              <ShieldCheck className="w-3 h-3" /> Authenticated Access
+            </p>
+            <p className="text-xl font-black tracking-tighter">
+              {loading ? '...' : subjects.length} Active Modules
+            </p>
+          </div>
+        </div>
+
+        {/* Status Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+          <div className="bg-white/60 backdrop-blur-md border border-gray-100 p-8 rounded-[2rem] shadow-sm">
+            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+              <Database className="w-3 h-3" /> Study Load
+            </p>
+            <p className="text-2xl font-black italic tracking-tighter text-[#1a1a1a]">Full Capacity</p>
+          </div>
+          
+          <div className="bg-blue-50/50 backdrop-blur-md border border-blue-100/50 p-8 rounded-[2rem] shadow-sm">
+            <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+              <Cloud className="w-3 h-3" /> Resources
+            </p>
+            <p className="text-2xl font-black italic tracking-tighter text-blue-600">Cloud Synced</p>
+          </div>
+
+          <div className="bg-[#0a0a0a] border border-white/10 p-8 rounded-[2rem] relative overflow-hidden shadow-xl">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/20 blur-3xl rounded-full"></div>
+            <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1 relative z-10">System Status</p>
+            <div className="flex items-center gap-3 relative z-10">
+              <span className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.8)]"></span>
+              <p className="text-xl font-bold italic tracking-tight text-white">Vault Secured</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-4 mb-10">
+          <h2 className="text-xs font-black tracking-[0.4em] text-gray-400 uppercase">Available Courses</h2>
+          <div className="h-[1px] flex-grow bg-gray-200"></div>
+        </div>
+
+        {/* Content Area */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white rounded-[2.5rem] border border-gray-100 h-96 animate-pulse p-10 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="w-14 h-14 bg-gray-100 rounded-2xl"></div>
+                  <div className="w-3/4 h-8 bg-gray-100 rounded-lg"></div>
+                  <div className="w-full h-4 bg-gray-100 rounded-md"></div>
+                  <div className="w-5/6 h-4 bg-gray-100 rounded-md"></div>
+                </div>
+                <div className="w-full h-12 bg-gray-100 rounded-2xl"></div>
+              </div>
+            ))}
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 border border-red-100 p-12 rounded-[3rem] text-center">
+            <p className="text-red-500 font-bold text-sm">âš ï¸ {error}</p>
+          </div>
+        ) : subjects.length === 0 ? (
+          <div className="bg-white border-2 border-dashed border-gray-200 p-24 rounded-[3rem] text-center flex flex-col items-center justify-center">
+            <FolderOpen className="w-12 h-12 text-gray-300 mb-4" />
+            <p className="text-gray-400 font-bold text-lg mb-2">No curriculum data found.</p>
+            <p className="text-gray-400 text-xs">Update your profile settings to load the correct subjects.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
+            {subjects.map((subject, index) => (
+              <div 
+                key={subject._id}
+                className="bg-white border border-gray-200 rounded-[2.5rem] p-10 flex flex-col justify-between group hover:border-[#1a1a1a] hover:-translate-y-2 hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-400"
+              >
+                <div>
+                  <div className="flex justify-between items-start mb-10">
+                    <div className="h-14 w-14 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl shadow-sm border border-gray-100 group-hover:scale-110 transition-transform duration-300">
+                      {courseIcons[index % courseIcons.length]}
+                    </div>
+                    <span className="text-[10px] font-black text-gray-400 border border-gray-100 px-3 py-1.5 rounded-xl uppercase tracking-tighter bg-gray-50">
+                      {subject.courseCode || `Course 0${index + 1}`}
+                    </span>
+                  </div>
+
+                  <h2 className="text-2xl font-black text-[#1a1a1a] mb-4 leading-tight tracking-tighter group-hover:text-blue-600 transition-colors">
+                    {subject.name}
+                  </h2>
+                  
+                  <p className="text-sm text-gray-500 font-medium mb-8 line-clamp-2 italic">
+                    Organized resources including unit-wise notes, textbooks, and previous year papers for {isUniversity ? subject.branch : subject.examCategory}.
+                  </p>
+
+                  <div className="flex gap-4 mb-10">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Syllabus</span>
+                      <span className="text-sm font-bold text-gray-800">{subject.units?.length || 0} Units</span>
+                    </div>
+                    <div className="w-[1px] h-8 bg-gray-100 self-center"></div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Type</span>
+                      <span className="text-[10px] font-bold text-blue-500 uppercase italic mt-0.5">Core Subject</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Link 
+                    to={`/subjects/${subject._id}`}
+                    className="flex items-center justify-center gap-2 w-full bg-[#0a0a0a] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-gray-200/50 active:scale-95"
+                  >
+                    Enter Subject Vault <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <Link 
+                    to={`/progress/${subject._id}`}
+                    className="flex items-center justify-center gap-2 w-full bg-white border border-gray-200 text-gray-500 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 hover:text-black transition-all"
+                  >
+                    Progress Tracker
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Footer Info Section */}
+        <div className="mt-32 grid md:grid-cols-2 gap-12 items-center mb-10">
+          <div className="bg-gray-100/50 rounded-[3rem] p-12 border border-gray-200/50">
+            <h3 className="text-xs font-black tracking-[0.4em] text-blue-500 uppercase mb-4">Pro Tip</h3>
+            <p className="text-2xl font-black italic tracking-tighter mb-6 leading-tight text-[#1a1a1a]">
+              Mastery comes from repetition and solving PYQs.
+            </p>
+            <p className="text-gray-500 text-sm leading-relaxed mb-8">
+              Don't just read the notes. Watch the curated video lectures and immediately try to solve at least 2 questions from the Previous Year section of that unit.
+            </p>
+            <div className="flex gap-2">
+              <span className="w-8 h-1.5 bg-gray-800 rounded-full"></span>
+              <span className="w-2 h-1.5 bg-gray-300 rounded-full"></span>
+              <span className="w-2 h-1.5 bg-gray-300 rounded-full"></span>
+            </div>
+          </div>
+          
+          <div className="p-8">
+            <h3 className="text-xs font-black tracking-[0.4em] text-gray-400 uppercase mb-8">Resources Overview</h3>
+            <ul className="space-y-8">
+              <li className="flex items-start gap-4">
+                <div className="bg-blue-50 p-3 rounded-xl text-blue-500">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest text-gray-800">Handwritten Notes</p>
+                  <p className="text-[11px] text-gray-500 italic mt-1">Curated by top-performing seniors and faculty.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-4">
+                <div className="bg-red-50 p-3 rounded-xl text-red-500">
+                  <PlayCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest text-gray-800">Video Tutorials</p>
+                  <p className="text-[11px] text-gray-500 italic mt-1">YouTube links specifically mapped to your syllabus.</p>
+                </div>
+              </li>
+              <li className="flex items-start gap-4">
+                <div className="bg-amber-50 p-3 rounded-xl text-amber-500">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-widest text-gray-800">Exam Archives</p>
+                  <p className="text-[11px] text-gray-500 italic mt-1">5+ years of PYQs organized unit-wise.</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+========================================
 FILE: D:\Mihran\The-AcadeMIa\client\src\context\AuthContext.jsx
 ========================================
 import React, { createContext, useContext, useState, useEffect } from 'react';
@@ -601,79 +1048,1213 @@ export const useAuth = () => {
 };
 
 ========================================
-FILE: D:\Mihran\The-AcadeMIa\client\src\pages\Dashboard.jsx
+FILE: D:\Mihran\The-AcadeMIa\client\src\pages\AddSubject.jsx
 ========================================
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { subjectService, progressService } from '../services/api';
-import { OnboardingModal } from '../components/OnboardingModal';
-import { 
-  BookOpen, 
-  CheckCircle2, 
-  Sparkles, 
-  ArrowUpRight, 
-  BarChart2, 
-  Settings2,
-  FolderOpen,
-  GraduationCap,
-  Layers
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { adminService } from '../services/api';
+import { Plus, Trash2, ArrowLeft, CheckCircle2, AlertTriangle, BookOpen } from 'lucide-react';
 
-export const Dashboard = () => {
-  const { user, refreshUser } = useAuth();
+export const AddSubject = () => {
   const navigate = useNavigate();
-
-  const [subjects, setSubjects] = useState([]);
-  const [progressMap, setProgressMap] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [success, setSuccess] = useState('');
+
+  // Form State
+  const [formData, setFormData] = useState({
+    name: '',
+    branch: '',
+    semester: 1,
+    units: [
+      {
+        unitNumber: 1,
+        unitTitle: '',
+        topics: '',
+        notes: [{ title: '', link: '' }],
+        books: [{ title: '', link: '' }],
+        pyqs: [{ title: '', link: '' }],
+        youtubeLinks: [{ title: '', link: '' }]
+      }
+    ]
+  });
+
+  const handleBaseChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleUnitChange = (index, field, value) => {
+    const updatedUnits = [...formData.units];
+    updatedUnits[index][field] = value;
+    setFormData(prev => ({ ...prev, units: updatedUnits }));
+  };
+
+  const handleResourceChange = (unitIndex, resourceType, resIndex, field, value) => {
+    const updatedUnits = [...formData.units];
+    updatedUnits[unitIndex][resourceType][resIndex][field] = value;
+    setFormData(prev => ({ ...prev, units: updatedUnits }));
+  };
+
+  const addUnit = () => {
+    setFormData(prev => ({
+      ...prev,
+      units: [
+        ...prev.units,
+        {
+          unitNumber: prev.units.length + 1,
+          unitTitle: '',
+          topics: '',
+          notes: [{ title: '', link: '' }],
+          books: [{ title: '', link: '' }],
+          pyqs: [{ title: '', link: '' }],
+          youtubeLinks: [{ title: '', link: '' }]
+        }
+      ]
+    }));
+  };
+
+  const removeUnit = (index) => {
+    const updatedUnits = formData.units.filter((_, i) => i !== index)
+      .map((u, i) => ({ ...u, unitNumber: i + 1 })); // Renumber units
+    setFormData(prev => ({ ...prev, units: updatedUnits }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Clean and format topics string into an array of objects if needed by backend schema
+      const formattedPayload = {
+        ...formData,
+        units: formData.units.map(u => ({
+          ...u,
+          topics: typeof u.topics === 'string' 
+            ? u.topics.split(',').map(t => ({ title: t.trim() })).filter(t => t.title)
+            : u.topics
+        }))
+      };
+
+      const res = await adminService.createSubject(formattedPayload);
+      if (res.data.success) {
+        setSuccess('Subject created successfully!');
+        setTimeout(() => navigate('/admin'), 1500);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create subject.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fbfbfa] pt-32 pb-20 px-6 animate-in fade-in duration-500">
+      <div className="max-w-5xl mx-auto">
+        
+        <div className="mb-12 border-b border-gray-200 pb-10 flex items-end justify-between">
+          <div>
+            <Link to="/admin" className="text-xs font-bold text-gray-400 hover:text-black uppercase tracking-widest flex items-center gap-1.5 mb-3">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Console
+            </Link>
+            <h1 className="text-4xl font-black tracking-tighter text-[#1a1a1a] italic">
+              Create <span className="text-gray-400 font-light not-italic">New Subject</span>
+            </h1>
+            <p className="text-gray-500 mt-2 font-medium">Define core curriculum parameters and upload academic resources.</p>
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5" /> {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-emerald-50 border border-emerald-100 text-emerald-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5" /> {success}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-10">
+          
+          {/* Base Parameters */}
+          <div className="bg-white border border-gray-200 rounded-[2rem] p-8 md:p-10 shadow-sm">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 mb-6">Subject Parameters</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-2">Subject Name</label>
+                <input 
+                  name="name" 
+                  value={formData.name}
+                  onChange={handleBaseChange}
+                  required 
+                  placeholder="e.g. Discrete Structures" 
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold focus:outline-none focus:border-blue-500" 
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-2">Branch</label>
+                <input 
+                  name="branch" 
+                  value={formData.branch}
+                  onChange={handleBaseChange}
+                  required 
+                  placeholder="e.g. CSE" 
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold focus:outline-none focus:border-blue-500 uppercase" 
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-2">Semester</label>
+                <input 
+                  type="number" 
+                  name="semester" 
+                  value={formData.semester}
+                  onChange={handleBaseChange}
+                  required 
+                  min="1" max="8" 
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold focus:outline-none focus:border-blue-500" 
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">Curriculum Units</h2>
+            <div className="h-[1px] flex-grow bg-gray-200"></div>
+          </div>
+
+          {/* Dynamic Units List */}
+          <div className="space-y-8">
+            {formData.units.map((unit, uIdx) => (
+              <div key={uIdx} className="bg-white border border-gray-200 border-l-4 border-l-black rounded-[2rem] p-8 md:p-10 shadow-sm space-y-8">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-black italic">Unit 0{unit.unitNumber}</h3>
+                  {formData.units.length > 1 && (
+                    <button 
+                      type="button" 
+                      onClick={() => removeUnit(uIdx)}
+                      className="text-[10px] font-black text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors py-2 px-4 border border-gray-100 rounded-xl hover:bg-red-50 flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" /> Remove Unit
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 block mb-2">Unit Title</label>
+                    <input 
+                      value={unit.unitTitle}
+                      onChange={(e) => handleUnitChange(uIdx, 'unitTitle', e.target.value)}
+                      placeholder="e.g. Graph Theory" 
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-blue-500" 
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 block mb-2">Topics (Comma separated)</label>
+                    <input 
+                      value={unit.topics}
+                      onChange={(e) => handleUnitChange(uIdx, 'topics', e.target.value)}
+                      placeholder="BFS, DFS, Dijkstra..." 
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-blue-500" 
+                    />
+                  </div>
+                </div>
+
+                {/* Resource Links Grid */}
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  
+                  {/* Notes */}
+                  <div className="bg-gray-50 p-4 rounded-xl space-y-2 border border-gray-100">
+                    <p className="text-[10px] font-extrabold uppercase text-blue-500 tracking-wider">Notes</p>
+                    <input 
+                      value={unit.notes[0].title}
+                      onChange={(e) => handleResourceChange(uIdx, 'notes', 0, 'title', e.target.value)}
+                      placeholder="Title" 
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white" 
+                    />
+                    <input 
+                      value={unit.notes[0].link}
+                      onChange={(e) => handleResourceChange(uIdx, 'notes', 0, 'link', e.target.value)}
+                      placeholder="URL" 
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white" 
+                    />
+                  </div>
+
+                  {/* Books */}
+                  <div className="bg-gray-50 p-4 rounded-xl space-y-2 border border-gray-100">
+                    <p className="text-[10px] font-extrabold uppercase text-purple-500 tracking-wider">Books</p>
+                    <input 
+                      value={unit.books[0].title}
+                      onChange={(e) => handleResourceChange(uIdx, 'books', 0, 'title', e.target.value)}
+                      placeholder="Title" 
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white" 
+                    />
+                    <input 
+                      value={unit.books[0].link}
+                      onChange={(e) => handleResourceChange(uIdx, 'books', 0, 'link', e.target.value)}
+                      placeholder="URL" 
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white" 
+                    />
+                  </div>
+
+                  {/* PYQs */}
+                  <div className="bg-gray-50 p-4 rounded-xl space-y-2 border border-gray-100">
+                    <p className="text-[10px] font-extrabold uppercase text-emerald-500 tracking-wider">PYQs</p>
+                    <input 
+                      value={unit.pyqs[0].title}
+                      onChange={(e) => handleResourceChange(uIdx, 'pyqs', 0, 'title', e.target.value)}
+                      placeholder="Title" 
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white" 
+                    />
+                    <input 
+                      value={unit.pyqs[0].link}
+                      onChange={(e) => handleResourceChange(uIdx, 'pyqs', 0, 'link', e.target.value)}
+                      placeholder="URL" 
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white" 
+                    />
+                  </div>
+
+                  {/* YouTube */}
+                  <div className="bg-gray-900 p-4 rounded-xl space-y-2 text-white">
+                    <p className="text-[10px] font-extrabold uppercase text-red-400 tracking-wider">YouTube</p>
+                    <input 
+                      value={unit.youtubeLinks[0].title}
+                      onChange={(e) => handleResourceChange(uIdx, 'youtubeLinks', 0, 'title', e.target.value)}
+                      placeholder="Title" 
+                      className="w-full px-3 py-2 rounded-lg border border-white/10 text-xs bg-white/5 text-white" 
+                    />
+                    <input 
+                      value={unit.youtubeLinks[0].link}
+                      onChange={(e) => handleResourceChange(uIdx, 'youtubeLinks', 0, 'link', e.target.value)}
+                      placeholder="URL" 
+                      className="w-full px-3 py-2 rounded-lg border border-white/10 text-xs bg-white/5 text-blue-400" 
+                    />
+                  </div>
+
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-6">
+            <button 
+              type="button" 
+              onClick={addUnit}
+              className="flex items-center justify-center gap-2 bg-white border-2 border-dashed border-gray-300 text-gray-600 px-8 py-4 rounded-2xl font-bold hover:border-blue-500 hover:text-blue-500 transition-all w-full md:w-auto"
+            >
+              <Plus className="w-4 h-4" /> Append New Unit
+            </button>
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="bg-black text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 transition-all shadow-xl active:scale-95 w-full md:w-auto"
+            >
+              {loading ? 'Creating Subject...' : 'Finalize & Create Subject'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+========================================
+FILE: D:\Mihran\The-AcadeMIa\client\src\pages\AdminDashboard.jsx
+========================================
+import React, { useState, useEffect } from "react";
+import { adminService, tenantService } from "../services/api";
+import {
+  Users,
+  BookOpen,
+  Building2,
+  Plus,
+  Trash2,
+  Edit3,
+  Search,
+  ShieldAlert,
+  Layers,
+  Sparkles,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
+
+export const AdminDashboard = () => {
+  const [activeTab, setActiveTab] = useState("overview"); // 'overview' | 'subjects' | 'users'
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalSubjects: 0,
+    totalTenants: 0,
+  });
+  const [subjects, setSubjects] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [tenants, setTenants] = useState([]);
+  const [selectedTenant, setSelectedTenant] = useState("ALL");
+  const [selectedTrack, setSelectedTrack] = useState("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  // Form State for Subject Creation / Modal
+  const [showSubjectModal, setShowSubjectModal] = useState(false);
+  const [editingSubject, setEditingSubject] = useState(null);
+  const [subjectForm, setSubjectForm] = useState({
+    name: "",
+    courseCode: "",
+    track: "UNIVERSITY",
+    tenantId: "",
+    branch: "",
+    semester: "1",
+    examCategory: "JEE_MAINS",
+  });
 
   useEffect(() => {
-    // If onboarding is not complete, show modal
-    if (user && !user.onboardingCompleted) {
-      setShowOnboarding(true);
-    }
-  }, [user]);
+    fetchInitialData();
+  }, []);
 
-  const loadDashboardData = async () => {
+  useEffect(() => {
+    if (activeTab === "subjects") fetchSubjects();
+    if (activeTab === "users") fetchUsers();
+  }, [activeTab, selectedTenant, selectedTrack, searchQuery]);
+
+  const fetchInitialData = async () => {
+    setLoading(true);
+    try {
+      const [overviewRes, tenantsRes] = await Promise.all([
+        adminService.getOverview(),
+        tenantService.getTenants(),
+      ]);
+
+      if (overviewRes.data.success) {
+        setStats(overviewRes.data.stats);
+      }
+      if (tenantsRes.data.success) {
+        setTenants(tenantsRes.data.tenants || []);
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Failed to load administrative analytics.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSubjects = async () => {
+    try {
+      const res = await adminService.getSubjects({
+        tenantId: selectedTenant,
+        track: selectedTrack,
+      });
+      if (res.data.success) {
+        setSubjects(res.data.subjects);
+      }
+    } catch (err) {
+      setError("Failed to fetch subjects list.");
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await adminService.getUsers({
+        tenantId: selectedTenant,
+        search: searchQuery,
+      });
+      if (res.data.success) {
+        setUsers(res.data.users);
+      }
+    } catch (err) {
+      setError("Failed to fetch user directory.");
+    }
+  };
+
+  const handleDeleteSubject = async (id) => {
+    if (
+      !window.confirm(
+        "Are you sure? This will purge all associated student progress records.",
+      )
+    )
+      return;
+    try {
+      const res = await adminService.deleteSubject(id);
+      if (res.data.success) {
+        setSuccessMsg(res.data.message);
+        fetchSubjects();
+        fetchInitialData();
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete subject.");
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm("Permanently delete this user account?")) return;
+    try {
+      const res = await adminService.deleteUser(id);
+      if (res.data.success) {
+        setSuccessMsg(res.data.message);
+        fetchUsers();
+        fetchInitialData();
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete user.");
+    }
+  };
+
+  const handleSubjectSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      let res;
+      if (editingSubject) {
+        res = await adminService.updateSubject(editingSubject._id, subjectForm);
+      } else {
+        res = await adminService.createSubject(subjectForm);
+      }
+
+      if (res.data.success) {
+        setSuccessMsg(res.data.message);
+        setShowSubjectModal(false);
+        setEditingSubject(null);
+        resetSubjectForm();
+        fetchSubjects();
+        fetchInitialData();
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to save subject.");
+    }
+  };
+
+  const resetSubjectForm = () => {
+    setSubjectForm({
+      name: "",
+      courseCode: "",
+      track: "UNIVERSITY",
+      tenantId: tenants[0]?._id || "",
+      branch: "",
+      semester: "1",
+      examCategory: "JEE_MAINS",
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fbfbfa] pt-28 pb-20 px-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Admin Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-gray-200 pb-8">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-bold uppercase tracking-wider mb-3">
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+              Administrative Command Center
+            </div>
+            <h1 className="text-4xl font-black tracking-tight text-[#1a1a1a]">
+              Admin Control Vault
+            </h1>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="flex bg-gray-100 p-1.5 rounded-2xl border border-gray-200 gap-1">
+            {["overview", "subjects", "users"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                  activeTab === tab
+                    ? "bg-white text-black shadow-sm"
+                    : "text-gray-500 hover:text-black"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Alert Banners */}
+        {error && (
+          <div className="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-xs font-bold flex items-center justify-between">
+            <span>âš ï¸ {error}</span>
+            <button onClick={() => setError("")}>
+              <XCircle className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+        {successMsg && (
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-between">
+            <span>âœ“ {successMsg}</span>
+            <button onClick={() => setSuccessMsg("")}>
+              <XCircle className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {/* TAB 1: OVERVIEW */}
+        {activeTab === "overview" && (
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm flex items-center gap-6">
+                <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <Users className="w-7 h-7" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    Total Enrolled
+                  </p>
+                  <p className="text-3xl font-black text-gray-900">
+                    {stats.totalUsers}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm flex items-center gap-6">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                  <BookOpen className="w-7 h-7" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    Curriculum Modules
+                  </p>
+                  <p className="text-3xl font-black text-gray-900">
+                    {stats.totalSubjects}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-3xl p-8 border border-gray-200 shadow-sm flex items-center gap-6">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <Building2 className="w-7 h-7" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                    Active Institutions
+                  </p>
+                  <p className="text-3xl font-black text-gray-900">
+                    {stats.totalTenants}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: SUBJECT MANAGEMENT */}
+        {activeTab === "subjects" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedTenant}
+                  onChange={(e) => setSelectedTenant(e.target.value)}
+                  className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-800"
+                >
+                  <option value="ALL">All Institutions</option>
+                  {tenants.map((t) => (
+                    <option key={t._id} value={t._id}>
+                      {t.name} ({t.shortCode})
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedTrack}
+                  onChange={(e) => setSelectedTrack(e.target.value)}
+                  className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-800"
+                >
+                  <option value="ALL">All Tracks</option>
+                  <option value="UNIVERSITY">University Track</option>
+                  <option value="JEE">JEE Track</option>
+                  <option value="NEET">NEET Track</option>
+                </select>
+              </div>
+
+              <button
+                onClick={() => {
+                  setEditingSubject(null);
+                  resetSubjectForm();
+                  setShowSubjectModal(true);
+                }}
+                className="px-5 py-2.5 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 hover:bg-blue-600 transition-all"
+              >
+                <Plus className="w-4 h-4" /> Add Subject
+              </button>
+            </div>
+
+            {/* Subjects Table */}
+            <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-sm">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  <tr>
+                    <th className="px-6 py-4">Subject Name</th>
+                    <th className="px-6 py-4">Code</th>
+                    <th className="px-6 py-4">Track / Category</th>
+                    <th className="px-6 py-4">Institution</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {subjects.map((s) => (
+                    <tr
+                      key={s._id}
+                      className="hover:bg-gray-50/50 transition-colors"
+                    >
+                      <td className="px-6 py-4 font-bold text-gray-900">
+                        {s.name}
+                      </td>
+                      <td className="px-6 py-4 font-medium text-gray-500">
+                        {s.courseCode || "N/A"}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="px-2.5 py-1 rounded-md bg-blue-50 text-blue-600 text-[10px] font-black uppercase">
+                          {s.track === "UNIVERSITY"
+                            ? `Sem ${s.semester} (${s.branch})`
+                            : s.examCategory || s.track}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-gray-700">
+                        {s.tenant?.shortCode || "National Track"}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleDeleteSubject(s._id)}
+                          className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: USER DIRECTORY */}
+        {activeTab === "users" && (
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-gray-400 absolute left-4 top-3.5" />
+                <input
+                  type="text"
+                  placeholder="Search students by name, email, or college..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 text-xs font-semibold focus:outline-none focus:border-black"
+                />
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl border border-gray-200 overflow-hidden shadow-sm">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                  <tr>
+                    <th className="px-6 py-4">Student Name</th>
+                    <th className="px-6 py-4">Email Address</th>
+                    <th className="px-6 py-4">Academic Track</th>
+                    <th className="px-6 py-4">Institution / Campus</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {users.map((u) => (
+                    <tr
+                      key={u._id}
+                      className="hover:bg-gray-50/50 transition-colors"
+                    >
+                      <td className="px-6 py-4 font-bold text-gray-900">
+                        {u.name}
+                      </td>
+                      <td className="px-6 py-4 font-medium text-gray-500">
+                        {u.email}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="px-2.5 py-1 rounded-md bg-gray-100 text-gray-700 text-[10px] font-black uppercase">
+                          {u.track}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-gray-700">
+                        {u.tenant?.shortCode || u.college || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => handleDeleteUser(u._id)}
+                          className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* CREATE SUBJECT MODAL */}
+      {showSubjectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full border border-gray-100 shadow-2xl space-y-4">
+            <h3 className="text-xl font-black text-gray-900">
+              Add New Subject Module
+            </h3>
+
+            <form onSubmit={handleSubjectSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                  Subject Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={subjectForm.name}
+                  onChange={(e) =>
+                    setSubjectForm({ ...subjectForm, name: e.target.value })
+                  }
+                  placeholder="e.g. Data Structures & Algorithms"
+                  className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                  Course Code
+                </label>
+                <input
+                  type="text"
+                  value={subjectForm.courseCode}
+                  onChange={(e) =>
+                    setSubjectForm({
+                      ...subjectForm,
+                      courseCode: e.target.value,
+                    })
+                  }
+                  placeholder="e.g. BCS-301"
+                  className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                    Track
+                  </label>
+                  <select
+                    value={subjectForm.track}
+                    onChange={(e) =>
+                      setSubjectForm({ ...subjectForm, track: e.target.value })
+                    }
+                    className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold bg-white"
+                  >
+                    <option value="UNIVERSITY">University</option>
+                    <option value="JEE">JEE</option>
+                    <option value="NEET">NEET</option>
+                  </select>
+                </div>
+
+                {subjectForm.track === "UNIVERSITY" ? (
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                      Institution
+                    </label>
+                    <select
+                      value={subjectForm.tenantId}
+                      onChange={(e) =>
+                        setSubjectForm({
+                          ...subjectForm,
+                          tenantId: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold bg-white"
+                    >
+                      {tenants.map((t) => (
+                        <option key={t._id} value={t._id}>
+                          {t.shortCode}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                      Exam Category
+                    </label>
+                    <select
+                      value={subjectForm.examCategory}
+                      onChange={(e) =>
+                        setSubjectForm({
+                          ...subjectForm,
+                          examCategory: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold bg-white"
+                    >
+                      <option value="JEE_MAINS">JEE Mains</option>
+                      <option value="JEE_ADVANCED">JEE Advanced</option>
+                      <option value="NEET">NEET</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {subjectForm.track === "UNIVERSITY" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                      Branch
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. CSE"
+                      value={subjectForm.branch}
+                      onChange={(e) =>
+                        setSubjectForm({
+                          ...subjectForm,
+                          branch: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold uppercase"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
+                      Semester
+                    </label>
+                    <select
+                      value={subjectForm.semester}
+                      onChange={(e) =>
+                        setSubjectForm({
+                          ...subjectForm,
+                          semester: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold bg-white"
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
+                        <option key={s} value={s}>
+                          Sem {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSubjectModal(false)}
+                  className="w-1/2 py-3 rounded-xl bg-gray-100 text-gray-700 text-xs font-bold uppercase"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="w-1/2 py-3 rounded-xl bg-black text-white text-xs font-bold uppercase hover:bg-blue-600 transition-all"
+                >
+                  Create Subject
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+========================================
+FILE: D:\Mihran\The-AcadeMIa\client\src\pages\AdminUsers.jsx
+========================================
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { adminService } from '../services/api';
+import { 
+  Users, 
+  ShieldCheck, 
+  GraduationCap, 
+  Trash2, 
+  Search, 
+  AlertTriangle, 
+  CheckCircle2,
+  ArrowLeft
+} from 'lucide-react';
+
+export const AdminUsers = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchUsers = async () => {
     setLoading(true);
     setError('');
     try {
-      const [subjectsRes, progressRes] = await Promise.all([
-        subjectService.getSubjects(),
-        progressService.getGlobalProgress().catch(() => ({ data: { subjectProgressMap: {} } }))
-      ]);
-
-      if (subjectsRes.data.success) {
-        setSubjects(subjectsRes.data.subjects);
-      }
-      if (progressRes.data.success) {
-        setProgressMap(progressRes.data.subjectProgressMap || {});
+      const res = await adminService.getUsers();
+      if (res.data.success) {
+        setUsers(res.data.users);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load courses.');
+      setError(err.response?.data?.message || 'Failed to fetch user directory.');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (user) {
+    fetchUsers();
+  }, []);
+
+  const handleDeleteUser = async (userId, userName) => {
+    if (!window.confirm(`Are you sure you want to permanently archive records for ${userName}?`)) {
+      return;
+    }
+
+    try {
+      const res = await adminService.deleteUser(userId);
+      if (res.data.success) {
+        setSuccess(`User ${userName} successfully archived.`);
+        setUsers(users.filter(u => u._id !== userId));
+        setTimeout(() => setSuccess(''), 3000);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete user record.');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  // Filter users based on search input
+  const filteredUsers = users.filter(u => 
+    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.branch?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="min-h-screen bg-[#fbfbfa] pt-32 pb-20 px-6 animate-in fade-in duration-500">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-2 w-2 rounded-full bg-blue-600 animate-pulse"></div>
+              <h1 className="text-4xl font-black tracking-tighter text-[#1a1a1a] italic">
+                User <span className="text-gray-400 font-light not-italic">Directory</span>
+              </h1>
+            </div>
+            <p className="text-gray-500 font-medium italic text-sm tracking-tight">Authenticating & Managing Student Access</p>
+          </div>
+          
+          <Link 
+            to="/admin" 
+            className="flex items-center gap-2 bg-white border border-gray-200 text-[#1a1a1a] px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-sm active:scale-95"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Console
+          </Link>
+        </div>
+
+        {/* Feedback Alerts */}
+        {error && (
+          <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5" /> {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-emerald-50 border border-emerald-100 text-emerald-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5" /> {success}
+          </div>
+        )}
+
+        {/* Search Toolbar */}
+        <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-2xl border border-gray-200 shadow-sm">
+          <div className="relative w-full sm:w-96">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input 
+              type="text"
+              placeholder="Search by name, email, or branch..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-200 text-xs font-semibold focus:outline-none focus:border-blue-500"
+            />
+          </div>
+          <div className="flex items-center gap-2 text-xs font-bold text-gray-400 px-2">
+            <span>Total Records:</span>
+            <span className="bg-[#0a0a0a] text-white px-3 py-1 rounded-full text-[10px] font-black">{filteredUsers.length}</span>
+          </div>
+        </div>
+
+        {/* Table Container */}
+        <div className="bg-white rounded-[2.5rem] border border-gray-200 overflow-hidden shadow-sm">
+          {loading ? (
+            <div className="p-24 text-center space-y-3">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">Loading Directory...</p>
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="p-24 text-center">
+              <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 font-bold italic text-sm">No matching user records found.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#fcfcfc] border-b border-gray-100">
+                    <th className="py-4 px-6 text-[10px] font-extrabold uppercase tracking-[0.15em] text-gray-400">Identity</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold uppercase tracking-[0.15em] text-gray-400">Email Credentials</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold uppercase tracking-[0.15em] text-gray-400">Branch / Sem</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold uppercase tracking-[0.15em] text-gray-400">Year</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold uppercase tracking-[0.15em] text-gray-400">Access Level</th>
+                    <th className="py-4 px-6 text-[10px] font-extrabold uppercase tracking-[0.15em] text-gray-400 text-center">Control</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredUsers.map((u) => (
+                    <tr key={u._id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 bg-gray-100 rounded-xl flex items-center justify-center font-black text-[#1a1a1a] text-xs shadow-inner">
+                            {u.name?.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="font-bold text-sm text-[#1a1a1a]">{u.name}</span>
+                        </div>
+                      </td>
+                      
+                      <td className="py-4 px-6 font-medium text-gray-500 text-xs italic">
+                        {u.email}
+                      </td>
+                      
+                      <td className="py-4 px-6">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="text-[10px] font-black text-blue-600 uppercase tracking-tighter">{u.branch || 'Not Set'}</span>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase">Semester {u.semester || 1}</span>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-6 font-bold text-xs text-gray-600">
+                        Year {u.year || 1}
+                      </td>
+
+                      <td className="py-4 px-6">
+                        {u.role === 'admin' ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 text-purple-600 border border-purple-100 text-[9px] font-black uppercase tracking-wider">
+                            <ShieldCheck className="w-3 h-3" /> Admin Console
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 text-[9px] font-black uppercase tracking-wider">
+                            <GraduationCap className="w-3 h-3" /> Student Access
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-4 px-6 text-center">
+                        <button 
+                          onClick={() => handleDeleteUser(u._id, u.name)}
+                          className="inline-flex items-center gap-1 text-[10px] font-black text-red-400 uppercase tracking-widest hover:text-red-600 transition-all hover:bg-red-50 px-3 py-2 rounded-xl"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Footer info */}
+        <div className="mt-20 flex flex-col md:flex-row justify-between items-center pt-10 border-t border-gray-200 gap-4">
+          <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.5em]">RIT AcadeMIA Terminal Directory</p>
+          <div className="flex gap-6">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest italic">Encrypted Database Link Active</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+========================================
+FILE: D:\Mihran\The-AcadeMIa\client\src\pages\Dashboard.jsx
+========================================
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { subjectService, progressService } from '../services/api';
+import { OnboardingModal } from '../components/OnboardingModal';
+import { 
+  ArrowUpRight, 
+  Settings2,
+  FolderOpen,
+  Layers
+} from 'lucide-react';
+
+export const Dashboard = () => {
+  const { user } = useAuth();
+  
+  const [subjects, setSubjects] = useState([]);
+  const [progressMap, setProgressMap] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // 1. Check Onboarding Status
+  useEffect(() => {
+    if (user && !user.onboardingCompleted) {
+      setShowOnboarding(true);
+    }
+  }, [user]);
+
+  // 2. Fetch Dashboard Data
+  const loadDashboardData = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [subjectsRes, progressRes] = await Promise.all([
+        subjectService.getSubjects(),
+        // Catch progress errors silently so the dashboard still loads if progress is empty
+        progressService.getGlobalProgress().catch(() => ({ data: { subjectProgressMap: {} } }))
+      ]);
+
+      if (subjectsRes.data.success) {
+        setSubjects(subjectsRes.data.subjects);
+      }
+      if (progressRes.data?.success) {
+        setProgressMap(progressRes.data.subjectProgressMap || {});
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load curriculum data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 3. Auto-load data when user session is confirmed
+  useEffect(() => {
+    if (user && user.onboardingCompleted) {
       loadDashboardData();
+    } else {
+      setLoading(false); // Stop loading spinner if we are just waiting for onboarding
     }
   }, [user]);
 
   return (
     <div className="min-h-screen bg-[#fbfbfa] pt-28 pb-20 px-6">
       
-      {/* Onboarding Dialog */}
+      {/* Onboarding Dialog (Forced if incomplete, or triggered manually by Settings) */}
       <OnboardingModal 
         isOpen={showOnboarding} 
         onClose={() => {
           setShowOnboarding(false);
-          loadDashboardData();
+          loadDashboardData(); // Instantly refresh the curriculum when they pick a new semester
         }} 
       />
 
@@ -772,7 +2353,7 @@ export const Dashboard = () => {
               return (
                 <div 
                   key={subject._id}
-                  className="notion-card rounded-[2rem] p-8 flex flex-col justify-between group relative overflow-hidden"
+                  className="bg-white rounded-[2rem] border border-gray-100 p-8 flex flex-col justify-between group relative overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
                 >
                   <div>
                     {/* Header: Course Code & Units */}
@@ -812,20 +2393,13 @@ export const Dashboard = () => {
                     </div>
 
                     {/* Action Links */}
-                    <div className="grid grid-cols-2 gap-3 pt-2">
+                    <div className="pt-2">
                       <Link
                         to={`/subjects/${subject._id}`}
-                        className="text-center py-2.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-xs font-bold text-gray-800 transition-all border border-gray-200 flex items-center justify-center gap-1"
+                        className="w-full py-3 rounded-xl bg-gray-50 hover:bg-[#0a0a0a] hover:text-white text-xs font-bold text-gray-800 transition-all border border-gray-200 flex items-center justify-center gap-1.5 shadow-sm"
                       >
                         <span>Open Vault</span>
                         <ArrowUpRight className="w-3.5 h-3.5" />
-                      </Link>
-
-                      <Link
-                        to={`/progress/${subject._id}`}
-                        className="text-center py-2.5 rounded-xl bg-[#0a0a0a] hover:bg-blue-600 text-xs font-bold text-white transition-all shadow-sm"
-                      >
-                        Checklist
                       </Link>
                     </div>
                   </div>
@@ -840,7 +2414,350 @@ export const Dashboard = () => {
     </div>
   );
 };
+========================================
+FILE: D:\Mihran\The-AcadeMIa\client\src\pages\EditSubject.jsx
+========================================
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { adminService, subjectService } from '../services/api';
+import { Plus, Trash2, ArrowLeft, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
 
+export const EditSubject = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const [formData, setFormData] = useState({
+    name: '',
+    branch: '',
+    semester: 1,
+    units: []
+  });
+
+  useEffect(() => {
+    const fetchSubject = async () => {
+      try {
+        const res = await subjectService.getSubjectById(id);
+        if (res.data.success) {
+          const sub = res.data.subject;
+          setFormData({
+            name: sub.name || '',
+            branch: sub.branch || '',
+            semester: sub.semester || 1,
+            units: sub.units ? sub.units.map(u => ({
+              unitNumber: u.unitNumber || 1,
+              unitTitle: u.unitTitle || '',
+              topics: u.topics ? u.topics.map(t => t.title).join(', ') : '',
+              notes: u.notes?.length ? u.notes : [{ title: '', link: '' }],
+              books: u.books?.length ? u.books : [{ title: '', link: '' }],
+              pyqs: u.pyqs?.length ? u.pyqs : [{ title: '', link: '' }],
+              youtubeLinks: u.youtubeLinks?.length ? u.youtubeLinks : [{ title: '', link: '' }]
+            })) : []
+          });
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to load subject for editing.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSubject();
+  }, [id]);
+
+  const handleBaseChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleUnitChange = (index, field, value) => {
+    const updatedUnits = [...formData.units];
+    updatedUnits[index][field] = value;
+    setFormData(prev => ({ ...prev, units: updatedUnits }));
+  };
+
+  const handleResourceChange = (unitIndex, resourceType, resIndex, field, value) => {
+    const updatedUnits = [...formData.units];
+    updatedUnits[unitIndex][resourceType][resIndex][field] = value;
+    setFormData(prev => ({ ...prev, units: updatedUnits }));
+  };
+
+  const addUnit = () => {
+    setFormData(prev => ({
+      ...prev,
+      units: [
+        ...prev.units,
+        {
+          unitNumber: prev.units.length + 1,
+          unitTitle: '',
+          topics: '',
+          notes: [{ title: '', link: '' }],
+          books: [{ title: '', link: '' }],
+          pyqs: [{ title: '', link: '' }],
+          youtubeLinks: [{ title: '', link: '' }]
+        }
+      ]
+    }));
+  };
+
+  const removeUnit = (index) => {
+    const updatedUnits = formData.units.filter((_, i) => i !== index)
+      .map((u, i) => ({ ...u, unitNumber: i + 1 }));
+    setFormData(prev => ({ ...prev, units: updatedUnits }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const formattedPayload = {
+        ...formData,
+        units: formData.units.map(u => ({
+          ...u,
+          topics: typeof u.topics === 'string' 
+            ? u.topics.split(',').map(t => ({ title: t.trim() })).filter(t => t.title)
+            : u.topics
+        }))
+      };
+
+      const res = await adminService.updateSubject(id, formattedPayload);
+      if (res.data.success) {
+        setSuccess('Subject updated successfully!');
+        setTimeout(() => navigate('/admin'), 1500);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update subject.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fbfbfa] pt-40 text-center">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+        <p className="text-gray-400 font-bold text-xs uppercase tracking-widest">Loading Module Editor...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#fbfbfa] pt-32 pb-20 px-6 animate-in fade-in duration-500">
+      <div className="max-w-6xl mx-auto">
+        
+        <div className="mb-12 border-b border-gray-200 pb-10">
+          <Link to="/admin" className="text-xs font-bold text-gray-400 hover:text-black uppercase tracking-widest flex items-center gap-1.5 mb-3">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Console
+          </Link>
+          <h1 className="text-4xl font-black tracking-tighter text-[#1a1a1a] italic">
+            Edit <span className="text-blue-600 not-italic">Subject</span>
+          </h1>
+          <p className="text-gray-500 mt-2 font-medium">Modifying resources for: <span className="text-black font-bold underline underline-offset-4">{formData.name}</span></p>
+        </div>
+
+        {error && (
+          <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5" /> {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-emerald-50 border border-emerald-100 text-emerald-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5" /> {success}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-12">
+          
+          {/* Base Configuration */}
+          <div className="bg-white border border-gray-200 rounded-[2.5rem] p-8 md:p-10 shadow-sm">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 mb-8">Base Configuration</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Subject Name</label>
+                <input 
+                  type="text" 
+                  name="name" 
+                  value={formData.name} 
+                  onChange={handleBaseChange}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-blue-500" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Branch</label>
+                <input 
+                  type="text" 
+                  name="branch" 
+                  value={formData.branch} 
+                  onChange={handleBaseChange}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-blue-500 uppercase" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Semester</label>
+                <input 
+                  type="number" 
+                  name="semester" 
+                  value={formData.semester} 
+                  onChange={handleBaseChange}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-blue-500" 
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">Resource Architecture</h2>
+            <div className="h-[1px] flex-grow bg-gray-200"></div>
+          </div>
+
+          {/* Units List */}
+          <div className="space-y-10">
+            {formData.units.map((unit, uIdx) => (
+              <div key={uIdx} className="bg-white border border-gray-200 border-l-4 border-l-blue-500 rounded-[2.5rem] p-8 md:p-12 shadow-sm space-y-10">
+                <div className="flex justify-between items-center border-b border-gray-100 pb-6">
+                  <h3 className="text-2xl font-black italic tracking-tighter">Unit 0{unit.unitNumber}</h3>
+                  <div className="flex items-center gap-4">
+                    <button 
+                      type="button" 
+                      onClick={() => removeUnit(uIdx)}
+                      className="text-[10px] font-black text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors py-2 px-4 border border-gray-100 rounded-xl hover:bg-red-50 flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" /> Remove Unit
+                    </button>
+                    <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3" /> Active Module
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-gray-500">Module Title</label>
+                    <input 
+                      value={unit.unitTitle} 
+                      onChange={(e) => handleUnitChange(uIdx, 'unitTitle', e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-blue-500" 
+                      placeholder="Unit Title" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-gray-500">Topic Index</label>
+                    <input 
+                      value={unit.topics} 
+                      onChange={(e) => handleUnitChange(uIdx, 'topics', e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-medium focus:outline-none focus:border-blue-500" 
+                      placeholder="Topic 1, Topic 2..." 
+                    />
+                  </div>
+                </div>
+
+                {/* Resource Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Notes */}
+                  <div className="p-6 bg-blue-50/30 rounded-3xl border border-blue-100/50 space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-blue-600">Study Notes</p>
+                    <input 
+                      value={unit.notes[0]?.title || ''}
+                      onChange={(e) => handleResourceChange(uIdx, 'notes', 0, 'title', e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs font-bold bg-white" 
+                      placeholder="Title" 
+                    />
+                    <input 
+                      value={unit.notes[0]?.link || ''}
+                      onChange={(e) => handleResourceChange(uIdx, 'notes', 0, 'link', e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white text-blue-600" 
+                      placeholder="URL" 
+                    />
+                  </div>
+
+                  {/* Books */}
+                  <div className="p-6 bg-purple-50/30 rounded-3xl border border-purple-100/50 space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-purple-600">Reference Books</p>
+                    <input 
+                      value={unit.books[0]?.title || ''}
+                      onChange={(e) => handleResourceChange(uIdx, 'books', 0, 'title', e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs font-bold bg-white" 
+                      placeholder="Title" 
+                    />
+                    <input 
+                      value={unit.books[0]?.link || ''}
+                      onChange={(e) => handleResourceChange(uIdx, 'books', 0, 'link', e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white text-purple-600" 
+                      placeholder="URL" 
+                    />
+                  </div>
+
+                  {/* PYQs */}
+                  <div className="p-6 bg-emerald-50/30 rounded-3xl border border-emerald-100/50 space-y-3">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">University PYQs</p>
+                    <input 
+                      value={unit.pyqs[0]?.title || ''}
+                      onChange={(e) => handleResourceChange(uIdx, 'pyqs', 0, 'title', e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs font-bold bg-white" 
+                      placeholder="Title" 
+                    />
+                    <input 
+                      value={unit.pyqs[0]?.link || ''}
+                      onChange={(e) => handleResourceChange(uIdx, 'pyqs', 0, 'link', e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-xs bg-white text-emerald-600" 
+                      placeholder="URL" 
+                    />
+                  </div>
+
+                  {/* YouTube */}
+                  <div className="p-6 bg-gray-900 rounded-3xl space-y-3 text-white">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-red-400">Video Tutorials</p>
+                    <input 
+                      value={unit.youtubeLinks[0]?.title || ''}
+                      onChange={(e) => handleResourceChange(uIdx, 'youtubeLinks', 0, 'title', e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-white/10 text-xs font-bold bg-white/5 text-white" 
+                      placeholder="Title" 
+                    />
+                    <input 
+                      value={unit.youtubeLinks[0]?.link || ''}
+                      onChange={(e) => handleResourceChange(uIdx, 'youtubeLinks', 0, 'link', e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg border border-white/10 text-xs bg-white/5 text-blue-400" 
+                      placeholder="URL" 
+                    />
+                  </div>
+
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-10">
+            <button 
+              type="button" 
+              onClick={addUnit}
+              className="flex items-center justify-center gap-2 bg-white border-2 border-dashed border-gray-300 text-gray-600 px-8 py-4 rounded-2xl font-bold hover:border-blue-500 hover:text-blue-500 transition-all w-full md:w-auto"
+            >
+              <Plus className="w-4 h-4" /> Append New Unit
+            </button>
+
+            <button 
+              type="submit" 
+              disabled={submitting}
+              className="bg-[#0a0a0a] text-white px-12 py-5 rounded-[2rem] font-black uppercase tracking-[0.3em] text-xs hover:bg-blue-600 transition-all shadow-2xl shadow-gray-300 active:scale-95 w-full md:w-auto"
+            >
+              {submitting ? 'Updating Vault...' : 'Commit Changes to Vault'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 ========================================
 FILE: D:\Mihran\The-AcadeMIa\client\src\pages\Home.jsx
 ========================================
@@ -1129,11 +3046,590 @@ export const Home = () => {
 };
 
 ========================================
+FILE: D:\Mihran\The-AcadeMIa\client\src\pages\Profile.jsx
+========================================
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
+// import { authService } from '../services/api'; // Uncomment and adjust based on your api.js exports
+import {
+  ShieldCheck,
+  AlertTriangle,
+  CheckCircle2,
+  User,
+  Mail,
+  GraduationCap,
+  Target,
+  Sparkles,
+} from "lucide-react";
+
+export const Profile = () => {
+  const { user, refreshUser } = useAuth();
+
+  // UI State
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // Form State
+  const [formData, setFormData] = useState({
+    name: "",
+    branch: "",
+    year: 1,
+    semester: 1,
+    targetExam: "JEE_MAINS",
+    targetYear: 2027,
+  });
+
+  // Sync user data to form state when component mounts or user updates
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        branch: user.branch || "",
+        year: user.year || 1,
+        semester: user.semester || 1,
+        targetExam: user.targetExam || "JEE_MAINS",
+        targetYear: user.targetYear || 2027,
+      });
+    }
+  }, [user]);
+
+  // Dynamic Semester Logic
+  const handleYearChange = (e) => {
+    const newYear = parseInt(e.target.value);
+    setFormData((prev) => ({
+      ...prev,
+      year: newYear,
+      semester: newYear * 2 - 1, // Auto-select the first semester of the newly selected year
+    }));
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      // NOTE: Replace this with your actual API call from api.js
+      // await authService.updateProfile(formData);
+
+      await refreshUser(); // Update global context
+      setSuccess("Academic profile updated successfully!");
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(""), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update profile.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!user) return null; // Prevent rendering before user context loads
+
+  const isUniversity = user.track === "UNIVERSITY";
+
+  return (
+    <div className="min-h-screen bg-[#fbfbfa] pt-32 pb-20 px-6 animate-in fade-in duration-500">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-10 flex flex-col md:flex-row items-start md:items-end justify-between border-b border-gray-200 pb-8 gap-4">
+          <div>
+            <h1 className="text-4xl font-black tracking-tighter text-[#1a1a1a]">
+              Account Settings
+            </h1>
+            <p className="text-gray-500 mt-2 font-medium">
+              Manage your academic identity and personal information.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl text-xs font-bold text-gray-500 uppercase tracking-widest shadow-sm">
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            Student ID:{" "}
+            {user._id?.toString().slice(-6).toUpperCase() || "XXXXXX"}
+          </div>
+        </div>
+
+        {/* Alerts */}
+        {error && (
+          <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5" /> {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-emerald-50 border border-emerald-100 text-emerald-600 px-5 py-4 rounded-2xl mb-8 text-sm font-bold flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5" /> {success}
+          </div>
+        )}
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {/* Left Column: Visual Profile Card */}
+          <div className="md:col-span-1">
+            <div className="bg-white border border-gray-200 rounded-[2rem] p-8 md:sticky md:top-28 shadow-sm">
+              <div className="relative w-28 h-28 mx-auto mb-6">
+                <div className="w-full h-full rounded-3xl bg-gradient-to-br from-gray-900 to-black flex items-center justify-center text-4xl font-black text-white italic shadow-xl">
+                  {user.name?.charAt(0).toUpperCase()}
+                </div>
+                <div className="absolute -bottom-2 -right-2 bg-emerald-400 w-8 h-8 border-4 border-white rounded-full shadow-sm flex items-center justify-center">
+                  <Sparkles className="w-3 h-3 text-white" />
+                </div>
+              </div>
+
+              <div className="text-center mb-8">
+                <h2 className="text-xl font-black text-[#1a1a1a] tracking-tight">
+                  {user.name}
+                </h2>
+                <p className="text-gray-400 text-xs font-bold uppercase tracking-wider mt-1">
+                  {user.email}
+                </p>
+              </div>
+
+              <div className="space-y-4 pt-6 border-t border-gray-100">
+                {isUniversity ? (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Branch
+                      </span>
+                      <span className="text-xs font-bold text-black uppercase">
+                        {user.branch}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Year
+                      </span>
+                      <span className="text-xs font-bold text-black">
+                        {user.year}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Semester
+                      </span>
+                      <span className="text-xs font-bold text-black">
+                        {user.semester}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Target
+                      </span>
+                      <span className="text-xs font-bold text-black uppercase">
+                        {user.targetExam}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                        Target Year
+                      </span>
+                      <span className="text-xs font-bold text-black">
+                        {user.targetYear}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <p className="text-[9px] text-center text-blue-500 uppercase tracking-[0.2em] font-black flex items-center justify-center gap-1">
+                  <ShieldCheck className="w-3 h-3" /> System Verified
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Edit Form */}
+          <div className="md:col-span-2">
+            <div className="bg-white border border-gray-200 rounded-[2rem] p-8 md:p-10 shadow-sm">
+              <h3 className="text-lg font-black mb-8 flex items-center gap-2 tracking-tight">
+                <span className="text-blue-500">âœ¦</span> Edit Information
+              </h3>
+
+              <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Personal Info */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <User className="w-3 h-3" /> Full Name
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Mail className="w-3 h-3" /> Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={user.email}
+                      readOnly
+                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 bg-gray-50 cursor-not-allowed focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="h-[1px] bg-gray-100 w-full"></div>
+
+                {/* Academic Info */}
+                {isUniversity ? (
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <GraduationCap className="w-3 h-3" /> Branch
+                      </label>
+                      <input
+                        type="text"
+                        name="branch"
+                        value={formData.branch}
+                        onChange={handleInputChange}
+                        required
+                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold uppercase text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">
+                        Year
+                      </label>
+                      <select
+                        name="year"
+                        value={formData.year}
+                        onChange={handleYearChange}
+                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                      >
+                        {[1, 2, 3, 4].map((y) => (
+                          <option key={y} value={y}>
+                            Year {y}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">
+                        Semester
+                      </label>
+                      <select
+                        name="semester"
+                        value={formData.semester}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                      >
+                        <option value={formData.year * 2 - 1}>
+                          Semester {formData.year * 2 - 1}
+                        </option>
+                        <option value={formData.year * 2}>
+                          Semester {formData.year * 2}
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Target className="w-3 h-3" /> Target Exam
+                      </label>
+                      <select
+                        name="targetExam"
+                        value={formData.targetExam}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                      >
+                        <option value="JEE_MAINS">JEE Mains</option>
+                        <option value="JEE_ADVANCED">JEE Advanced</option>
+                        <option value="NEET">NEET (UG)</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Target className="w-3 h-3" /> Target Year
+                      </label>
+                      <select
+                        name="targetYear"
+                        value={formData.targetYear}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white text-gray-800 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                      >
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-6">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[#0a0a0a] text-white py-4 rounded-xl text-xs uppercase tracking-widest font-black hover:bg-blue-600 transition-all shadow-xl shadow-gray-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Saving Changes..." : "Save Profile Changes"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+========================================
+FILE: D:\Mihran\The-AcadeMIa\client\src\pages\SubjectDetail.jsx
+========================================
+import React, { useState, useEffect } from "react";
+import { useParams, Link } from "react-router-dom";
+import API from "../services/api";
+import {
+  CheckCircle2,
+  Circle,
+  BookOpen,
+  FileText,
+  Video,
+  ArrowLeft,
+  Award,
+  ExternalLink
+} from "lucide-react";
+
+export default function SubjectDetail() {
+  const { id } = useParams();
+  const [subject, setSubject] = useState(null);
+  const [completedTopics, setCompletedTopics] = useState(new Set());
+  const [progress, setProgress] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchSubjectAndProgress();
+  }, [id]);
+
+  const fetchSubjectAndProgress = async () => {
+    try {
+      const [subRes, progRes] = await Promise.all([
+        API.get(`/subjects/${id}`),
+        API.get(`/progress/subject/${id}`),
+      ]);
+
+      if (subRes.data.success) setSubject(subRes.data.subject);
+      if (progRes.data.success) {
+        setCompletedTopics(new Set(progRes.data.completedTopicIds));
+        setProgress(progRes.data.subjectProgress);
+      }
+    } catch (err) {
+      console.error("Error loading subject details:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTopicToggle = async (topicId) => {
+    const updated = new Set(completedTopics);
+    if (updated.has(topicId)) {
+      updated.delete(topicId);
+    } else {
+      updated.add(topicId);
+    }
+    setCompletedTopics(updated);
+
+    try {
+      const res = await API.post("/progress/toggle", {
+        subjectId: id,
+        topicId,
+      });
+      if (res.data.success) {
+        const progRes = await API.get(`/progress/subject/${id}`);
+        if (progRes.data.success) {
+          setProgress(progRes.data.subjectProgress);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to toggle topic:", err);
+      fetchSubjectAndProgress();
+    }
+  };
+
+  if (loading)
+    return (
+      <div className="p-8 text-center text-gray-500 font-bold">
+        Loading Vault...
+      </div>
+    );
+  if (!subject)
+    return (
+      <div className="p-8 text-center text-red-500 font-bold">
+        Subject not found.
+      </div>
+    );
+
+  return (
+    <div className="max-w-6xl mx-auto p-6 pt-28 space-y-8 min-h-screen bg-[#fbfbfa]">
+      <Link
+        to="/dashboard"
+        className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-black transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+      </Link>
+
+      {/* Header Banner */}
+      <div className="bg-[#0a0a0a] text-white rounded-[2rem] p-8 md:p-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-2xl">
+        <div>
+          <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-black uppercase tracking-wider">
+            {subject.courseCode || "CORE MODULE"}
+          </span>
+          <h1 className="text-3xl md:text-4xl font-black mt-4 tracking-tight">{subject.name}</h1>
+          <p className="text-gray-400 text-sm mt-2 font-medium">
+            {subject.tenant?.shortCode ? `${subject.tenant.shortCode} â€¢ ` : ""}
+            {subject.units?.length || 0} Units Total
+          </p>
+        </div>
+
+        <div className="bg-white/5 p-6 rounded-3xl border border-white/10 min-w-[220px] text-center backdrop-blur-md">
+          <div className="flex items-center justify-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+            <Award className="w-4 h-4 text-blue-400" /> Vault Mastery
+          </div>
+          <div className="text-5xl font-black text-white">{progress}%</div>
+          <div className="w-full bg-gray-800 h-2.5 rounded-full mt-4 overflow-hidden">
+            <div
+              className="bg-blue-500 h-full transition-all duration-700 rounded-full"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Units & Topics List */}
+      <div className="space-y-6 pb-20">
+        {subject.units?.map((unit, uIdx) => (
+          <div
+            key={unit._id || uIdx}
+            className="bg-white rounded-3xl border border-gray-200 p-6 md:p-8 shadow-sm"
+          >
+            <h2 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-4">
+              <span className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 font-black text-sm flex items-center justify-center shrink-0">
+                U{uIdx + 1}
+              </span>
+              {unit.name}
+            </h2>
+
+            <div className="space-y-4">
+              {unit.topics?.map((topic) => {
+                const isDone = completedTopics.has(topic._id.toString());
+                
+                return (
+                  <div
+                    key={topic._id}
+                    onClick={(e) => {
+                      // STRICT EVENT CONTROL: Ignore clicks that originate from an anchor tag or its children
+                      if (e.target.closest('a')) return;
+                      handleTopicToggle(topic._id.toString());
+                    }}
+                    className={`p-4 md:p-5 rounded-2xl border transition-all cursor-pointer ${
+                      isDone
+                        ? "bg-emerald-50/30 border-emerald-200"
+                        : "bg-gray-50/50 border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    {/* Topic Header & Toggle */}
+                    {/* Removed inline onClick from this wrapper to rely on the parent div */}
+                    <div className="flex items-start md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 flex-1">
+                        {isDone ? (
+                          <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0" />
+                        ) : (
+                          <Circle className="w-6 h-6 text-gray-300 shrink-0" />
+                        )}
+                        <span
+                          className={`text-base font-bold ${
+                            isDone ? "line-through text-gray-400" : "text-gray-900"
+                          }`}
+                        >
+                          {topic.name}
+                        </span>
+                      </div>
+
+                      {topic.importance && (
+                        <span
+                          className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-lg shrink-0 ${
+                            topic.importance === "HIGH"
+                              ? "bg-red-50 text-red-600 border border-red-100"
+                              : topic.importance === "MEDIUM"
+                              ? "bg-amber-50 text-amber-600 border border-amber-100"
+                              : "bg-gray-100 text-gray-500 border border-gray-200"
+                          }`}
+                        >
+                          {topic.importance}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Topic Resources (PDFs, Videos, PYQs) */}
+                    {topic.resources && topic.resources.length > 0 && (
+                      <div className="mt-4 ml-9 flex flex-wrap gap-2">
+                        {topic.resources.map((res, rIdx) => {
+                          
+                          // Determine icon and color based on resource type
+                          let Icon = ExternalLink;
+                          let colorClass = "text-gray-600 hover:text-gray-900 border-gray-200";
+                          
+                          if (res.type === 'PDF') {
+                            Icon = FileText;
+                            colorClass = "text-blue-600 hover:text-blue-700 bg-blue-50/50 border-blue-100 hover:border-blue-300";
+                          } else if (res.type === 'VIDEO') {
+                            Icon = Video;
+                            colorClass = "text-red-600 hover:text-red-700 bg-red-50/50 border-red-100 hover:border-red-300";
+                          } else if (res.type === 'PYQ') {
+                            Icon = BookOpen;
+                            colorClass = "text-amber-600 hover:text-amber-700 bg-amber-50/50 border-amber-100 hover:border-amber-300";
+                          }
+
+                          return (
+                            <a
+                              key={rIdx}
+                              href={res.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()} // Secondary protection mechanism
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-sm ${colorClass}`}
+                            >
+                              <Icon className="w-3.5 h-3.5" />
+                              {res.title}
+                            </a>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+========================================
 FILE: D:\Mihran\The-AcadeMIa\client\src\services\api.js
 ========================================
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// âœ… Now correctly targets the exact variable name in your new .env file
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -1159,6 +3655,7 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       if (window.location.pathname !== '/' && !window.location.pathname.startsWith('/auth')) {
         localStorage.removeItem('academia_token');
+        window.location.href = '/'; // âœ… Added forced redirect to login page on session expiry
       }
     }
     return Promise.reject(error);
@@ -1170,7 +3667,8 @@ export const authService = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
   getMe: () => api.get('/auth/me'),
-  logout: () => api.post('/auth/logout')
+  logout: () => api.post('/auth/logout'),
+  updateProfile: (data) => api.put('/auth/profile', data) // âœ… Added this line for Profile.jsx
 };
 
 // Tenant Endpoints
@@ -1205,7 +3703,6 @@ export const adminService = {
 };
 
 export default api;
-
 ========================================
 FILE: D:\Mihran\The-AcadeMIa\client\src\App.css
 ========================================
@@ -1397,129 +3894,123 @@ FILE: D:\Mihran\The-AcadeMIa\client\src\App.css
 ========================================
 FILE: D:\Mihran\The-AcadeMIa\client\src\App.jsx
 ========================================
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Context
+import { AuthProvider, useAuth } from './context/AuthContext';
+
+// Components & Layout
+import { Navbar } from './components/Navbar';
+import { Footer } from './components/Footer';
+
+// Pages
+import { Home } from './pages/Home';
+import { Dashboard } from './pages/Dashboard';
+import { SubjectCatalog } from './pages/SubjectCatalog';
+import SubjectDetail from './pages/SubjectDetail';
+import { Profile } from './pages/Profile';
+import { Progress } from './pages/Progress';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminUsers } from './pages/AdminUsers';
+import { AddSubject } from './pages/AddSubject';
+import { EditSubject } from './pages/EditSubject';
+
+// âœ… OAuth Callback Handler
+const OAuthCallback = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = searchParams.get('token');
+    
+    if (token) {
+      localStorage.setItem('academia_token', token);
+      window.location.href = '/dashboard';
+    } else {
+      navigate('/', { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="min-h-screen flex items-center justify-center bg-[#fbfbfa]">
+      <div className="flex flex-col items-center gap-3">
+        <span className="w-8 h-8 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin"></span>
+        <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
+          Securing Vault Access...
+        </span>
+      </div>
+    </div>
+  );
+};
 
-      <div className="ticks"></div>
+// Route Protection Wrapper
+const ProtectedRoute = ({ children, requireAdmin = false }) => {
+  const { user, isAuthenticated, loading } = useAuth();
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fbfbfa]">
+        <div className="flex flex-col items-center gap-3">
+          <span className="w-8 h-8 rounded-full border-4 border-gray-200 border-t-blue-600 animate-spin"></span>
+          <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
+            Verifying Vault Session...
+          </span>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      </div>
+    );
+  }
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  if (!isAuthenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requireAdmin && user?.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+};
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <div className="flex flex-col min-h-screen bg-[#fbfbfa]">
+          {/* Smart Navbar rendered globally */}
+          <Navbar />
+
+          <main className="flex-grow">
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Home />} />
+              <Route path="/auth/callback" element={<OAuthCallback />} />
+
+              {/* Student Protected Routes */}
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/subjects" element={<ProtectedRoute><SubjectCatalog /></ProtectedRoute>} />
+              <Route path="/subjects/:id" element={<ProtectedRoute><SubjectDetail /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/progress" element={<ProtectedRoute><Progress /></ProtectedRoute>} />
+
+              {/* Admin Protected Routes */}
+              <Route path="/admin" element={<ProtectedRoute requireAdmin={true}><AdminDashboard /></ProtectedRoute>} />
+              <Route path="/admin/users" element={<ProtectedRoute requireAdmin={true}><AdminUsers /></ProtectedRoute>} />
+              <Route path="/subjects/add" element={<ProtectedRoute requireAdmin={true}><AddSubject /></ProtectedRoute>} />
+              <Route path="/subjects/edit/:id" element={<ProtectedRoute requireAdmin={true}><EditSubject /></ProtectedRoute>} />
+
+              {/* Catch-all redirect for unknown URLs */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </main>
+
+          {/* Consolidated Footer rendered globally */}
+          <Footer />
+        </div>
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }
-
-export default App
-
 ========================================
 FILE: D:\Mihran\The-AcadeMIa\client\src\index.css
 ========================================
@@ -5059,46 +7550,46 @@ module.exports.getGlobalProgress = async (req, res) => {
             if (user.semester) query.semester = user.semester;
         }
 
-        const subjects = await subjectModel.find(query);
-        const subjectProgressMap = {};
+        // 1. Fetch all matching subjects
+        const subjects = await subjectModel.find(query).lean();
+        const subjectIds = subjects.map(s => s._id);
 
+        // 2. Single DB call for all user completed records across all enrolled subjects
+        const completedRecords = await progressModel.find({
+            user: userId,
+            subject: { $in: subjectIds },
+            completed: true
+        }).lean();
+
+        const completedSet = new Set(completedRecords.map(r => r.topicId.toString()));
+
+        const subjectProgressMap = {};
         let overallTotalTopics = 0;
         let overallCompletedTopics = 0;
 
-        for (const subject of subjects) {
-            const completedRecords = await progressModel.find({
-                user: userId,
-                subject: subject._id,
-                completed: true
-            });
-
-            const completedMap = {};
-            completedRecords.forEach(r => {
-                completedMap[r.topicId.toString()] = true;
-            });
-
+        subjects.forEach(subject => {
             let subTotal = 0;
             let subCompleted = 0;
 
-            subject.units.forEach(unit => {
-                unit.topics.forEach(topic => {
-                    subTotal++;
-                    overallTotalTopics++;
-                    if (completedMap[topic._id.toString()]) {
-                        subCompleted++;
-                        overallCompletedTopics++;
+            if (subject.units) {
+                subject.units.forEach(unit => {
+                    if (unit.topics) {
+                        unit.topics.forEach(topic => {
+                            subTotal++;
+                            overallTotalTopics++;
+                            if (completedSet.has(topic._id.toString())) {
+                                subCompleted++;
+                                overallCompletedTopics++;
+                            }
+                        });
                     }
                 });
-            });
+            }
 
-            const pct = subTotal === 0 ? 0 : Math.round((subCompleted / subTotal) * 100);
-            subjectProgressMap[subject._id.toString()] = pct;
-        }
+            subjectProgressMap[subject._id.toString()] = subTotal === 0 ? 0 : Math.round((subCompleted / subTotal) * 100);
+        });
 
-        // Dynamically compute the TRUE average readiness across all enrolled subjects
-        const averageReadiness = overallTotalTopics === 0
-            ? 0
-            : Math.round((overallCompletedTopics / overallTotalTopics) * 100);
+        const averageReadiness = overallTotalTopics === 0 ? 0 : Math.round((overallCompletedTopics / overallTotalTopics) * 100);
 
         return res.status(200).json({
             success: true,
@@ -5349,648 +7840,6 @@ module.exports.completeOnboarding = async (req, res) => {
 };
 
 ========================================
-FILE: D:\Mihran\The-AcadeMIa\server\controllers\adminController.js
-========================================
-const userModel = require("../models/user-model");
-const subjectModel = require("../models/subject-model");
-
-// Show admin dashboard
-module.exports.showAdminDashboard = async (req, res) => {
-    try {
-        const users = await userModel.find().select("-password");
-        const subjects = await subjectModel.find();
-        res.render("admin-dashboard", { users, subjects });
-    } catch (err) {
-        res.send(err.message);
-    }
-};
-
-// View all users
-module.exports.viewUsers = async (req, res) => {
-    try {
-        const users = await userModel.find().select("-password");
-        res.render("users", { users });
-    } catch (err) {
-        res.send(err.message);
-    }
-};
-
-// Delete user
-module.exports.deleteUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        
-        // Safety: Don't let an admin delete themselves by accident
-        if (id === req.user._id.toString()) {
-            req.flash("error", "Security Alert: You cannot delete your own account.");
-            return res.redirect("/admin/users");
-        }
-
-        await userModel.findByIdAndDelete(id);
-        
-        req.flash("success", "User record purged successfully.");
-        // Ensure this redirect matches the route that shows users
-        res.redirect("/admin/users"); 
-    } catch (err) {
-        req.flash("error", "Database Error: " + err.message);
-        res.redirect("/admin/users");
-    }
-};
-
-========================================
-FILE: D:\Mihran\The-AcadeMIa\server\controllers\authController.js
-========================================
-const userModel = require("../models/user-model");
-const bcrypt = require("bcrypt");
-const { generateToken } = require("../utils/generateToken");
-
-// Register
-module.exports.registerUser = async (req, res) => {
-    try {
-        const { name, branch, year, semester, email, password, confirmPassword } = req.body;
-
-        // --- DOMAIN RESTRICTION LOGIC ---
-        const allowedDomain = "ritroorkee.com";
-        const emailDomain = email.split('@')[1];
-
-        if (emailDomain !== allowedDomain) {
-            req.flash("error", "Access Restricted: Please use your @ritroorkee.com institutional email.");
-            return req.session.save(() => res.redirect("/#auth"));
-        }
-
-        // 1. Password Match Validation
-        if (password !== confirmPassword) {
-            req.flash("error", "Passwords do not match");
-            return req.session.save(() => res.redirect("/#auth"));
-        }
-
-        // 2. Existing User Validation
-        let existingUser = await userModel.findOne({ email });
-        if (existingUser) {
-            req.flash("error", "You already have an account, please login.");
-            return req.session.save(() => res.redirect("/#auth"));
-        }
-
-        // 3. Hash Password
-        const salt = await bcrypt.genSalt(10);
-        const hash = await bcrypt.hash(password, salt);
-
-        // 4. Create User
-        const user = await userModel.create({
-            name,
-            branch,
-            year,
-            semester,
-            email,
-            password: hash
-        });
-
-        // 5. Generate Token & Success Message
-        const token = generateToken(user);
-        res.cookie("token", token);
-        
-        req.flash("success", "Registration successful! Welcome to AcadeMIA.");
-        return req.session.save(() => res.redirect("/dashboard"));
-
-    } catch (err) {
-        req.flash("error", err.message);
-        return req.session.save(() => res.redirect("/#auth"));
-    }
-};
-
-// Login
-module.exports.loginUser = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        const user = await userModel.findOne({ email });
-
-        // 1. User Existence Check
-        if (!user) {
-            req.flash("error", "No account found with this email.");
-            return req.session.save(() => res.redirect("/#auth"));
-        }
-
-        // 2. Password Validation (Only if user has a password - handles Google users trying to log in manually)
-        if (!user.password) {
-            req.flash("error", "This account was created with Google. Please use 'Continue with Google'.");
-            return req.session.save(() => res.redirect("/#auth"));
-        }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            req.flash("error", "Invalid email or password.");
-            return req.session.save(() => res.redirect("/#auth"));
-        }
-
-        // 3. Success Logic
-        let token = generateToken(user);
-        res.cookie("token", token);
-
-        if (user.role === "admin") {
-            return res.redirect("/admin");
-        } else {
-            return res.redirect("/dashboard");
-        }
-
-    } catch (err) {
-        req.flash("error", "Internal Server Error. Please try again.");
-        return req.session.save(() => res.redirect("/#auth"));
-    }
-};
-
-// Logout
-module.exports.logoutUser = (req, res) => {
-    res.clearCookie("token");
-    req.flash("success", "Logged out successfully.");
-    req.session.save(() => res.redirect("/"));
-};
-========================================
-FILE: D:\Mihran\The-AcadeMIa\server\controllers\progressController.js
-========================================
-const progressModel = require("../models/progress-model");
-const subjectModel = require("../models/subject-model");
-
-
-// ===============================
-// 1ï¸âƒ£ Show Progress Tracker Page
-// ===============================
-module.exports.showProgress = async (req, res) => {
-
-    try {
-
-        const userId = req.user._id;
-        const subjectId = req.params.subjectId;
-
-        const subject = await subjectModel.findById(subjectId);
-
-        if (!subject) {
-            req.flash("error", "Subject not found");
-            return res.redirect("/subjects");
-        }
-
-        const progress = await progressModel.find({
-            user: userId,
-            subject: subjectId,
-            completed: true
-        });
-
-        // -----------------------
-        // Completed Topics Map
-        // -----------------------
-
-        const completedMap = {};
-
-        progress.forEach(p => {
-            completedMap[`${p.unitIndex}-${p.topicIndex}`] = true;
-        });
-
-
-        // -----------------------
-        // Subject Progress
-        // -----------------------
-
-        let totalTopics = 0;
-        let completedTopics = 0;
-
-        // -----------------------
-        // Unit Progress Array
-        // -----------------------
-
-        const unitProgress = [];
-
-        subject.units.forEach((unit, uIndex) => {
-
-            let unitTotal = 0;
-            let unitCompleted = 0;
-
-            unit.topics.forEach((topic, tIndex) => {
-
-                totalTopics++;
-                unitTotal++;
-
-                if (completedMap[`${uIndex}-${tIndex}`]) {
-                    completedTopics++;
-                    unitCompleted++;
-                }
-
-            });
-
-            const progressPercent = unitTotal === 0
-                ? 0
-                : Math.round((unitCompleted / unitTotal) * 100);
-
-            unitProgress.push(progressPercent);
-
-        });
-
-
-        const subjectProgress = totalTopics === 0
-            ? 0
-            : Math.round((completedTopics / totalTopics) * 100);
-
-
-        res.render("progress", {
-            subject,
-            completedMap,
-            subjectProgress,
-            unitProgress
-        });
-
-    } catch (err) {
-
-        console.log(err);
-        res.redirect("/subjects");
-
-    }
-
-};
-
-
-
-// ===============================
-// 2ï¸âƒ£ Toggle Topic Completion
-// ===============================
-module.exports.toggleTopic = async (req, res) => {
-
-    try {
-
-        const { subjectId, unitIndex, topicIndex } = req.body;
-        const userId = req.user._id;
-
-        let progress = await progressModel.findOne({
-            user: userId,
-            subject: subjectId,
-            unitIndex,
-            topicIndex
-        });
-
-        if (progress) {
-
-            progress.completed = !progress.completed;
-            await progress.save();
-
-        } else {
-
-            await progressModel.create({
-                user: userId,
-                subject: subjectId,
-                unitIndex,
-                topicIndex,
-                completed: true
-            });
-
-        }
-
-        res.redirect("/progress/" + subjectId);
-
-    } catch (err) {
-
-        console.log(err);
-        res.redirect("back");
-
-    }
-
-};
-========================================
-FILE: D:\Mihran\The-AcadeMIa\server\controllers\subjectController.js
-========================================
-const subjectModel = require("../models/subject-model");
-
-
-// =============================
-// Show subjects for students
-// =============================
-module.exports.showSubjects = async (req, res) => {
-
-    try {
-
-        const { branch, semester } = req.user;
-
-        const subjects = await subjectModel.find({
-            branch,
-            semester
-        });
-
-        res.render("subjects", {
-            user: req.user,
-            subjects
-        });
-
-    } catch (err) {
-
-        console.log(err);
-        res.status(500).render("500");
-
-    }
-
-};
-
-
-
-// =============================
-// View Single Subject
-// =============================
-module.exports.viewSubject = async (req, res) => {
-
-    try {
-
-        const { id } = req.params;
-
-        const subject = await subjectModel.findById(id);
-
-        if (!subject) {
-            return res.status(404).render("404");
-        }
-
-        res.render("view-subject", { subject });
-
-    } catch (err) {
-
-        console.log(err);
-        res.status(500).render("500");
-
-    }
-
-};
-
-
-
-// =============================
-// Admin: Add Subject
-// =============================
-module.exports.addSubject = async (req, res) => {
-
-    try {
-
-        const { name, branch, semester, units } = req.body;
-
-        const formattedUnits = [];
-
-        if (units) {
-
-            Object.keys(units).forEach((key) => {
-
-                const unit = units[key];
-
-                const topics = unit.topics
-                    ? unit.topics.split(",").map(t => ({ title: t.trim() }))
-                    : [];
-
-                formattedUnits.push({
-
-                    unitNumber: unit.unitNumber,
-                    unitTitle: unit.unitTitle,
-
-                    topics,
-
-                    notes: unit.notes
-                        ? Object.values(unit.notes).filter(n => n.title || n.link)
-                        : [],
-
-                    books: unit.books
-                        ? Object.values(unit.books).filter(b => b.title || b.link)
-                        : [],
-
-                    pyqs: unit.pyqs
-                        ? Object.values(unit.pyqs).filter(p => p.title || p.link)
-                        : [],
-
-                    youtubeLinks: unit.youtubeLinks
-                        ? Object.values(unit.youtubeLinks).filter(v => v.title || v.link)
-                        : []
-
-                });
-
-            });
-
-        }
-
-        await subjectModel.create({
-
-            name,
-            branch,
-            semester,
-            units: formattedUnits
-
-        });
-
-        req.flash("success", "Subject added successfully");
-
-        res.redirect("/admin");
-
-    } catch (err) {
-
-        console.log(err);
-        res.status(500).render("500");
-
-    }
-
-};
-
-
-
-// =============================
-// Admin: Edit Subject
-// =============================
-module.exports.editSubject = async (req, res) => {
-
-    try {
-
-        const { id } = req.params;
-
-        const subject = await subjectModel.findById(id);
-
-        if (!subject) {
-
-            req.flash("error", "Subject not found");
-            return res.redirect("/admin");
-
-        }
-
-        res.render("edit-subject", { subject });
-
-    } catch (err) {
-
-        console.log(err);
-        res.status(500).render("500");
-
-    }
-
-};
-
-
-
-// =============================
-// Admin: Update Subject
-// =============================
-module.exports.updateSubject = async (req, res) => {
-
-    try {
-
-        const { id } = req.params;
-        const { name, branch, semester, units } = req.body;
-
-        const formattedUnits = [];
-
-        if (units) {
-
-            Object.keys(units).forEach((key) => {
-
-                const unit = units[key];
-
-                const topics = unit.topics
-                    ? unit.topics.split(",").map(t => ({ title: t.trim() }))
-                    : [];
-
-                formattedUnits.push({
-
-                    unitNumber: unit.unitNumber,
-                    unitTitle: unit.unitTitle,
-
-                    topics,
-
-                    notes: unit.notes
-                        ? Object.values(unit.notes).filter(n => n.title || n.link)
-                        : [],
-
-                    books: unit.books
-                        ? Object.values(unit.books).filter(b => b.title || b.link)
-                        : [],
-
-                    pyqs: unit.pyqs
-                        ? Object.values(unit.pyqs).filter(p => p.title || p.link)
-                        : [],
-
-                    youtubeLinks: unit.youtubeLinks
-                        ? Object.values(unit.youtubeLinks).filter(v => v.title || v.link)
-                        : []
-
-                });
-
-            });
-
-        }
-
-        await subjectModel.findByIdAndUpdate(id, {
-
-            name,
-            branch,
-            semester,
-            units: formattedUnits
-
-        });
-
-        req.flash("success", "Subject updated successfully");
-
-        res.redirect("/admin");
-
-    } catch (err) {
-
-        console.log(err);
-        res.status(500).render("500");
-
-    }
-
-};
-
-
-// =============================
-// Show All Progress for students
-// =============================
-const progressModel = require("../models/progress-model");
-
-module.exports.showAllProgress = async (req, res) => {
-    try {
-
-        const { branch, semester, _id: userId } = req.user;
-
-        const subjects = await subjectModel.find({
-            branch,
-            semester
-        });
-
-        const subjectProgressMap = {};
-
-        for (let subject of subjects) {
-
-            const progress = await progressModel.find({
-                user: userId,
-                subject: subject._id,
-                completed: true
-            });
-
-            const completedMap = {};
-
-            progress.forEach(p => {
-                completedMap[`${p.unitIndex}-${p.topicIndex}`] = true;
-            });
-
-            let totalTopics = 0;
-            let completedTopics = 0;
-
-            subject.units.forEach((unit, uIndex) => {
-
-                unit.topics.forEach((topic, tIndex) => {
-
-                    totalTopics++;
-
-                    if (completedMap[`${uIndex}-${tIndex}`]) {
-                        completedTopics++;
-                    }
-
-                });
-
-            });
-
-            const percent = totalTopics === 0
-                ? 0
-                : Math.round((completedTopics / totalTopics) * 100);
-
-            subjectProgressMap[subject._id] = percent;
-
-        }
-
-        res.render("all-progress", {
-            subjects,
-            user: req.user,
-            subjectProgressMap
-        });
-
-    } catch (err) {
-
-        console.log(err);
-        res.status(500).render("500");
-
-    }
-};
-
-
-
-// =============================
-// Admin: Delete Subject
-// =============================
-module.exports.deleteSubject = async (req, res) => {
-
-    try {
-
-        const { id } = req.params;
-
-        await subjectModel.findByIdAndDelete(id);
-
-        req.flash("success", "Subject deleted successfully");
-
-        res.redirect("/admin");
-
-    } catch (err) {
-
-        console.log(err);
-        res.status(500).render("500");
-
-    }
-
-};
-========================================
 FILE: D:\Mihran\The-AcadeMIa\server\controllers\userController.js
 ========================================
 const userModel = require("../models/user-model");
@@ -6231,25 +8080,24 @@ const progressSchema = new mongoose.Schema({
     },
     subject: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Subject",
+        ref: "Subject", // Make sure this matches your exact Subject model name
         required: true,
         index: true
     },
-    topicId: {
+    completedTopicIds: [{
         type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        index: true
-    },
-    completed: {
-        type: Boolean,
-        default: true
+        ref: "topic" // Strictly ObjectIds grouped in an array
+    }],
+    subjectProgress: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100
     }
 }, { timestamps: true });
 
-// Prevent duplicate progress entries for the same user and topic
-progressSchema.index({ user: 1, topicId: 1 }, { unique: true });
-// Facilitate lightning-fast lookup for all topics completed by a user in a subject
-progressSchema.index({ user: 1, subject: 1 });
+// CRITICAL INDEX: Ensure a user can only have ONE progress tracker per subject
+progressSchema.index({ user: 1, subject: 1 }, { unique: true });
 
 module.exports = mongoose.model("progress", progressSchema);
 ========================================
@@ -6638,192 +8486,6 @@ router.post("/onboarding", authApi, tenantController.completeOnboarding);
 module.exports = router;
 
 ========================================
-FILE: D:\Mihran\The-AcadeMIa\server\routes\adminRouter.js
-========================================
-const express = require("express");
-const router = express.Router();
-const adminController = require("../controllers/adminController");
-const isLoggedIn = require("../middlewares/isLoggedIn");
-const checkRole = require("../middlewares/checkRole");
-
-// Admin dashboard
-router.get("/", isLoggedIn, checkRole(["admin"]), adminController.showAdminDashboard);
-
-// View users
-router.get("/users", isLoggedIn, checkRole(["admin"]), adminController.viewUsers);
-
-// Delete user
-router.get("/delete-user/:id", isLoggedIn, checkRole(["admin"]), adminController.deleteUser);
-
-// Admin manage subjects (optional)
-// router.get("/subjects", isLoggedIn, checkRole(["admin"]), (req, res) => {
-//     res.render("edit-subject"); // redirect to subjectsRouter admin pages
-// });
-
-module.exports = router;
-========================================
-FILE: D:\Mihran\The-AcadeMIa\server\routes\authRouter.js
-========================================
-const express = require("express");
-const router = express.Router();
-const passport = require("passport"); // Added
-const authController = require("../controllers/authController");
-const validateUserInput = require("../middlewares/validateUserInput"); 
-const { generateToken } = require("../utils/generateToken"); // Added
-
-// --- Manual Auth Routes ---
-
-// Registration
-router.post("/register", validateUserInput, authController.registerUser);
-
-// Login
-router.post("/login", (req, res, next) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
-        req.flash("error", "All fields are required");
-        return res.redirect("/#auth");
-    }
-    next();
-}, authController.loginUser);
-
-// Logout
-router.get("/logout", authController.logoutUser);
-
-// --- Google OAuth Routes (NEW) ---
-
-// 1. Trigger Google Login
-router.get('/google', passport.authenticate('google', { 
-    scope: ['profile', 'email'] 
-}));
-
-// 2. Google Callback
-router.get('/google/callback', 
-    passport.authenticate('google', { 
-        failureRedirect: '/#auth', 
-        failureFlash: true 
-    }),
-    (req, res) => {
-        // req.user is populated by passport after successful login
-        const token = generateToken(req.user);
-        res.cookie("token", token);
-        
-        // Redirect based on role
-        if (req.user.role === "admin") {
-            res.redirect("/admin");
-        } else {
-            res.redirect("/dashboard");
-        }
-    }
-);
-
-module.exports = router;
-========================================
-FILE: D:\Mihran\The-AcadeMIa\server\routes\index.js
-========================================
-const express = require("express");
-const router = express.Router();
-
-router.get("/", (req, res) => {
-    // res.locals.error and success are already set by app.js middleware
-    res.render("home"); 
-});
-
-module.exports = router;
-========================================
-FILE: D:\Mihran\The-AcadeMIa\server\routes\progressRouter.js
-========================================
-const express = require("express");
-const router = express.Router();
-
-const progressController = require("../controllers/progressController");
-
-const isLoggedIn = require("../middlewares/isLoggedIn");
-
-
-// ==========================
-// Show Progress Tracker
-// ==========================
-
-router.get("/:subjectId", isLoggedIn, progressController.showProgress);
-
-
-// ==========================
-// Toggle Topic Completion
-// ==========================
-
-router.post("/toggle", isLoggedIn, progressController.toggleTopic);
-
-
-module.exports = router;
-========================================
-FILE: D:\Mihran\The-AcadeMIa\server\routes\subjectsRouter.js
-========================================
-const express = require("express");
-const router = express.Router();
-const subjectController = require("../controllers/subjectController");
-const isLoggedIn = require("../middlewares/isLoggedIn");
-const checkRole = require("../middlewares/checkRole");
-
-
-// ----------------------
-// ADMIN ROUTES
-// ----------------------
-
-// Add subject
-router.get("/add", isLoggedIn, checkRole(["admin"]), (req, res) => {
-    res.render("add-subject");
-});
-
-router.post("/add", isLoggedIn, checkRole(["admin"]), subjectController.addSubject);
-
-
-// Edit subject
-router.get("/edit/:id", isLoggedIn, checkRole(["admin"]), subjectController.editSubject);
-
-router.post("/edit/:id", isLoggedIn, checkRole(["admin"]), subjectController.updateSubject);
-
-
-// Delete subject
-router.post("/delete/:id", isLoggedIn, checkRole(["admin"]), subjectController.deleteSubject);
-
-
-// ----------------------
-// STUDENT ROUTES
-// ----------------------
-
-// 1. List subjects
-router.get("/", isLoggedIn, subjectController.showSubjects);
-
-// 2. Global Progress Page (ADDED THIS LINE)
-// It MUST be above the /:id route to prevent the CastError
-router.get("/progress", isLoggedIn, subjectController.showAllProgress);
-
-
-// 3. View single subject (âš ï¸ ALWAYS LAST)
-router.get("/:id", isLoggedIn, subjectController.viewSubject);
-
-
-module.exports = router;
-========================================
-FILE: D:\Mihran\The-AcadeMIa\server\routes\usersRouter.js
-========================================
-const express = require("express");
-const router = express.Router();
-const userController = require("../controllers/userController");
-const isLoggedIn = require("../middlewares/isLoggedIn");
-const validateProfileUpdate = require("../middlewares/validateProfileUpdate");
-
-// Dashboard (after login)
-router.get("/dashboard", isLoggedIn, userController.showDashboard);
-
-// View profile
-router.get("/profile", isLoggedIn, userController.viewProfile);
-
-// Update profile
-router.post("/profile/update", isLoggedIn, validateProfileUpdate, userController.updateProfile);
-
-module.exports = router;
-========================================
 FILE: D:\Mihran\The-AcadeMIa\server\utils\createAdmin.js
 ========================================
 require("dotenv").config();
@@ -7011,7 +8673,6 @@ const path = require("path");
 const mongoose = require("mongoose");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
-const flash = require("connect-flash");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const passport = require("passport");
@@ -7048,7 +8709,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Persistent Mongo Session Store (solves in-memory leak)
+// Persistent Mongo Session Store
 app.use(session({
     secret: process.env.EXPRESS_SESSION_SECRET || "academia-secret-key-2026",
     resave: false,
@@ -7063,8 +8724,6 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000
     }
 }));
-
-app.use(flash());
 
 // ------------------
 // Passport Google OAuth
@@ -7145,20 +8804,6 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // ------------------
-// Static & Views (Legacy/SSR support)
-// ------------------
-app.use(express.static(path.join(__dirname, "public")));
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-
-app.use((req, res, next) => {
-    res.locals.currentUser = req.user || req.session.user || null;
-    res.locals.error = req.flash("error");
-    res.locals.success = req.flash("success");
-    next();
-});
-
-// ------------------
 // REST API Routes (MERN Core)
 // ------------------
 app.use("/api/auth", require("./routes/api/authApiRouter"));
@@ -7170,7 +8815,7 @@ app.use("/api/admin", require("./routes/api/adminApiRouter"));
 // Google OAuth callback bridging to React frontend
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 app.get("/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/#auth", failureFlash: true }),
+    passport.authenticate("google", { failureRedirect: `${clientUrl}/#auth` }),
     (req, res) => {
         const token = generateToken(req.user);
         res.cookie("token", token, {
@@ -7187,38 +8832,21 @@ app.get("/auth/google/callback",
 );
 
 // ------------------
-// Legacy SSR Web Routes (Preserved during migration)
-// ------------------
-app.use("/", require("./routes/index"));
-app.use("/auth", require("./routes/authRouter"));
-app.use("/", require("./routes/usersRouter"));
-app.use("/subjects", require("./routes/subjectsRouter"));
-app.use("/admin", require("./routes/adminRouter"));
-app.use("/progress", require("./routes/progressRouter"));
-
-// ------------------
 // 404 & Error Handlers
 // ------------------
 app.use((req, res) => {
-    if (req.originalUrl.startsWith("/api")) {
-        return res.status(404).json({
-            success: false,
-            message: `API endpoint not found: ${req.method} ${req.originalUrl}`
-        });
-    }
-    res.status(404).render("404", { url: req.originalUrl });
+    res.status(404).json({
+        success: false,
+        message: `Endpoint not found: ${req.method} ${req.originalUrl}`
+    });
 });
 
 app.use((err, req, res, next) => {
     console.error("Server Error:", err);
-    if (req.originalUrl.startsWith("/api")) {
-        return res.status(500).json({
-            success: false,
-            message: err.message || "Internal server error"
-        });
-    }
-    // Fixed: pass err object safely to 500.ejs
-    res.status(500).render("500", { error: err });
+    res.status(500).json({
+        success: false,
+        message: err.message || "Internal server error"
+    });
 });
 
 // ------------------
@@ -9359,7 +10987,8 @@ FILE: D:\Mihran\The-AcadeMIa\package-lock.json
         "multer": "^2.1.0",
         "nodemon": "^3.1.14",
         "passport": "^0.7.0",
-        "passport-google-oauth20": "^2.0.0"
+        "passport-google-oauth20": "^2.0.0",
+        "react-router-dom": "^7.18.4"
       }
     },
     "node_modules/@mongodb-js/saslprep": {
@@ -9908,7 +11537,6 @@ FILE: D:\Mihran\The-AcadeMIa\package-lock.json
       "resolved": "https://registry.npmjs.org/express-session/-/express-session-1.19.0.tgz",
       "integrity": "sha512-0csaMkGq+vaiZTmSMMGkfdCOabYv192VbytFypcvI0MANrp+4i/7yEkJ0sbAEhycQjntaKGzYfjfXQyVb7BHMA==",
       "license": "MIT",
-      "peer": true,
       "dependencies": {
         "cookie": "~0.7.2",
         "cookie-signature": "~1.0.7",
@@ -10458,7 +12086,6 @@ FILE: D:\Mihran\The-AcadeMIa\package-lock.json
       "resolved": "https://registry.npmjs.org/mongodb/-/mongodb-7.0.0.tgz",
       "integrity": "sha512-vG/A5cQrvGGvZm2mTnCSz1LUcbOPl83hfB6bxULKQ8oFZauyox/2xbZOoGNl+64m8VBrETkdGCDBdOsCr3F3jg==",
       "license": "Apache-2.0",
-      "peer": true,
       "dependencies": {
         "@mongodb-js/saslprep": "^1.3.0",
         "bson": "^7.0.0",
@@ -10946,6 +12573,80 @@ FILE: D:\Mihran\The-AcadeMIa\package-lock.json
         "node": ">= 0.10"
       }
     },
+    "node_modules/react": {
+      "version": "19.3.0",
+      "resolved": "https://registry.npmjs.org/react/-/react-19.3.0.tgz",
+      "integrity": "sha512-E8LUcbtBWt20bbl2YoHfx4ZDBdxVTfOKtCZn9cDSJ4l6/nuoApcpIBcj47t2wZoVX8g2ZHuMHbiShgCR1T5Sog==",
+      "license": "MIT",
+      "peer": true,
+      "engines": {
+        "node": ">=0.10.0"
+      }
+    },
+    "node_modules/react-dom": {
+      "version": "19.3.0",
+      "resolved": "https://registry.npmjs.org/react-dom/-/react-dom-19.3.0.tgz",
+      "integrity": "sha512-JDk8dgif51OjFoDE70+OT9ICyYr+69HlmihNwp1+Nsfbna3t5sIiCa9ZJktDmQ4/1b/rn26hIAR2uYXDMr5r0Q==",
+      "license": "MIT",
+      "peer": true,
+      "dependencies": {
+        "scheduler": "^0.28.0"
+      },
+      "peerDependencies": {
+        "react": "^19.3.0"
+      }
+    },
+    "node_modules/react-router": {
+      "version": "7.18.4",
+      "resolved": "https://registry.npmjs.org/react-router/-/react-router-7.18.4.tgz",
+      "integrity": "sha512-PUPQcMhMGRAslLcvtlPz/kmzBEWPhLdgLFrL7pLNepBL6dX0lWj4WD2cUYVgYCuT3jxvghYFg81cDTj44DhetQ==",
+      "license": "MIT",
+      "dependencies": {
+        "cookie": "^1.0.1",
+        "set-cookie-parser": "^2.6.0"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "react": ">=18",
+        "react-dom": ">=18"
+      },
+      "peerDependenciesMeta": {
+        "react-dom": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/react-router-dom": {
+      "version": "7.18.4",
+      "resolved": "https://registry.npmjs.org/react-router-dom/-/react-router-dom-7.18.4.tgz",
+      "integrity": "sha512-yrfmJHIpDG7taCpqKjT1G5B6q3O2K+RN8/fgNf0lTjCwiPbQ0ei6vXX9ZjQR+7ld8Tr7Z5xmyMnZ8YJrphWQUw==",
+      "license": "MIT",
+      "dependencies": {
+        "react-router": "7.18.4"
+      },
+      "engines": {
+        "node": ">=20.0.0"
+      },
+      "peerDependencies": {
+        "react": ">=18",
+        "react-dom": ">=18"
+      }
+    },
+    "node_modules/react-router/node_modules/cookie": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/cookie/-/cookie-1.1.1.tgz",
+      "integrity": "sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==",
+      "license": "MIT",
+      "engines": {
+        "node": ">=18"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/express"
+      }
+    },
     "node_modules/readable-stream": {
       "version": "3.6.2",
       "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-3.6.2.tgz",
@@ -11014,6 +12715,13 @@ FILE: D:\Mihran\The-AcadeMIa\package-lock.json
       "integrity": "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==",
       "license": "MIT"
     },
+    "node_modules/scheduler": {
+      "version": "0.28.0",
+      "resolved": "https://registry.npmjs.org/scheduler/-/scheduler-0.28.0.tgz",
+      "integrity": "sha512-juorfCmIkIw8tT+p5BXSm6PJjQF/ycEYmKyzURCIt/RaZIhL+PulbQ9Yu2z1HdOJDdqDTlxA1+xKBmHXJsczAw==",
+      "license": "MIT",
+      "peer": true
+    },
     "node_modules/semver": {
       "version": "7.7.4",
       "resolved": "https://registry.npmjs.org/semver/-/semver-7.7.4.tgz",
@@ -11070,6 +12778,12 @@ FILE: D:\Mihran\The-AcadeMIa\package-lock.json
         "type": "opencollective",
         "url": "https://opencollective.com/express"
       }
+    },
+    "node_modules/set-cookie-parser": {
+      "version": "2.7.2",
+      "resolved": "https://registry.npmjs.org/set-cookie-parser/-/set-cookie-parser-2.7.2.tgz",
+      "integrity": "sha512-oeM1lpU/UvhTxw+g3cIfxXHyJRc/uidd3yK1P242gzHds0udQBYzs3y8j4gCCW+ZJ7ad0yctld8RYO+bdurlvw==",
+      "license": "MIT"
     },
     "node_modules/setprototypeof": {
       "version": "1.2.0",
@@ -11402,7 +13116,8 @@ FILE: D:\Mihran\The-AcadeMIa\package.json
     "multer": "^2.1.0",
     "nodemon": "^3.1.14",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "react-router-dom": "^7.18.4"
   }
 }
 

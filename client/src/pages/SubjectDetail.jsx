@@ -9,6 +9,7 @@ import {
   Video,
   ArrowLeft,
   Award,
+  ExternalLink
 } from "lucide-react";
 
 export default function SubjectDetail() {
@@ -42,7 +43,6 @@ export default function SubjectDetail() {
   };
 
   const handleTopicToggle = async (topicId) => {
-    // Optimistic UI Update
     const updated = new Set(completedTopics);
     if (updated.has(topicId)) {
       updated.delete(topicId);
@@ -57,7 +57,6 @@ export default function SubjectDetail() {
         topicId,
       });
       if (res.data.success) {
-        // Refresh progress stats
         const progRes = await API.get(`/progress/subject/${id}`);
         if (progRes.data.success) {
           setProgress(progRes.data.subjectProgress);
@@ -65,54 +64,53 @@ export default function SubjectDetail() {
       }
     } catch (err) {
       console.error("Failed to toggle topic:", err);
-      // Revert on error
       fetchSubjectAndProgress();
     }
   };
 
   if (loading)
     return (
-      <div className="p-8 text-center text-gray-500 font-bold">
-        Loading Syllabus...
+      <div className="p-24 text-center font-bold text-gray-400 uppercase tracking-widest text-xs">
+        Loading Vault...
       </div>
     );
   if (!subject)
     return (
-      <div className="p-8 text-center text-red-500 font-bold">
+      <div className="p-24 text-center font-bold text-red-500 text-sm">
         Subject not found.
       </div>
     );
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="max-w-6xl mx-auto p-6 pt-32 space-y-8 min-h-screen bg-[#fbfbfa]">
       <Link
         to="/dashboard"
-        className="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-800"
+        className="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-black uppercase tracking-widest transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+        <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
       </Link>
 
       {/* Header Banner */}
-      <div className="bg-slate-900 text-white rounded-3xl p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-xl">
+      <div className="bg-[#0a0a0a] text-white rounded-[2.5rem] p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-2xl">
         <div>
-          <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-black uppercase tracking-wider">
-            {subject.code || "CORE"}
+          <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest">
+            {subject.courseCode || "CORE MODULE"}
           </span>
-          <h1 className="text-3xl font-black mt-2">{subject.name}</h1>
-          <p className="text-slate-400 text-sm mt-1">
-            {subject.tenant?.name ? `${subject.tenant.name} • ` : ""}
+          <h1 className="text-3xl md:text-5xl font-black mt-4 tracking-tighter italic">{subject.name}</h1>
+          <p className="text-gray-400 text-xs mt-2 font-medium tracking-tight">
+            {subject.tenant?.shortCode ? `${subject.tenant.shortCode} • ` : ""}
             {subject.units?.length || 0} Units Total
           </p>
         </div>
 
-        <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/50 min-w-[200px] text-center">
-          <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-            <Award className="w-4 h-4 text-blue-400" /> Subject Mastery
+        <div className="bg-white/5 p-6 rounded-3xl border border-white/10 min-w-[220px] text-center backdrop-blur-md">
+          <div className="flex items-center justify-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+            <Award className="w-4 h-4 text-blue-400" /> Vault Mastery
           </div>
-          <div className="text-4xl font-black text-white">{progress}%</div>
-          <div className="w-full bg-slate-700 h-2 rounded-full mt-3 overflow-hidden">
+          <div className="text-5xl font-black text-white">{progress}%</div>
+          <div className="w-full bg-gray-800 h-2.5 rounded-full mt-4 overflow-hidden">
             <div
-              className="bg-blue-500 h-full transition-all duration-300"
+              className="bg-blue-500 h-full transition-all duration-700 rounded-full"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -120,57 +118,100 @@ export default function SubjectDetail() {
       </div>
 
       {/* Units & Topics List */}
-      <div className="space-y-6">
+      <div className="space-y-6 pb-20">
         {subject.units?.map((unit, uIdx) => (
           <div
             key={unit._id || uIdx}
-            className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm"
+            className="bg-white rounded-[2.5rem] border border-gray-200 p-8 md:p-10 shadow-sm"
           >
-            <h2 className="text-lg font-black text-gray-900 mb-4 flex items-center gap-3">
-              <span className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 font-bold text-sm flex items-center justify-center">
+            <h2 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-4 tracking-tight">
+              <span className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 font-black text-xs flex items-center justify-center shrink-0 border border-blue-100">
                 U{uIdx + 1}
               </span>
-              {unit.name}
+              {unit.name || unit.unitTitle}
             </h2>
 
-            <div className="space-y-3">
+            <div className="space-y-4">
               {unit.topics?.map((topic) => {
-                const isDone = completedTopics.has(topic._id.toString());
+                const topicIdStr = topic._id ? topic._id.toString() : topic.toString();
+                const isDone = completedTopics.has(topicIdStr);
+                
                 return (
                   <div
-                    key={topic._id}
-                    onClick={() => handleTopicToggle(topic._id.toString())}
-                    className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                    key={topicIdStr}
+                    onClick={(e) => {
+                      if (e.target.closest('a')) return;
+                      handleTopicToggle(topicIdStr);
+                    }}
+                    className={`p-5 rounded-2xl border transition-all cursor-pointer ${
                       isDone
-                        ? "bg-emerald-50/50 border-emerald-200"
+                        ? "bg-emerald-50/30 border-emerald-200"
                         : "bg-gray-50/50 border-gray-200 hover:border-gray-300"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      {isDone ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-                      ) : (
-                        <Circle className="w-5 h-5 text-gray-400 shrink-0" />
+                    <div className="flex items-start md:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 flex-1">
+                        {isDone ? (
+                          <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0" />
+                        ) : (
+                          <Circle className="w-6 h-6 text-gray-300 shrink-0" />
+                        )}
+                        <span
+                          className={`text-sm font-bold ${
+                            isDone ? "line-through text-gray-400" : "text-gray-900"
+                          }`}
+                        >
+                          {topic.name || topic.title}
+                        </span>
+                      </div>
+
+                      {topic.importance && (
+                        <span
+                          className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg shrink-0 ${
+                            topic.importance === "HIGH"
+                              ? "bg-red-50 text-red-600 border border-red-100"
+                              : topic.importance === "MEDIUM"
+                              ? "bg-amber-50 text-amber-600 border border-amber-100"
+                              : "bg-gray-100 text-gray-500 border border-gray-200"
+                          }`}
+                        >
+                          {topic.importance}
+                        </span>
                       )}
-                      <span
-                        className={`text-sm font-semibold ${isDone ? "line-through text-gray-500" : "text-gray-800"}`}
-                      >
-                        {topic.name}
-                      </span>
                     </div>
 
-                    {topic.importance && (
-                      <span
-                        className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-                          topic.importance === "HIGH"
-                            ? "bg-red-100 text-red-700"
-                            : topic.importance === "MEDIUM"
-                              ? "bg-amber-100 text-amber-700"
-                              : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {topic.importance}
-                      </span>
+                    {topic.resources && topic.resources.length > 0 && (
+                      <div className="mt-4 ml-9 flex flex-wrap gap-2">
+                        {topic.resources.map((res, rIdx) => {
+                          let Icon = ExternalLink;
+                          let colorClass = "text-gray-600 hover:text-gray-900 border-gray-200";
+                          
+                          if (res.type === 'PDF') {
+                            Icon = FileText;
+                            colorClass = "text-blue-600 hover:text-blue-700 bg-blue-50/50 border-blue-100";
+                          } else if (res.type === 'VIDEO') {
+                            Icon = Video;
+                            colorClass = "text-red-600 hover:text-red-700 bg-red-50/50 border-red-100";
+                          } else if (res.type === 'PYQ') {
+                            Icon = BookOpen;
+                            colorClass = "text-amber-600 hover:text-amber-700 bg-amber-50/50 border-amber-100";
+                          }
+
+                          return (
+                            <a
+                              key={rIdx}
+                              href={res.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all shadow-sm ${colorClass}`}
+                            >
+                              <Icon className="w-3.5 h-3.5" />
+                              {res.title}
+                            </a>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 );

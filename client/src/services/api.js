@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// ✅ Now correctly targets the exact variable name in your new .env file
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -26,6 +27,7 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       if (window.location.pathname !== '/' && !window.location.pathname.startsWith('/auth')) {
         localStorage.removeItem('academia_token');
+        window.location.href = '/'; // ✅ Added forced redirect to login page on session expiry
       }
     }
     return Promise.reject(error);
@@ -37,7 +39,8 @@ export const authService = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
   getMe: () => api.get('/auth/me'),
-  logout: () => api.post('/auth/logout')
+  logout: () => api.post('/auth/logout'),
+  updateProfile: (data) => api.put('/auth/profile', data) // ✅ Added this line for Profile.jsx
 };
 
 // Tenant Endpoints
