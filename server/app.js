@@ -70,7 +70,11 @@ passport.use(new GoogleStrategy({
     proxy: true
 }, async (accessToken, refreshToken, profile, done) => {
     try {
-        const email = profile.emails[0].value.toLowerCase().trim();
+        const profileEmail = profile.emails?.[0]?.value;
+        if (!profileEmail || typeof profileEmail !== "string") {
+            return done(new Error("Google did not provide an email address."), null);
+        }
+        const email = profileEmail.toLowerCase().trim();
         const emailDomain = email.split("@")[1];
 
         // Dynamic domain resolution across registered tenants
@@ -143,13 +147,22 @@ app.use("/api/auth", require("./routes/api/authApiRouter"));
 app.use("/api/tenants", require("./routes/api/tenantApiRouter"));
 app.use("/api/subjects", require("./routes/api/subjectApiRouter"));
 app.use("/api/progress", require("./routes/api/progressApiRouter"));
+app.use("/api/study-tools", require("./routes/api/studyToolsApiRouter"));
 app.use("/api/admin", require("./routes/api/adminApiRouter"));
 
 // Google OAuth callback bridging to React frontend
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.env.GOOGLE_CALLBACK_URL) {
     app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+    
     app.get("/auth/google/callback",
-        passport.authenticate("google", { failureRedirect: `${clientUrl}/#auth` }),
+        // ✅ FIXED: Catch the access_denied error if a user cancels the consent screen
+        (req, res, next) => {
+            if (req.query.error === 'access_denied') {
+                return res.redirect(`${clientUrl}/?error=denied`);
+            }
+            next();
+        },
+        passport.authenticate("google", { failureRedirect: `${clientUrl}/?error=failed` }),
         (req, res) => {
         const token = generateToken(req.user);
         res.cookie("token", token, {
@@ -160,8 +173,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.
         });
 
         // Redirect to React frontend callback
-        const target = `${clientUrl}/auth/callback?token=${token}`;
-        res.redirect(target);
+        res.redirect(`${clientUrl}/auth/callback`);
         }
     );
 } else {
@@ -169,7 +181,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.
         success: false,
         message: "Google sign-in is not configured on this server."
     }));
-    app.get("/auth/google/callback", (req, res) => res.redirect(`${clientUrl}/#auth`));
+    app.get("/auth/google/callback", (req, res) => res.redirect(`${clientUrl}/?error=not_configured`));
 }
 
 // ------------------

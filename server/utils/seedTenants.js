@@ -44,9 +44,10 @@ async function seedTenants() {
     if (!process.env.MONGO_URI) throw new Error("MONGO_URI is required in server/.env.");
     await mongoose.connect(process.env.MONGO_URI);
     for (const tenant of tenants) {
+        const { shortCode, active = true, ...insertOnlyFields } = tenant;
         await tenantModel.updateOne(
-            { shortCode: tenant.shortCode },
-            { $set: { active: true }, $setOnInsert: tenant },
+            { shortCode },
+            { $set: { active }, $setOnInsert: insertOnlyFields },
             { upsert: true }
         );
     }

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { adminService, subjectService, tenantService } from '../services/api';
+import { adminService, tenantService } from '../services/api';
 import { Plus, Trash2, ArrowLeft, CheckCircle2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import CareerBridgeEditor from '../components/CareerBridgeEditor';
+import { emptyCareerBridge, prepareCareerBridge } from '../utils/careerBridge';
 
 export const EditSubject = () => {
   const { id } = useParams();
@@ -12,36 +14,48 @@ export const EditSubject = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [tenants, setTenants] = useState([]);
+  const [activeTab, setActiveTab] = useState('syllabus');
 
   const [formData, setFormData] = useState({
     name: '',
     courseCode: '',
+    credits: '',
     track: 'UNIVERSITY',
     tenantId: '',
     branch: '',
     semester: 1,
     examCategory: 'JEE_MAINS',
-    units: []
+    units: [],
+    careerBridge: emptyCareerBridge()
   });
 
   useEffect(() => {
     const fetchSubject = async () => {
       try {
         const [res, tenantRes] = await Promise.all([
-          subjectService.getSubjectById(id),
+          adminService.getSubjects(),
           tenantService.getTenants()
         ]);
         setTenants((tenantRes.data.tenants || []).filter(tenant => tenant.type === 'UNIVERSITY'));
         if (res.data.success) {
-          const sub = res.data.subject;
+          const sub = (res.data.subjects || []).find(item => item._id === id);
+          if (!sub) throw new Error('Subject not found or you do not have permission to edit it.');
           setFormData({
             name: sub.name || '',
             courseCode: sub.courseCode || '',
+            credits: sub.credits || '',
             track: sub.track || 'UNIVERSITY',
             tenantId: sub.tenant?._id || sub.tenant || '',
             branch: sub.branch || '',
             semester: Number(sub.semester) || 1,
             examCategory: sub.examCategory || 'JEE_MAINS',
+            careerBridge: sub.careerBridge ? {
+              ...sub.careerBridge,
+              interviewQuestions: (sub.careerBridge.interviewQuestions || []).map(question => ({
+                ...question,
+                companies: question.companies?.length ? question.companies : (question.company ? [question.company] : [])
+              }))
+            } : emptyCareerBridge(),
             units: sub.units ? sub.units.map(u => ({
               unitNumber: Number(u.unitNumber) || 1,
               unitTitle: u.unitTitle || '',
@@ -117,6 +131,7 @@ export const EditSubject = () => {
     try {
       const formattedPayload = {
         ...formData,
+        careerBridge: prepareCareerBridge(formData.careerBridge),
         semester: Number(formData.semester),
         units: formData.units.map(({ originalTopics = [], ...unit }) => {
           const existingTopics = new Map(originalTopics.map(topic => [topic.title.trim().toLowerCase(), topic]));
@@ -177,6 +192,10 @@ export const EditSubject = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-12">
+          <div role="tablist" aria-label="Subject data" className="flex gap-2 rounded-2xl bg-gray-100 p-2">
+            {[['syllabus','University Syllabus'],['career','Career Bridge']].map(([key,label]) => <button key={key} type="button" role="tab" aria-selected={activeTab === key} onClick={() => setActiveTab(key)} className={`rounded-xl px-5 py-3 text-sm font-bold transition ${activeTab === key ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>{label}</button>)}
+          </div>
+          <div className={activeTab === 'syllabus' ? 'contents' : 'hidden'}>
           
           <div className="bg-white border border-gray-200 rounded-[2.5rem] p-8 md:p-10 shadow-sm">
             <h2 className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 mb-8">Base Configuration</h2>
@@ -208,6 +227,10 @@ export const EditSubject = () => {
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-blue-500"
                 />
               </div>
+              {formData.track === 'UNIVERSITY' && <div className="space-y-2">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-wider">Official Course Credits</label>
+                <input type="number" name="credits" value={formData.credits} onChange={handleBaseChange} required min="0.1" max="100" step="0.1" placeholder="e.g. 4" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-bold focus:outline-none focus:border-blue-500" />
+              </div>}
               {formData.track === 'UNIVERSITY' ? (
                 <>
                   <div className="space-y-2">
@@ -357,6 +380,8 @@ export const EditSubject = () => {
             ))}
           </div>
 
+          </div>
+          {activeTab === 'career' && <section className="rounded-[2rem] border border-gray-200 bg-white p-6 shadow-sm md:p-8"><CareerBridgeEditor value={formData.careerBridge} onChange={careerBridge => setFormData(prev => ({ ...prev, careerBridge }))} /></section>}
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-10">
             <button 
               type="button" 

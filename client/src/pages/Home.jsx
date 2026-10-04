@@ -3,19 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { tenantService } from '../services/api';
 import { 
-  BookOpen, 
   Sparkles, 
-  CheckCircle2, 
-  GraduationCap, 
-  Target, 
-  Layers, 
   ArrowRight,
-  ShieldCheck,
   Building2
 } from 'lucide-react';
 
 export const Home = () => {
-  const { user, login, register, isAuthenticated } = useAuth();
+  const { login, register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const [isLoginTab, setIsLoginTab] = useState(true);
@@ -77,7 +71,10 @@ export const Home = () => {
   };
 
   const handleGoogleAuth = () => {
-    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+    const configuredApiUrl = import.meta.env.VITE_API_BASE_URL;
+    const apiUrl = configuredApiUrl
+      ? configuredApiUrl.replace(/\/api\/?$/, '')
+      : `${window.location.protocol}//${window.location.hostname}:3000`;
     window.location.href = `${apiUrl}/auth/google`;
   };
 

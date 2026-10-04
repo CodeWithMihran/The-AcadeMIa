@@ -20,4 +20,8 @@ router.delete("/subjects/:id", adminController.deleteSubject);
 router.get("/users", adminController.getAdminUsers);
 router.delete("/users/:id", adminController.deleteUser);
 
+// Crowdsourced external-resource QA
+router.get("/link-reports", adminController.getLinkReports);
+router.patch("/link-reports/:id", adminController.updateLinkReport);
+
 module.exports = router;

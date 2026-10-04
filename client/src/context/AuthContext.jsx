@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -7,25 +7,28 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const res = await authService.getMe();
       if (res.data.success && res.data.user) {
         setUser(res.data.user);
+        return res.data.user;
       } else {
         setUser(null);
+        return null;
       }
     } catch (err) {
       setUser(null);
-      localStorage.removeItem('academia_token');
+      if (err.response?.status === 401) localStorage.removeItem('academia_token');
+      return null;
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchCurrentUser();
-  }, []);
+  }, [fetchCurrentUser]);
 
   const login = async (email, password) => {
     const res = await authService.login({ email, password });
@@ -63,9 +66,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const refreshUser = async () => {
-    await fetchCurrentUser();
-  };
+  const refreshUser = useCallback(() => fetchCurrentUser(), [fetchCurrentUser]);
 
   return (
     <AuthContext.Provider value={{

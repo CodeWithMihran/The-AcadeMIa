@@ -1,5 +1,6 @@
 const tenantModel = require("../../models/tenant-model");
 const userModel = require("../../models/user-model");
+const mongoose = require("mongoose");
 
 // 1. Get All Active Tenants (Universities & Competitive Tracks)
 module.exports.getTenants = async (req, res) => {
@@ -20,7 +21,10 @@ module.exports.getTenants = async (req, res) => {
 // 2. Get Single Tenant with Affiliated Colleges
 module.exports.getTenantById = async (req, res) => {
     try {
-        const tenant = await tenantModel.findById(req.params.id);
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(400).json({ success: false, message: "Invalid institution id." });
+        }
+        const tenant = await tenantModel.findOne({ _id: req.params.id, active: true });
         if (!tenant) {
             return res.status(404).json({
                 success: false,
@@ -43,14 +47,14 @@ module.exports.getTenantById = async (req, res) => {
 module.exports.resolveDomain = async (req, res) => {
     try {
         const { email } = req.body;
-        if (!email || !email.includes("@")) {
+        if (typeof email !== "string" || !/^\S+@\S+\.\S+$/.test(email.trim())) {
             return res.status(400).json({
                 success: false,
                 message: "Valid email address required."
             });
         }
 
-        const domain = email.split("@")[1].toLowerCase().trim();
+        const domain = email.trim().split("@")[1].toLowerCase();
 
         // 1. Search tenant by global domain or affiliated college domain
         const matchedTenant = await tenantModel.findOne({
@@ -110,26 +114,53 @@ module.exports.completeOnboarding = async (req, res) => {
         } = req.body;
 
         const userId = req.user._id;
-        const updatePayload = {
-            track: track || "UNIVERSITY",
-            onboardingCompleted: true
-        };
+        const selectedTrack = track || "UNIVERSITY";
+        if (!["UNIVERSITY", "JEE", "NEET"].includes(selectedTrack)) {
+            return res.status(400).json({ success: false, message: "Select a valid learning track." });
+        }
 
-        if (track === "JEE" || track === "NEET") {
-            updatePayload.targetExam = targetExam || (track === "JEE" ? "JEE_MAINS" : "NEET");
-            updatePayload.targetYear = targetYear || new Date().getFullYear() + 1;
+        const updatePayload = { track: selectedTrack, onboardingCompleted: true };
+
+        if (selectedTrack === "JEE" || selectedTrack === "NEET") {
+            const selectedExam = targetExam || (selectedTrack === "JEE" ? "JEE_MAINS" : "NEET");
+            const examYear = Number(targetYear || new Date().getFullYear() + 1);
+            if (!["JEE_MAINS", "JEE_ADVANCED", "NEET"].includes(selectedExam) || (selectedTrack === "NEET") !== (selectedExam === "NEET")) {
+                return res.status(400).json({ success: false, message: "Select an exam that matches your learning track." });
+            }
+            if (!Number.isInteger(examYear) || examYear < 2020 || examYear > 2100) {
+                return res.status(400).json({ success: false, message: "Select a valid examination year." });
+            }
+            updatePayload.targetExam = selectedExam;
+            updatePayload.targetYear = examYear;
             // Link to national competitive track tenant if available
-            const compTenant = await tenantModel.findOne({ shortCode: "COMPETITIVE" });
+            const compTenant = await tenantModel.findOne({ shortCode: "COMPETITIVE", active: true });
             if (compTenant) {
                 updatePayload.tenant = compTenant._id;
+            } else {
+                updatePayload.tenant = null;
             }
         } else {
-            // University Track
-            if (tenantId) updatePayload.tenant = tenantId;
-            if (college) updatePayload.college = college;
-            if (branch) updatePayload.branch = branch.toUpperCase().trim();
-            if (year) updatePayload.year = Number(year);
-            if (semester) updatePayload.semester = Number(semester);
+            if (typeof tenantId !== "string" || !mongoose.isValidObjectId(tenantId)) {
+                return res.status(400).json({ success: false, message: "Choose a valid university." });
+            }
+            const tenant = await tenantModel.findOne({ _id: tenantId, type: "UNIVERSITY", active: true }).select("_id");
+            if (!tenant) return res.status(400).json({ success: false, message: "The selected university is unavailable." });
+            const yearValue = Number(year);
+            const semesterValue = Number(semester);
+            if (typeof college !== "string" || !college.trim() || college.trim() === "Other") {
+                return res.status(400).json({ success: false, message: "Enter or select your college or campus." });
+            }
+            if (typeof branch !== "string" || !branch.trim()) {
+                return res.status(400).json({ success: false, message: "Enter your branch." });
+            }
+            if (!Number.isInteger(yearValue) || yearValue < 1 || yearValue > 4 || !Number.isInteger(semesterValue) || semesterValue < 1 || semesterValue > 8 || ![yearValue * 2 - 1, yearValue * 2].includes(semesterValue)) {
+                return res.status(400).json({ success: false, message: "Choose a semester within your selected year." });
+            }
+            updatePayload.tenant = tenant._id;
+            updatePayload.college = college.trim();
+            updatePayload.branch = branch.trim().toUpperCase();
+            updatePayload.year = yearValue;
+            updatePayload.semester = semesterValue;
         }
 
         const updatedUser = await userModel

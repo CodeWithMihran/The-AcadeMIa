@@ -43,6 +43,46 @@ const unitSchema = new mongoose.Schema({
     topics: [topicSchema]
 }, { _id: true });
 
+const careerQuestionSchema = new mongoose.Schema({
+    question: { type: String, trim: true, required: true },
+    answerMarkdown: { type: String, trim: true, maxlength: 20000, default: "" },
+    companies: [{ type: String, trim: true, maxlength: 60 }],
+    // Retained so existing subject documents and older admin payloads remain readable.
+    company: { type: String, trim: true, default: "" },
+    topic: { type: String, trim: true, default: "" },
+    difficulty: { type: String, enum: ["", "Easy", "Medium", "Hard"], default: "" },
+    isPremium: { type: Boolean, default: false }
+}, { _id: true });
+
+const careerLinkSchema = new mongoose.Schema({
+    title: { type: String, trim: true, required: true },
+    platform: { type: String, trim: true, default: "Other" },
+    url: { type: String, trim: true, required: true },
+    topic: { type: String, trim: true, default: "" },
+    difficulty: { type: String, enum: ["", "Easy", "Medium", "Hard"], default: "" },
+    isPremium: { type: Boolean, default: false }
+}, { _id: true });
+
+const gatePyqSchema = new mongoose.Schema({
+    title: { type: String, trim: true, required: true },
+    year: { type: Number, min: 1980, max: 2100 },
+    topic: { type: String, trim: true, default: "" },
+    url: { type: String, trim: true, required: true },
+    isPremium: { type: Boolean, default: false }
+}, { _id: true });
+
+const careerBridgeSchema = new mongoose.Schema({
+    interviewQuestions: { type: [careerQuestionSchema], default: [] },
+    codingLinks: { type: [careerLinkSchema], default: [] },
+    gate: {
+        examCode: { type: String, trim: true, default: "GATE CS" },
+        weightageMinMarks: { type: Number, min: 0, max: 100, default: null },
+        weightageMaxMarks: { type: Number, min: 0, max: 100, default: null },
+        weightagePeriod: { type: String, trim: true, default: "" },
+        pyqs: { type: [gatePyqSchema], default: [] }
+    }
+}, { _id: false });
+
 const subjectSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -53,6 +93,12 @@ const subjectSchema = new mongoose.Schema({
         type: String,
         trim: true,
         uppercase: true
+    },
+    // University-issued course credit value used by the student's SGPA planner.
+    credits: {
+        type: Number,
+        min: 0,
+        default: 0
     },
     track: {
         type: String,
@@ -82,7 +128,8 @@ const subjectSchema = new mongoose.Schema({
     units: {
         type: [unitSchema],
         default: []
-    }
+    },
+    careerBridge: { type: careerBridgeSchema, default: () => ({}) }
 }, { timestamps: true });
 
 // Fast querying by university, branch, and semester

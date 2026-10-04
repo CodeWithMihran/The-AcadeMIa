@@ -69,6 +69,19 @@ const userSchema = new mongoose.Schema({
     onboardingCompleted: {
         type: Boolean,
         default: false
+    },
+    // Set only by trusted billing/admin workflows. A live entitlement also
+    // requires an unexpired period end; client profile updates cannot set it.
+    premiumSubscription: {
+        status: {
+            type: String,
+            enum: ["INACTIVE", "ACTIVE", "PAST_DUE", "CANCELED"],
+            default: "INACTIVE"
+        },
+        currentPeriodEnd: {
+            type: Date,
+            default: null
+        }
     }
 }, { timestamps: true });
 

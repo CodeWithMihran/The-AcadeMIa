@@ -7,7 +7,8 @@ import {
   ArrowUpRight, 
   Settings2,
   FolderOpen,
-  Layers
+  Layers,
+  Calculator
 } from 'lucide-react';
 
 export const Dashboard = () => {
@@ -114,6 +115,12 @@ export const Dashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Section Title */}
+        <Link to="/study-tools" className="mb-8 flex items-center justify-between gap-4 rounded-2xl border border-blue-100 bg-blue-50/70 p-5 transition hover:border-blue-300 hover:bg-blue-50">
+          <div className="flex items-center gap-4"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm"><Calculator className="h-5 w-5" /></span><div><p className="text-sm font-black text-gray-900">Daily Study Tools</p><p className="mt-1 text-xs text-gray-500">Attendance forecast · SGPA planner · Internal marks</p></div></div>
+          <ArrowUpRight className="h-4 w-4 shrink-0 text-blue-600" />
+        </Link>
 
         {/* Section Title */}
         <div className="flex items-center justify-between mb-8">

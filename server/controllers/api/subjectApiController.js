@@ -1,36 +1,26 @@
 const subjectModel = require("../../models/subject-model");
+const mongoose = require("mongoose");
+const studentSubjectFilter = require("../../utils/studentSubjectFilter");
+const { hasActivePremium, filterSubjectForStudent } = require("../../utils/premiumAccess");
+const linkReportModel = require("../../models/link-report-model");
+
+const canViewPremiumCareerBridge = (user) => hasActivePremium(user);
 
 // 1. Get Subjects for Logged In Student
 module.exports.getSubjects = async (req, res) => {
     try {
-        const user = req.user;
-        let query = {};
-
-        if (user.track === "JEE" || user.track === "NEET") {
-            query.track = user.track;
-        } else {
-            // University Track
-            query.track = "UNIVERSITY";
-            if (user.tenant) {
-                query.tenant = user.tenant._id || user.tenant;
-            }
-            if (user.branch && user.branch !== "Not Set") {
-                query.branch = user.branch;
-            }
-            if (user.semester) {
-                query.semester = user.semester;
-            }
-        }
+        const query = studentSubjectFilter(req.user);
 
         const subjects = await subjectModel
             .find(query)
             .populate("tenant", "name shortCode")
             .sort({ name: 1 });
+        const includePremium = canViewPremiumCareerBridge(req.user);
 
         return res.status(200).json({
             success: true,
             count: subjects.length,
-            subjects
+            subjects: subjects.map((subject) => filterSubjectForStudent(subject, includePremium))
         });
 
     } catch (err) {
@@ -46,8 +36,11 @@ module.exports.getSubjects = async (req, res) => {
 module.exports.getSubjectById = async (req, res) => {
     try {
         const { id } = req.params;
+        if (!mongoose.isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: "Invalid subject id." });
+        }
         const subject = await subjectModel
-            .findById(id)
+            .findOne({ _id: id, ...studentSubjectFilter(req.user) })
             .populate("tenant", "name shortCode");
 
         if (!subject) {
@@ -57,9 +50,11 @@ module.exports.getSubjectById = async (req, res) => {
             });
         }
 
+        const safeSubject = filterSubjectForStudent(subject, canViewPremiumCareerBridge(req.user));
+
         return res.status(200).json({
             success: true,
-            subject
+            subject: safeSubject
         });
 
     } catch (err) {
@@ -68,5 +63,58 @@ module.exports.getSubjectById = async (req, res) => {
             success: false,
             message: "Failed to load subject: " + err.message
         });
+    }
+};
+
+module.exports.reportBrokenLink = async (req, res) => {
+    try {
+        const { id: subjectId } = req.params;
+        const { resourceId, resourceType } = req.body || {};
+        if (!mongoose.isValidObjectId(subjectId) || !mongoose.isValidObjectId(resourceId)) {
+            return res.status(400).json({ success: false, message: "Invalid subject or resource id." });
+        }
+        if (!["CODING_LINK", "GATE_PYQ"].includes(resourceType)) {
+            return res.status(400).json({ success: false, message: "Unsupported link report type." });
+        }
+
+        const subject = await subjectModel.findOne({ _id: subjectId, ...studentSubjectFilter(req.user) });
+        if (!subject) return res.status(404).json({ success: false, message: "Subject not found." });
+
+        const resources = resourceType === "CODING_LINK"
+            ? subject.careerBridge?.codingLinks || []
+            : subject.careerBridge?.gate?.pyqs || [];
+        const resource = resources.find(item => item._id.toString() === resourceId);
+        if (!resource?.url) return res.status(404).json({ success: false, message: "Link not found." });
+        if (resource.isPremium && !hasActivePremium(req.user)) {
+            return res.status(403).json({ success: false, message: "An active premium subscription is required to report this link." });
+        }
+
+        const reportData = {
+            subject: subject._id,
+            reporter: req.user._id,
+            resourceType,
+            resourceId: resource._id,
+            resourceTitle: resource.title,
+            resourceUrl: resource.url,
+            topic: resource.topic || ""
+        };
+
+        try {
+            const report = await linkReportModel.create(reportData);
+            return res.status(201).json({ success: true, alreadyReported: false, reportId: report._id, message: "Thanks. The admin team has been notified." });
+        } catch (err) {
+            if (err.code !== 11000) throw err;
+            const existingReport = await linkReportModel.findOne({
+                subject: subject._id,
+                reporter: req.user._id,
+                resourceType,
+                resourceId: resource._id,
+                status: "OPEN"
+            }).select("_id");
+            return res.status(200).json({ success: true, alreadyReported: true, reportId: existingReport?._id, message: "You have already reported this link. The admin team has been notified." });
+        }
+    } catch (err) {
+        console.error("Report Broken Link Error:", err);
+        return res.status(500).json({ success: false, message: "Could not submit the broken-link report." });
     }
 };

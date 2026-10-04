@@ -1,6 +1,7 @@
 const progressModel = require("../../models/progress-model");
 const subjectModel = require("../../models/subject-model");
 const mongoose = require("mongoose");
+const studentSubjectFilter = require("../../utils/studentSubjectFilter");
 
 // 1. Toggle Topic Completion (Atomic)
 module.exports.toggleTopic = async (req, res) => {
@@ -21,29 +22,48 @@ module.exports.toggleTopic = async (req, res) => {
         const normalizedSubjectId = new mongoose.Types.ObjectId(subjectId);
         const normalizedTopicId = new mongoose.Types.ObjectId(topicId);
 
-        const subject = await subjectModel.findById(normalizedSubjectId).select("units.topics._id");
+        const subject = await subjectModel.findOne({
+            _id: normalizedSubjectId,
+            ...studentSubjectFilter(req.user)
+        }).select("units.topics._id");
         if (!subject) return res.status(404).json({ success: false, message: "Subject not found." });
         const topicExists = subject.units.some(unit => unit.topics.some(topic => topic._id.equals(normalizedTopicId)));
         if (!topicExists) return res.status(404).json({ success: false, message: "Topic not found in this subject." });
 
-        let progress = await progressModel.findOne({ user: userId, subject: normalizedSubjectId, topicId: normalizedTopicId });
+        const progressKey = { user: userId, subject: normalizedSubjectId, topicId: normalizedTopicId };
+        let completed;
+        // Compare-and-set makes concurrent toggles reliable while respecting the unique index.
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+            const current = await progressModel.findOne(progressKey).select("_id completed").lean();
+            if (!current) {
+                try {
+                    await progressModel.create({ ...progressKey, completed: true });
+                    completed = true;
+                    break;
+                } catch (error) {
+                    if (error.code === 11000) continue;
+                    throw error;
+                }
+            }
 
-        if (progress) {
-            progress.completed = !progress.completed;
-            await progress.save();
-        } else {
-            progress = await progressModel.create({
-                user: userId,
-                subject: normalizedSubjectId,
-                topicId: normalizedTopicId,
-                completed: true
-            });
+            const nextValue = !current.completed;
+            const result = await progressModel.updateOne(
+                { _id: current._id, completed: current.completed },
+                { $set: { completed: nextValue } }
+            );
+            if (result.modifiedCount === 1) {
+                completed = nextValue;
+                break;
+            }
+        }
+        if (completed === undefined) {
+            return res.status(409).json({ success: false, message: "Progress changed concurrently. Please try again." });
         }
 
         return res.status(200).json({
             success: true,
             topicId,
-            completed: progress.completed
+            completed
         });
 
     } catch (err) {
@@ -65,7 +85,10 @@ module.exports.getSubjectProgress = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid subjectId." });
         }
 
-        const subject = await subjectModel.findById(subjectId);
+        const subject = await subjectModel.findOne({
+            _id: subjectId,
+            ...studentSubjectFilter(req.user)
+        });
         if (!subject) {
             return res.status(404).json({
                 success: false,
@@ -130,15 +153,7 @@ module.exports.getGlobalProgress = async (req, res) => {
         const user = req.user;
         const userId = user._id;
 
-        let query = {};
-        if (user.track === "JEE" || user.track === "NEET") {
-            query.track = user.track;
-        } else {
-            query.track = "UNIVERSITY";
-            if (user.tenant) query.tenant = user.tenant._id || user.tenant;
-            if (user.branch && user.branch !== "Not Set") query.branch = user.branch;
-            if (user.semester) query.semester = user.semester;
-        }
+        const query = studentSubjectFilter(user);
 
         // 1. Fetch all matching subjects
         const subjects = await subjectModel.find(query).lean();

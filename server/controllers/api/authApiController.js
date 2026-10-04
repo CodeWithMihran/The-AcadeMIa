@@ -43,11 +43,16 @@ module.exports.register = async (req, res) => {
     try {
         const { name, email, password, confirmPassword } = req.body;
 
-        if (!name || !email || !password) {
+        if (typeof name !== "string" || name.trim().length < 2 || name.trim().length > 120 || typeof email !== "string" || typeof password !== "string" || !password || typeof confirmPassword !== "string") {
             return res.status(400).json({
                 success: false,
-                message: "Name, email, and password are required."
+                message: "Enter a valid name, email, and password."
             });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+        if (normalizedEmail.length > 254 || !/^\S+@\S+\.\S+$/.test(normalizedEmail) || Buffer.byteLength(password, "utf8") > 72) {
+            return res.status(400).json({ success: false, message: "Enter a valid email and a password of at most 72 bytes." });
         }
 
         if (password !== confirmPassword) {
@@ -57,7 +62,6 @@ module.exports.register = async (req, res) => {
             });
         }
 
-        const normalizedEmail = email.toLowerCase().trim();
         const existingUser = await userModel.findOne({ email: normalizedEmail });
         if (existingUser) {
             return res.status(409).json({
@@ -110,9 +114,12 @@ module.exports.register = async (req, res) => {
 
     } catch (err) {
         console.error("Register Error:", err);
+        if (err.code === 11000) {
+            return res.status(409).json({ success: false, message: "An account with this email already exists. Please log in." });
+        }
         return res.status(500).json({
             success: false,
-            message: "Internal server error during registration: " + err.message
+            message: "Internal server error during registration."
         });
     }
 };
@@ -122,14 +129,14 @@ module.exports.login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
+        if (typeof email !== "string" || typeof password !== "string" || !email.trim() || !password) {
             return res.status(400).json({
                 success: false,
                 message: "Email and password are required."
             });
         }
 
-        const normalizedEmail = email.toLowerCase().trim();
+        const normalizedEmail = email.trim().toLowerCase();
         const user = await userModel
             .findOne({ email: normalizedEmail })
             .populate("tenant", "name shortCode type state");
@@ -162,7 +169,7 @@ module.exports.login = async (req, res) => {
         console.error("Login Error:", err);
         return res.status(500).json({
             success: false,
-            message: "Internal server error during login: " + err.message
+            message: "Internal server error during login."
         });
     }
 };

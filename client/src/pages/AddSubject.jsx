@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { adminService, tenantService } from '../services/api';
 import { Plus, Trash2, ArrowLeft, CheckCircle2, AlertTriangle } from 'lucide-react';
+import CareerBridgeEditor from '../components/CareerBridgeEditor';
+import { emptyCareerBridge, prepareCareerBridge } from '../utils/careerBridge';
 
 export const AddSubject = () => {
   const navigate = useNavigate();
@@ -10,14 +12,17 @@ export const AddSubject = () => {
   const [success, setSuccess] = useState('');
   const [tenants, setTenants] = useState([]);
   const [tenantsLoading, setTenantsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('syllabus');
 
   // Form State
   const [formData, setFormData] = useState({
     name: '',
     courseCode: '',
+    credits: '',
     tenantId: '',
     branch: '',
     semester: 1,
+    careerBridge: emptyCareerBridge(),
     units: [
       {
         unitNumber: 1,
@@ -93,6 +98,7 @@ export const AddSubject = () => {
       // Clean and format topics string into an array of objects if needed by backend schema
       const formattedPayload = {
         ...formData,
+        careerBridge: prepareCareerBridge(formData.careerBridge),
         track: 'UNIVERSITY',
         semester: Number(formData.semester),
         units: formData.units.map(u => ({
@@ -149,6 +155,10 @@ export const AddSubject = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-10">
+          <div role="tablist" aria-label="Subject data" className="flex gap-2 rounded-2xl bg-gray-100 p-2">
+            {[['syllabus','University Syllabus'],['career','Career Bridge']].map(([key,label]) => <button key={key} type="button" role="tab" aria-selected={activeTab === key} onClick={() => setActiveTab(key)} className={`rounded-xl px-5 py-3 text-sm font-bold transition ${activeTab === key ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>{label}</button>)}
+          </div>
+          <div className={activeTab === 'syllabus' ? 'contents' : 'hidden'}>
           
           {/* Base Parameters */}
           <div className="bg-white border border-gray-200 rounded-[2rem] p-8 md:p-10 shadow-sm">
@@ -211,6 +221,10 @@ export const AddSubject = () => {
                   min="1" max="8" 
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold focus:outline-none focus:border-blue-500" 
                 />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-2">Official Course Credits</label>
+                <input type="number" name="credits" value={formData.credits} onChange={handleBaseChange} required min="0.1" max="100" step="0.1" placeholder="e.g. 4" className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold focus:outline-none focus:border-blue-500" />
               </div>
             </div>
           </div>
@@ -334,6 +348,8 @@ export const AddSubject = () => {
             ))}
           </div>
 
+          </div>
+          {activeTab === 'career' && <section className="rounded-[2rem] border border-gray-200 bg-white p-6 shadow-sm md:p-8"><CareerBridgeEditor value={formData.careerBridge} onChange={careerBridge => setFormData(prev => ({ ...prev, careerBridge }))} /></section>}
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 pt-6">
             <button 
               type="button" 

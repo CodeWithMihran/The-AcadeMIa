@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { tenantService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { GraduationCap, Target, Sparkles, CheckCircle, ArrowRight } from 'lucide-react';
+import { GraduationCap, Target, Sparkles, ArrowRight } from 'lucide-react';
 
 export const OnboardingModal = ({ isOpen, onClose }) => {
   const { user, refreshUser } = useAuth();

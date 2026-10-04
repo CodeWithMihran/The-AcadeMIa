@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 // Context
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Components & Layout
 import { Navbar } from './components/Navbar';
@@ -20,22 +21,23 @@ import { AddSubject } from './pages/AddSubject';
 import { EditSubject } from './pages/EditSubject';
 import { ProgressOverview } from './pages/ProgressOverview';
 import SubjectVault from './pages/SubjectVault';
+import { StudyTools } from './pages/StudyTools';
 
-// ✅ OAuth Callback Handler with Error Safety
+// ✅ OAuth Callback Handler with Error Safety & Seamless Navigation
 const OAuthCallback = () => {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    
-    if (token) {
-      localStorage.setItem('academia_token', token);
-      window.location.href = '/dashboard';
-    } else {
-      navigate('/', { replace: true });
-    }
-  }, [searchParams, navigate]);
+    const handleAuthCallback = async () => {
+      // Google OAuth sets the session token in an HttpOnly cookie. Keep it out
+      // of the URL, browser history, and referrer headers.
+      const user = await refreshUser();
+      navigate(user ? '/dashboard' : '/?error=denied', { replace: true });
+    };
+
+    handleAuthCallback().catch(() => navigate('/?error=failed', { replace: true }));
+  }, [navigate, refreshUser]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#fbfbfa]">
@@ -81,9 +83,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <div className="flex flex-col min-h-screen bg-[#fbfbfa]">
-          {/* Dynamic Smart Navbar */}
-          <Navbar />
+        <ThemeProvider>
+          <div className="flex flex-col min-h-screen bg-[#fbfbfa]">
+            {/* Dynamic Smart Navbar */}
+            <Navbar />
 
           <main className="flex-grow">
             <Routes>
@@ -97,6 +100,7 @@ export default function App() {
               <Route path="/subjects/:id" element={<ProtectedRoute><SubjectVault /></ProtectedRoute>} />
               <Route path="/progress" element={<ProtectedRoute><ProgressOverview /></ProtectedRoute>} />
               <Route path="/progress/:subjectId" element={<ProtectedRoute><SubjectDetail /></ProtectedRoute>} />
+              <Route path="/study-tools" element={<ProtectedRoute><StudyTools /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
               {/* Admin Protected Routes */}
@@ -110,9 +114,10 @@ export default function App() {
             </Routes>
           </main>
 
-          {/* Consolidated Dynamic Footer */}
-          <Footer />
-        </div>
+            {/* Consolidated Dynamic Footer */}
+            <Footer />
+          </div>
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

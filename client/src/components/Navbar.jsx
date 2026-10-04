@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   BookOpen, 
@@ -11,15 +11,18 @@ import {
   Library,
   UserCircle,
   Users,
-  PlusCircle
+  PlusCircle,
+  Calculator
 } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 export const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   
-  const navigate = useNavigate();
   const location = useLocation();
 
   const isAdmin = user?.role === 'admin';
@@ -85,6 +88,9 @@ export const Navbar = () => {
                   <Link to="/progress" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/progress') ? 'text-blue-400' : ''}`}>
                     <BarChart3 className="w-3.5 h-3.5" /> Progress
                   </Link>
+                  <Link to="/study-tools" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/study-tools') ? 'text-blue-400' : ''}`}>
+                    <Calculator className="w-3.5 h-3.5" /> Study Tools
+                  </Link>
                   <Link to="/profile" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/profile') ? 'text-blue-400' : ''}`}>
                     <UserCircle className="w-4 h-4" /> Profile
                   </Link>
@@ -134,12 +140,23 @@ export const Navbar = () => {
               </div>
               <div className="flex items-center gap-4 ml-2">
                 <a href="#auth" className="text-[13px] font-medium text-white/70 hover:text-white transition-colors">Log in</a>
-                <a href="#auth" className="bg-white text-black px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-100 transition-all shadow-md active:scale-95">
+                <a href="#auth" className="theme-always-light bg-white text-black px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-100 transition-all shadow-md active:scale-95">
                   Get Started
                 </a>
               </div>
             </div>
           )}
+
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            className="ml-auto mr-2 inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 text-gray-200 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 md:ml-0 md:mr-0"
+          >
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            <span className="hidden text-[10px] font-bold uppercase tracking-wider lg:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+          </button>
 
           {/* Mobile Menu Toggle */}
           <button 
@@ -172,6 +189,7 @@ export const Navbar = () => {
                   <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Dashboard</Link>
                   <Link to="/subjects" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Subjects Catalog</Link>
                   <Link to="/progress" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Global Mastery</Link>
+                  <Link to="/study-tools" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Study Tools</Link>
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">My Profile</Link>
                 </>
               ) : (

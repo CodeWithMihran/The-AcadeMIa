@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-// ✅ Now correctly targets the exact variable name in your new .env file
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+// Keep local frontend/API requests on the same loopback hostname. Browsers can
+// resolve `localhost` differently from `127.0.0.1` (especially on Windows/IPv6).
+const localApiBase = `${window.location.protocol}//${window.location.hostname}:3000/api`;
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || localApiBase).replace(/\/$/, '');
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -63,6 +65,14 @@ export const progressService = {
   getGlobalProgress: () => api.get('/progress/overview')
 };
 
+// Persistent student utility tools
+export const studyToolsService = {
+  getTools: () => api.get('/study-tools'),
+  saveAttendance: (attendance) => api.put('/study-tools/attendance', { attendance }),
+  saveSessionals: (sessionals) => api.put('/study-tools/sessionals', { sessionals }),
+  savePlanner: (planner) => api.put('/study-tools/planner', planner)
+};
+
 // Admin Endpoints
 export const adminService = {
   getOverview: () => api.get('/admin/overview'),
@@ -71,7 +81,10 @@ export const adminService = {
   updateSubject: (id, data) => api.put(`/admin/subjects/${id}`, data),
   deleteSubject: (id) => api.delete(`/admin/subjects/${id}`),
   getUsers: (params) => api.get('/admin/users', { params }),
-  deleteUser: (id) => api.delete(`/admin/users/${id}`)
+  deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  getLinkReports: (params) => api.get('/admin/link-reports', { params }),
+  updateLinkReport: (id, data) => api.patch(`/admin/link-reports/${id}`, data),
+  reportBrokenLink: (subjectId, data) => api.post(`/subjects/${subjectId}/link-reports`, data)
 };
 
 export default api;

@@ -9,8 +9,9 @@ import {
   Video,
   ArrowLeft,
   Award,
-  ExternalLink
+  Eye
 } from "lucide-react";
+import StudyMaterialViewer from "../components/StudyMaterialViewer";
 
 export default function SubjectDetail() {
   const { id, subjectId } = useParams();
@@ -23,10 +24,19 @@ export default function SubjectDetail() {
   const [totalTopicCount, setTotalTopicCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeMaterial, setActiveMaterial] = useState(null);
+  const [careerNotice, setCareerNotice] = useState(null);
+  const closeViewer = useCallback(() => setActiveMaterial(null), []);
 
   const fetchSubjectAndProgress = useCallback(async () => {
     setLoading(true);
     setError("");
+    setSubject(null);
+    setCompletedTopics(new Set());
+    setProgress(0);
+    setUnitProgress([]);
+    setCompletedTopicCount(0);
+    setTotalTopicCount(0);
     try {
       const [subjectResult, progressResult] = await Promise.allSettled([
         API.get(`/subjects/${subjectIdToLoad}`),
@@ -60,6 +70,12 @@ export default function SubjectDetail() {
     if (subjectIdToLoad) fetchSubjectAndProgress();
   }, [subjectIdToLoad, fetchSubjectAndProgress]);
 
+  useEffect(() => {
+    if (!careerNotice) return undefined;
+    const timer = window.setTimeout(() => setCareerNotice(null), 8000);
+    return () => window.clearTimeout(timer);
+  }, [careerNotice]);
+
   const handleTopicToggle = async (topicId) => {
     const updated = new Set(completedTopics);
     if (updated.has(topicId)) {
@@ -78,9 +94,18 @@ export default function SubjectDetail() {
         setCompletedTopics(current => {
           const next = new Set(current);
           if (res.data.completed) next.add(topicId);
-          else next.delete(topicId);
+        else next.delete(topicId);
           return next;
         });
+        if (res.data.completed) {
+          const topic = subject?.units?.flatMap(unit => unit.topics || []).find(item => String(item._id || item.id) === String(topicId));
+          const topicName = topic?.title || topic?.name || "this topic";
+          const normalize = value => String(value || "").trim().toLocaleLowerCase();
+          const bridge = subject?.careerBridge || {};
+          const questionCount = (bridge.interviewQuestions || []).filter(item => normalize(item.topic) === normalize(topicName)).length;
+          const codingCount = (bridge.codingLinks || []).filter(item => normalize(item.topic) === normalize(topicName)).length;
+          if (questionCount + codingCount > 0) setCareerNotice({ topicName, questionCount, codingCount });
+        }
         const progRes = await API.get(`/progress/${subjectIdToLoad}`);
         if (progRes.data.success) {
           setProgress(progRes.data.subjectProgress);
@@ -173,7 +198,7 @@ export default function SubjectDetail() {
                   <div
                     key={topicIdStr}
                     onClick={(e) => {
-                      if (e.target.closest('a')) return;
+                      if (e.target.closest('a, button')) return;
                       handleTopicToggle(topicIdStr);
                     }}
                     className={`p-5 rounded-2xl border transition-all cursor-pointer ${
@@ -216,7 +241,7 @@ export default function SubjectDetail() {
                     {topic.resources && topic.resources.length > 0 && (
                       <div className="mt-4 ml-9 flex flex-wrap gap-2">
                         {topic.resources.map((res, rIdx) => {
-                          let Icon = ExternalLink;
+                          let Icon = Eye;
                           let colorClass = "text-gray-600 hover:text-gray-900 border-gray-200";
                           
                           if (res.type === 'PDF') {
@@ -231,17 +256,16 @@ export default function SubjectDetail() {
                           }
 
                           return (
-                            <a
+                            <button
                               key={rIdx}
-                              href={res.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all shadow-sm ${colorClass}`}
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setActiveMaterial({ title: res.title || topic.title || "Study Material", url: res.url || res.link, kind: res.type === "VIDEO" ? "video" : "pdf" }); }}
+                              disabled={!res.url && !res.link}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-bold transition-all shadow-sm disabled:cursor-not-allowed ${colorClass}`}
                             >
                               <Icon className="w-3.5 h-3.5" />
                               {res.title}
-                            </a>
+                            </button>
                           );
                         })}
                       </div>
@@ -253,6 +277,9 @@ export default function SubjectDetail() {
           </div>
         ))}
       </div>
+
+      {careerNotice && <div role="status" aria-live="polite" className="flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-blue-950 shadow-sm sm:flex-row sm:items-center sm:justify-between"><p className="text-sm font-semibold">Nice work finishing {careerNotice.topicName}. Explore {careerNotice.questionCount ? `${careerNotice.questionCount} interview question${careerNotice.questionCount === 1 ? "" : "s"}` : ""}{careerNotice.questionCount && careerNotice.codingCount ? " and " : ""}{careerNotice.codingCount ? `${careerNotice.codingCount} coding problem${careerNotice.codingCount === 1 ? "" : "s"}` : ""} linked to this topic.</p><Link to={`/subjects/${subjectIdToLoad}?mode=career`} className="shrink-0 rounded-xl bg-blue-700 px-4 py-2.5 text-center text-xs font-black text-white hover:bg-blue-800">Explore Career Bridge</Link></div>}
+      <StudyMaterialViewer material={activeMaterial} onClose={closeViewer} />
     </div>
   );
 }

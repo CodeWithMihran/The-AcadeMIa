@@ -106,7 +106,11 @@ async function seedAndMigrate() {
         // 2. Migrate Existing Subjects to VMSB UTU
         console.log("2. Linking unassigned subjects to VMSB UTU...");
         const unassignedSubjects = await subjectModel.find({
-            $or: [{ tenant: null }, { tenant: { $exists: false } }]
+            $and: [
+                { $or: [{ tenant: null }, { tenant: { $exists: false } }] },
+                // Keep legacy and current competitive curricula global.
+                { track: { $nin: ["JEE", "NEET"] } }
+            ]
         });
 
         if (unassignedSubjects.length > 0) {
@@ -123,7 +127,11 @@ async function seedAndMigrate() {
         // 3. Migrate Existing Users
         console.log("3. Linking legacy users to tenants...");
         const usersToUpdate = await userModel.find({
-            $or: [{ tenant: null }, { tenant: { $exists: false } }]
+            $and: [
+                { $or: [{ tenant: null }, { tenant: { $exists: false } }] },
+                // Do not rewrite competitive-exam accounts as university students.
+                { track: { $nin: ["JEE", "NEET"] } }
+            ]
         });
 
         for (let user of usersToUpdate) {

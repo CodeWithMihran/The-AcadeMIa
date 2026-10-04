@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { adminService, tenantService } from "../services/api";
 import {
@@ -10,10 +10,10 @@ import {
   Edit3,
   Search,
   ShieldAlert,
-  Layers,
-  Sparkles,
-  CheckCircle2,
   XCircle,
+  Flag,
+  ExternalLink,
+  CheckCircle2,
 } from "lucide-react";
 
 export const AdminDashboard = () => {
@@ -25,6 +25,8 @@ export const AdminDashboard = () => {
   });
   const [subjects, setSubjects] = useState([]);
   const [users, setUsers] = useState([]);
+  const [linkReports, setLinkReports] = useState([]);
+  const [reportStatus, setReportStatus] = useState("OPEN");
   const [tenants, setTenants] = useState([]);
   const [selectedTenant, setSelectedTenant] = useState("ALL");
   const [selectedTrack, setSelectedTrack] = useState("ALL");
@@ -39,6 +41,7 @@ export const AdminDashboard = () => {
   const [subjectForm, setSubjectForm] = useState({
     name: "",
     courseCode: "",
+    credits: "",
     track: "UNIVERSITY",
     tenantId: "",
     branch: "",
@@ -46,16 +49,7 @@ export const AdminDashboard = () => {
     examCategory: "JEE_MAINS",
   });
 
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === "subjects") fetchSubjects();
-    if (activeTab === "users") fetchUsers();
-  }, [activeTab, selectedTenant, selectedTrack, searchQuery]);
-
-  const fetchInitialData = async () => {
+  const fetchInitialData = useCallback(async () => {
     setLoading(true);
     try {
       const [overviewRes, tenantsRes] = await Promise.all([
@@ -77,9 +71,9 @@ export const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchSubjects = async () => {
+  const fetchSubjects = useCallback(async () => {
     try {
       const res = await adminService.getSubjects({
         tenantId: selectedTenant,
@@ -89,11 +83,11 @@ export const AdminDashboard = () => {
         setSubjects(res.data.subjects);
       }
     } catch (err) {
-      setError("Failed to fetch subjects list.");
+      setError(err.response?.data?.message || "Failed to fetch subjects list.");
     }
-  };
+  }, [selectedTenant, selectedTrack]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const res = await adminService.getUsers({
         tenantId: selectedTenant,
@@ -103,7 +97,28 @@ export const AdminDashboard = () => {
         setUsers(res.data.users);
       }
     } catch (err) {
-      setError("Failed to fetch user directory.");
+      setError(err.response?.data?.message || "Failed to fetch user directory.");
+    }
+  }, [selectedTenant, searchQuery]);
+
+  const fetchLinkReports = useCallback(async () => {
+    try {
+      const res = await adminService.getLinkReports({ status: reportStatus });
+      if (res.data.success) setLinkReports(res.data.reports || []);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to load broken-link reports.");
+    }
+  }, [reportStatus]);
+
+  const handleLinkReportUpdate = async (report, status) => {
+    try {
+      const res = await adminService.updateLinkReport(report._id, { status });
+      if (res.data.success) {
+        setSuccessMsg(res.data.message);
+        fetchLinkReports();
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to update link report.");
     }
   };
 
@@ -167,6 +182,7 @@ export const AdminDashboard = () => {
     setSubjectForm({
       name: "",
       courseCode: "",
+      credits: "",
       track: "UNIVERSITY",
       tenantId: tenants.find(tenant => tenant.type === "UNIVERSITY")?._id || "",
       branch: "",
@@ -174,6 +190,20 @@ export const AdminDashboard = () => {
       examCategory: "JEE_MAINS",
     });
   };
+
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  useEffect(() => {
+    if (activeTab === "subjects") fetchSubjects();
+    if (activeTab === "users") fetchUsers();
+    if (activeTab === "link-reports") fetchLinkReports();
+  }, [activeTab, fetchSubjects, fetchUsers, fetchLinkReports]);
+
+  if (loading) {
+    return <main className="min-h-screen bg-[#fbfbfa] px-6 pt-40 text-center text-xs font-black uppercase tracking-widest text-gray-400">Loading admin console…</main>;
+  }
 
   return (
     <div className="min-h-screen bg-[#fbfbfa] pt-28 pb-20 px-6">
@@ -192,7 +222,7 @@ export const AdminDashboard = () => {
 
           {/* Navigation Tabs */}
           <div className="flex bg-gray-100 p-1.5 rounded-2xl border border-gray-200 gap-1">
-            {["overview", "subjects", "users"].map((tab) => (
+            {["overview", "subjects", "users", "link-reports"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -202,7 +232,7 @@ export const AdminDashboard = () => {
                     : "text-gray-500 hover:text-black"
                 }`}
               >
-                {tab}
+                {tab === "link-reports" ? "link reports" : tab}
               </button>
             ))}
           </div>
@@ -325,6 +355,7 @@ export const AdminDashboard = () => {
                     <th className="px-6 py-4">Subject Name</th>
                     <th className="px-6 py-4">Code</th>
                     <th className="px-6 py-4">Track / Category</th>
+                    <th className="px-6 py-4">Credits</th>
                     <th className="px-6 py-4">Institution</th>
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
@@ -347,6 +378,9 @@ export const AdminDashboard = () => {
                             ? `Sem ${s.semester} (${s.branch})`
                             : s.examCategory || s.track}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-bold">
+                        {s.track !== "UNIVERSITY" ? "—" : Number(s.credits) > 0 ? s.credits : <span className="text-amber-600">Missing</span>}
                       </td>
                       <td className="px-6 py-4 font-semibold text-gray-700">
                         {s.tenant?.shortCode || "National Track"}
@@ -438,6 +472,33 @@ export const AdminDashboard = () => {
             </div>
           </div>
         )}
+
+        {activeTab === "link-reports" && (
+          <section className="space-y-5">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="flex items-center gap-2 text-xl font-black text-gray-900"><Flag className="h-5 w-5 text-amber-600"/>Broken-link reports</h2>
+                <p className="mt-1 text-sm text-gray-500">Student reports for curated practice links and GATE PYQs. Showing up to 200 most recent.</p>
+              </div>
+              <select aria-label="Report status" value={reportStatus} onChange={e => setReportStatus(e.target.value)} className="rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-xs font-bold">
+                <option value="OPEN">Needs review</option><option value="RESOLVED">Resolved</option><option value="DISMISSED">Dismissed</option><option value="ALL">All reports</option>
+              </select>
+            </div>
+            {linkReports.length ? <div className="space-y-3">{linkReports.map(report => <article key={report._id} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-col justify-between gap-4 md:flex-row md:items-start">
+                <div className="min-w-0 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2"><span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${report.status === "OPEN" ? "bg-amber-100 text-amber-800" : report.status === "RESOLVED" ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-700"}`}>{report.status}</span><span className="text-xs font-bold uppercase tracking-wide text-gray-500">{report.resourceType === "GATE_PYQ" ? "GATE PYQ" : "Coding practice"}</span><span className="text-xs text-gray-400">{new Date(report.createdAt).toLocaleString()}</span></div>
+                  <h3 className="font-black text-gray-900">{report.resourceTitle}</h3>
+                  <p className="text-xs text-gray-600">{report.subject?.name || "Deleted subject"}{report.subject?.courseCode ? ` · ${report.subject.courseCode}` : ""}{report.topic ? ` · ${report.topic}` : ""}</p>
+                  <p className="text-xs text-gray-500">Reported by {report.reporter?.name || "Unknown student"} {report.reporter?.email ? `(${report.reporter.email})` : ""}</p>
+                  <a href={report.resourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex max-w-full items-center gap-1 break-all text-xs font-semibold text-blue-700 underline">{report.resourceUrl}<ExternalLink className="h-3 w-3 shrink-0"/></a>
+                  {report.resolutionNote && <p className="text-xs text-gray-500">Admin note: {report.resolutionNote}</p>}
+                </div>
+                {report.status === "OPEN" && <div className="flex shrink-0 gap-2"><button type="button" onClick={() => handleLinkReportUpdate(report, "RESOLVED")} className="inline-flex items-center gap-1 rounded-xl bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800"><CheckCircle2 className="h-4 w-4"/>Resolve</button><button type="button" onClick={() => handleLinkReportUpdate(report, "DISMISSED")} className="rounded-xl border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600 hover:bg-gray-50">Dismiss</button></div>}
+              </div>
+            </article>)}</div> : <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center"><Flag className="mx-auto h-8 w-8 text-gray-300"/><p className="mt-3 font-bold text-gray-700">No reports in this view</p><p className="mt-1 text-sm text-gray-500">New student link reports will appear here.</p></div>}
+          </section>
+        )}
       </div>
 
       {/* CREATE SUBJECT MODAL */}
@@ -482,6 +543,10 @@ export const AdminDashboard = () => {
                   className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold"
                 />
               </div>
+              {subjectForm.track === "UNIVERSITY" && <div>
+                <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Official Course Credits</label>
+                <input type="number" min="0.1" max="100" step="0.1" required value={subjectForm.credits} onChange={(e) => setSubjectForm({ ...subjectForm, credits: e.target.value })} placeholder="e.g. 4" className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold" />
+              </div>}
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
