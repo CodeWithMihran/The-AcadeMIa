@@ -1,23 +1,31 @@
+import { TRACKS } from "../constants";
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { subjectService, progressService } from '../services/api';
+import { useStudentSubjects, useGlobalProgress, queryKeys } from '../hooks/useAcademiaQueries';
 import { OnboardingModal } from '../components/OnboardingModal';
-import { 
+import {
   ArrowUpRight, 
   Settings2,
   FolderOpen,
   Layers,
   Calculator
 } from 'lucide-react';
+import SkillRadarCard from '../components/SkillRadarCard';
 
 export const Dashboard = () => {
   const { user } = useAuth();
   
-  const [subjects, setSubjects] = useState([]);
-  const [progressMap, setProgressMap] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const queryClient = useQueryClient();
+  const enabled = Boolean(user?.onboardingCompleted);
+  const subjectsQuery = useStudentSubjects(user, enabled);
+  const progressQuery = useGlobalProgress(user, enabled);
+  const subjects = subjectsQuery.data || [];
+  const progressMap = progressQuery.data?.subjectProgressMap || {};
+  const skillRadar = progressQuery.data?.skillRadar || [];
+  const loading = enabled && (subjectsQuery.isLoading || progressQuery.isLoading);
+  const error = subjectsQuery.error?.response?.data?.message || (subjectsQuery.error ? 'Failed to load curriculum data.' : '');
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   // 1. Check Onboarding Status
@@ -28,37 +36,10 @@ export const Dashboard = () => {
   }, [user]);
 
   // 2. Fetch Dashboard Data
-  const loadDashboardData = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const [subjectsRes, progressRes] = await Promise.all([
-        subjectService.getSubjects(),
-        // Catch progress errors silently so the dashboard still loads if progress is empty
-        progressService.getGlobalProgress().catch(() => ({ data: { subjectProgressMap: {} } }))
-      ]);
-
-      if (subjectsRes.data.success) {
-        setSubjects(subjectsRes.data.subjects);
-      }
-      if (progressRes.data?.success) {
-        setProgressMap(progressRes.data.subjectProgressMap || {});
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load curriculum data.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 3. Auto-load data when user session is confirmed
-  useEffect(() => {
-    if (user && user.onboardingCompleted) {
-      loadDashboardData();
-    } else {
-      setLoading(false); // Stop loading spinner if we are just waiting for onboarding
-    }
-  }, [user]);
+  const loadDashboardData = () => Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.studentSubjects(user) }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.globalProgress(user) }),
+  ]);
 
   return (
     <div className="min-h-screen bg-[#fbfbfa] pt-28 pb-20 px-6">
@@ -79,7 +60,7 @@ export const Dashboard = () => {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wider">
-                {user?.track === 'UNIVERSITY' ? 'University Curriculum' : `${user?.targetExam || 'Competitive'} Track`}
+                {user?.track === TRACKS.UNIVERSITY ? 'University Curriculum' : `${user?.targetExam || 'Competitive'} Track`}
               </span>
               <button 
                 onClick={() => setShowOnboarding(true)}
@@ -95,7 +76,7 @@ export const Dashboard = () => {
             </h1>
 
             <p className="text-gray-500 font-medium text-sm mt-2">
-              {user?.track === 'UNIVERSITY' ? (
+              {user?.track === TRACKS.UNIVERSITY ? (
                 <span>
                   Current Enrollment: <strong className="text-black">{user?.tenant?.shortCode || "University"}</strong> &bull; {user?.college} &bull; <span className="text-blue-600 font-bold">{user?.branch} (Sem {user?.semester})</span>
                 </span>
@@ -121,6 +102,8 @@ export const Dashboard = () => {
           <div className="flex items-center gap-4"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-blue-600 shadow-sm"><Calculator className="h-5 w-5" /></span><div><p className="text-sm font-black text-gray-900">Daily Study Tools</p><p className="mt-1 text-xs text-gray-500">Attendance forecast · SGPA planner · Internal marks</p></div></div>
           <ArrowUpRight className="h-4 w-4 shrink-0 text-blue-600" />
         </Link>
+
+        <SkillRadarCard data={skillRadar} />
 
         {/* Section Title */}
         <div className="flex items-center justify-between mb-8">

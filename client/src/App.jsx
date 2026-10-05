@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './queryClient';
 
 // Context
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -22,6 +24,8 @@ import { EditSubject } from './pages/EditSubject';
 import { ProgressOverview } from './pages/ProgressOverview';
 import SubjectVault from './pages/SubjectVault';
 import { StudyTools } from './pages/StudyTools';
+import { CampusDashboard } from './pages/CampusDashboard';
+import Rankings from './pages/Rankings';
 
 // ✅ OAuth Callback Handler with Error Safety & Seamless Navigation
 const OAuthCallback = () => {
@@ -82,6 +86,7 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
 export default function App() {
   return (
     <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ThemeProvider>
           <div className="flex flex-col min-h-screen bg-[#fbfbfa]">
@@ -99,8 +104,10 @@ export default function App() {
               <Route path="/subjects" element={<ProtectedRoute><SubjectCatalog /></ProtectedRoute>} />
               <Route path="/subjects/:id" element={<ProtectedRoute><SubjectVault /></ProtectedRoute>} />
               <Route path="/progress" element={<ProtectedRoute><ProgressOverview /></ProtectedRoute>} />
+              <Route path="/rankings" element={<ProtectedRoute><Rankings /></ProtectedRoute>} />
               <Route path="/progress/:subjectId" element={<ProtectedRoute><SubjectDetail /></ProtectedRoute>} />
               <Route path="/study-tools" element={<ProtectedRoute><StudyTools /></ProtectedRoute>} />
+              <Route path="/campus" element={<ProtectedRoute><CampusDashboard /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
 
               {/* Admin Protected Routes */}
@@ -119,6 +126,7 @@ export default function App() {
           </div>
         </ThemeProvider>
       </AuthProvider>
+      </QueryClientProvider>
     </BrowserRouter>
   );
 }

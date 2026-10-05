@@ -2,8 +2,9 @@ import React from "react";
 import { Plus, Trash2 } from "lucide-react";
 
 import { emptyCareerBridge } from "../utils/careerBridge";
+import { CODING_PLATFORMS, DIFFICULTY_LEVELS } from "../constants";
 const blankQuestion = () => ({ question: "", answerMarkdown: "", companies: [], topic: "", difficulty: "", isPremium: false });
-const blankCoding = () => ({ title: "", platform: "LeetCode", url: "", topic: "", difficulty: "", isPremium: false });
+const blankCoding = () => ({ title: "", platform: CODING_PLATFORMS[0], url: "", topic: "", difficulty: "", isPremium: false });
 const blankPyq = () => ({ title: "", year: "", topic: "", url: "", isPremium: false });
 
 const fieldClass = "w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm";
@@ -24,7 +25,7 @@ export default function CareerBridgeEditor({ value = emptyCareerBridge(), onChan
         <input className={`${fieldClass} md:col-span-2`} placeholder="Interview question" value={row.question || ""} onChange={e => updateRow("interviewQuestions", i, "question", e.target.value)} />
         <input className={fieldClass} placeholder="Companies (comma-separated: Google, Microsoft, Amazon)" value={(row.companies || (row.company ? [row.company] : [])).join(", ")} onChange={e => updateRow("interviewQuestions", i, "companies", e.target.value.split(",").map(company => company.trim()).filter(Boolean))} />
         <input className={fieldClass} placeholder="Related topic (match syllabus topic)" value={row.topic || ""} onChange={e => updateRow("interviewQuestions", i, "topic", e.target.value)} />
-        <select className={fieldClass} value={row.difficulty || ""} onChange={e => updateRow("interviewQuestions", i, "difficulty", e.target.value)}><option value="">Difficulty (optional)</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
+        <select className={fieldClass} value={row.difficulty || ""} onChange={e => updateRow("interviewQuestions", i, "difficulty", e.target.value)}><option value="">Difficulty (optional)</option>{DIFFICULTY_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}</select>
         <label className="space-y-2 text-xs font-semibold text-gray-600 md:col-span-2">Answer / explanation <span className="font-normal text-gray-500">(Markdown: **bold**, `code`, lists, fenced code blocks)</span><textarea className={`${fieldClass} min-h-32 font-mono`} maxLength={20000} placeholder={'Explain the approach…\n\n```js\n// code example\n```'} value={row.answerMarkdown || ""} onChange={e => updateRow("interviewQuestions", i, "answerMarkdown", e.target.value)} /></label>
         <div className="flex items-center justify-between">{renderPremium(row, (f,v) => updateRow("interviewQuestions", i, f, v))}<button type="button" aria-label="Remove question" onClick={() => update("interviewQuestions", data.interviewQuestions.filter((_, j) => j !== i))} className="text-red-500"><Trash2 className="h-4 w-4"/></button></div>
       </div>)}</div>
@@ -35,10 +36,10 @@ export default function CareerBridgeEditor({ value = emptyCareerBridge(), onChan
       {!data.codingLinks.length && <p className="rounded-xl bg-white p-4 text-sm text-gray-500">No practice links added yet.</p>}
       <div className="space-y-4">{data.codingLinks.map((row, i) => <div key={row._id || i} className="grid gap-3 rounded-2xl border border-gray-100 bg-white p-4 md:grid-cols-2">
         <input className={fieldClass} placeholder="Problem title" value={row.title || ""} onChange={e => updateRow("codingLinks", i, "title", e.target.value)} />
-        <select className={fieldClass} value={row.platform || "Other"} onChange={e => updateRow("codingLinks", i, "platform", e.target.value)}>{["LeetCode", "GeeksforGeeks", "HackerRank", "Codeforces", "Other"].map(p => <option key={p}>{p}</option>)}</select>
+        <select className={fieldClass} value={row.platform || CODING_PLATFORMS.at(-1)} onChange={e => updateRow("codingLinks", i, "platform", e.target.value)}>{CODING_PLATFORMS.map(platform => <option key={platform} value={platform}>{platform}</option>)}</select>
         <input className={fieldClass} type="url" placeholder="https://…" value={row.url || ""} onChange={e => updateRow("codingLinks", i, "url", e.target.value)} />
         <input className={fieldClass} placeholder="Related topic (match syllabus topic)" value={row.topic || ""} onChange={e => updateRow("codingLinks", i, "topic", e.target.value)} />
-        <select className={fieldClass} value={row.difficulty || ""} onChange={e => updateRow("codingLinks", i, "difficulty", e.target.value)}><option value="">Difficulty (optional)</option><option>Easy</option><option>Medium</option><option>Hard</option></select>
+        <select className={fieldClass} value={row.difficulty || ""} onChange={e => updateRow("codingLinks", i, "difficulty", e.target.value)}><option value="">Difficulty (optional)</option>{DIFFICULTY_LEVELS.map(level => <option key={level} value={level}>{level}</option>)}</select>
         <div className="flex items-center justify-between">{renderPremium(row, (f,v) => updateRow("codingLinks", i, f, v))}<button type="button" aria-label="Remove problem" onClick={() => update("codingLinks", data.codingLinks.filter((_, j) => j !== i))} className="text-red-500"><Trash2 className="h-4 w-4"/></button></div>
       </div>)}</div>
     </section>

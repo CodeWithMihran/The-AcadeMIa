@@ -46,11 +46,15 @@ module.exports.getTools = async (req, res) => {
 
 module.exports.saveAttendance = async (req, res) => {
     try {
-        if (!Array.isArray(req.body.attendance) || req.body.attendance.length > 300) {
+        const attendanceData = req.body?.attendance;
+        if (!Array.isArray(attendanceData) || attendanceData.length > 300) {
             return res.status(400).json({ success: false, message: "Attendance data must be a list of up to 300 subjects." });
         }
         const entries = [];
-        for (const entry of req.body.attendance) {
+        for (const entry of attendanceData) {
+            if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+                return res.status(400).json({ success: false, message: "Check subject names, class totals, attendance counts, and threshold values." });
+            }
             const classesHeld = validNumber(entry.classesHeld, 0, 100000);
             const classesAttended = validNumber(entry.classesAttended, 0, 100000);
             const threshold = validNumber(entry.threshold, 1, 100);
@@ -70,11 +74,15 @@ module.exports.saveAttendance = async (req, res) => {
 
 module.exports.saveSessionals = async (req, res) => {
     try {
-        if (!Array.isArray(req.body.sessionals) || req.body.sessionals.length > 300) {
+        const sessionalData = req.body?.sessionals;
+        if (!Array.isArray(sessionalData) || sessionalData.length > 300) {
             return res.status(400).json({ success: false, message: "Marks data must be a list of up to 300 subjects." });
         }
         const entries = [];
-        for (const entry of req.body.sessionals) {
+        for (const entry of sessionalData) {
+            if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+                return res.status(400).json({ success: false, message: "Check subject names, assessment limits, and maximum mark values." });
+            }
             const internalMaximum = validNumber(entry.internalMaximum, 0.01, 10000);
             const externalMaximum = validNumber(entry.externalMaximum, 0.01, 10000);
             const targetPercent = validNumber(entry.targetPercent, 1, 100);
@@ -84,6 +92,9 @@ module.exports.saveSessionals = async (req, res) => {
             if (entry.subject && !mongoose.isValidObjectId(entry.subject)) return res.status(400).json({ success: false, message: "A marks subject reference is invalid." });
             const assessments = [];
             for (const assessment of entry.assessments) {
+                if (!assessment || typeof assessment !== "object" || Array.isArray(assessment)) {
+                    return res.status(400).json({ success: false, message: "Each assessment needs a name and a valid score within its maximum marks." });
+                }
                 const marks = validNumber(assessment.marks, 0, 10000);
                 const maxMarks = validNumber(assessment.maxMarks, 0.01, 10000);
                 if (!assessment || !validText(assessment.name, 80) || marks === null || maxMarks === null || marks > maxMarks || !["MIDTERM", "CLASS_TEST", "LAB_VIVA", "OTHER"].includes(assessment.category)) {
@@ -103,21 +114,25 @@ module.exports.saveSessionals = async (req, res) => {
 
 module.exports.savePlanner = async (req, res) => {
     try {
+        const body = req.body || {};
         if (req.user.track !== "UNIVERSITY" || req.user.tenant?.type !== "UNIVERSITY") {
             return res.status(400).json({ success: false, message: "The credit planner is available for university students." });
         }
         const tenantId = currentTenantId(req.user);
         if (!tenantId || !mongoose.isValidObjectId(tenantId)) return res.status(400).json({ success: false, message: "Choose a university before setting a grading scheme." });
-        const previousCgpa = validNumber(req.body.previousCgpa, 0, 10);
-        const completedCredits = validNumber(req.body.completedCredits, 0, 10000);
-        const targetCgpa = validNumber(req.body.targetCgpa, 0, 10);
-        const gradeScale = req.body.gradeScale;
-        const rawProjections = req.body.projections || [];
+        const previousCgpa = validNumber(body.previousCgpa, 0, 10);
+        const completedCredits = validNumber(body.completedCredits, 0, 10000);
+        const targetCgpa = validNumber(body.targetCgpa, 0, 10);
+        const gradeScale = body.gradeScale;
+        const rawProjections = body.projections || [];
         if (previousCgpa === null || completedCredits === null || targetCgpa === null || !Array.isArray(gradeScale) || gradeScale.length < 2 || gradeScale.length > 20 || !Array.isArray(rawProjections) || rawProjections.length > 300) {
             return res.status(400).json({ success: false, message: "Provide a valid prior CGPA, credit total, and grading scale." });
         }
         const normalizedScale = [];
         for (const band of gradeScale) {
+            if (!band || typeof band !== "object" || Array.isArray(band)) {
+                return res.status(400).json({ success: false, message: "Each grade band needs a label, percentage threshold, and grade point." });
+            }
             const minimumPercent = validNumber(band.minimumPercent, 0, 100);
             const gradePoint = validNumber(band.gradePoint, 0, 10);
             if (!band || !validText(band.label, 12) || minimumPercent === null || gradePoint === null) {
@@ -136,6 +151,7 @@ module.exports.savePlanner = async (req, res) => {
         }).select("_id").lean();
         const allowedSubjectIds = new Set(allowedSubjects.map(subject => subject._id.toString()));
         for (const item of rawProjections) {
+            if (!item || typeof item !== "object" || Array.isArray(item)) return res.status(400).json({ success: false, message: "Each projected mark needs a subject in your current university catalog and a valid percentage." });
             const percent = validNumber(item.percent, 0, 100);
             if (!item || !mongoose.isValidObjectId(item.subject) || !allowedSubjectIds.has(item.subject.toString()) || percent === null) return res.status(400).json({ success: false, message: "Each projected mark needs a subject in your current university catalog and a valid percentage." });
             projections.push({ subject: item.subject, percent });

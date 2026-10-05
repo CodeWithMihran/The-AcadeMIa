@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { TRACKS } from "../constants";
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { subjectService } from '../services/api';
+import { useStudentSubjects } from '../hooks/useAcademiaQueries';
 import { 
   Database, 
   Cloud, 
@@ -16,35 +17,15 @@ import {
 export const SubjectCatalog = () => {
   const { user } = useAuth();
   
-  const [subjects, setSubjects] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    const fetchCatalog = async () => {
-      try {
-        const res = await subjectService.getSubjects();
-        if (res.data.success) {
-          setSubjects(res.data.subjects);
-        }
-      } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load curriculum vault.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchCatalog();
-    }
-  }, [user]);
+  const { data: subjects = [], isLoading: loading, error: queryError } = useStudentSubjects(user);
+  const error = queryError?.response?.data?.message || (queryError ? 'Failed to load curriculum vault.' : '');
 
   // Array of icons to cycle through for subject cards
   const courseIcons = ['📓', '⚙️', '💻', '📐', '🔬'];
 
   if (!user) return null;
 
-  const isUniversity = user.track === 'UNIVERSITY';
+  const isUniversity = user.track === TRACKS.UNIVERSITY;
 
   return (
     <div className="min-h-screen bg-[#fbfbfa] pt-32 pb-20 px-6 animate-in fade-in duration-500">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import API from "../services/api";
 import {
   CheckCircle2,
@@ -14,6 +15,7 @@ import {
 import StudyMaterialViewer from "../components/StudyMaterialViewer";
 
 export default function SubjectDetail() {
+  const queryClient = useQueryClient();
   const { id, subjectId } = useParams();
   const subjectIdToLoad = id || subjectId;
   const [subject, setSubject] = useState(null);
@@ -91,6 +93,7 @@ export default function SubjectDetail() {
         topicId,
       });
       if (res.data.success) {
+        queryClient.invalidateQueries({ queryKey: ["globalProgress"] });
         setCompletedTopics(current => {
           const next = new Set(current);
           if (res.data.completed) next.add(topicId);

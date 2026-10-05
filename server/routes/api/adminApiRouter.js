@@ -12,6 +12,7 @@ router.get("/overview", adminController.getAdminOverview);
 
 // Subject Management
 router.get("/subjects", adminController.getAdminSubjects);
+router.get("/subjects/:id", adminController.getAdminSubject);
 router.post("/subjects", adminController.createSubject);
 router.put("/subjects/:id", adminController.updateSubject);
 router.delete("/subjects/:id", adminController.deleteSubject);

@@ -4,6 +4,10 @@ const tenantModel = require("../../models/tenant-model");
 const progressModel = require("../../models/progress-model");
 const studyToolsModel = require("../../models/study-tools-model");
 const linkReportModel = require("../../models/link-report-model");
+const communityNoteModel = require("../../models/community-note-model");
+const communityVoteModel = require("../../models/community-vote-model");
+const communityBountyModel = require("../../models/community-bounty-model");
+const communityWalletModel = require("../../models/community-wallet-model");
 const mongoose = require("mongoose");
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -30,6 +34,40 @@ const careerBridgeValidationError = (bridge) => {
         try { return !["http:", "https:"].includes(new URL(value).protocol); }
         catch { return true; }
     })) return "Career Bridge links must be valid HTTP(S) URLs.";
+    return null;
+};
+
+const examNightValidationError = (units) => {
+    if (units === undefined) return null;
+    if (!Array.isArray(units)) return "Subject units must be an array.";
+    for (const unit of units) {
+        const coveredYears = unit?.examYearsCovered || [];
+        const questions = unit?.examQuestions || [];
+        if (!Array.isArray(coveredYears) || coveredYears.length > 10 || coveredYears.some(year => !Number.isInteger(Number(year)) || Number(year) < 1980 || Number(year) > 2100)) {
+            return "Add up to 10 valid exam coverage years (1980–2100) per unit.";
+        }
+        const covered = new Set(coveredYears.map(Number));
+        if (!Array.isArray(questions) || questions.length > 300) return "Each unit can contain up to 300 structured exam questions.";
+        for (const item of questions) {
+            if (!item || typeof item.question !== "string" || !item.question.trim() || item.question.length > 2000 || typeof item.topic !== "string" || !item.topic.trim() || item.topic.length > 160 || !Number.isInteger(Number(item.year)) || Number(item.year) < 1980 || Number(item.year) > 2100 || typeof item.sourceLabel !== "string" || !item.sourceLabel.trim() || item.sourceLabel.length > 160) {
+                return "Each PYQ needs a question, mapped topic, valid year, and source label.";
+            }
+            if (!covered.has(Number(item.year))) return `Add ${item.year} to the unit's covered exam years before adding its question.`;
+            if (item.marks !== undefined && item.marks !== null && item.marks !== "" && (!Number.isFinite(Number(item.marks)) || Number(item.marks) <= 0 || Number(item.marks) > 100)) {
+                return "Question marks must be greater than 0 and at most 100.";
+            }
+            if (item.sourceUrl) {
+                try { if (!["http:", "https:"].includes(new URL(item.sourceUrl).protocol)) return "PYQ source links must use HTTP or HTTPS."; }
+                catch { return "Enter a valid HTTP(S) PYQ source link."; }
+            }
+        }
+        for (const section of ["formulas", "derivations", "diagrams", "keyPoints"]) {
+            if (typeof unit?.rapidRevision?.[section] === "string" && unit.rapidRevision[section].length > 12000) return "Each rapid revision section must be 12,000 characters or fewer.";
+        }
+        for (const section of ["definition", "diagram", "workingPrinciple", "advantages", "disadvantages"]) {
+            if (typeof unit?.quickSummary?.[section] === "string" && unit.quickSummary[section].length > 12000) return "Each quick summary section must be 12,000 characters or fewer.";
+        }
+    }
     return null;
 };
 
@@ -90,6 +128,19 @@ module.exports.getAdminSubjects = async (req, res) => {
     }
 };
 
+module.exports.getAdminSubject = async (req, res) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(400).json({ success: false, message: "Invalid subject ID." });
+        }
+        const subject = await subjectModel.findById(req.params.id).populate("tenant", "name shortCode");
+        if (!subject) return res.status(404).json({ success: false, message: "Subject not found." });
+        return res.status(200).json({ success: true, subject });
+    } catch (err) {
+        return res.status(500).json({ success: false, message: "Failed to fetch subject: " + err.message });
+    }
+};
+
 // 3. Create Subject Under Tenant
 module.exports.createSubject = async (req, res) => {
     try {
@@ -97,6 +148,8 @@ module.exports.createSubject = async (req, res) => {
 
         const careerBridgeError = careerBridgeValidationError(careerBridge);
         if (careerBridgeError) return res.status(400).json({ success: false, message: careerBridgeError });
+        const examNightError = examNightValidationError(units);
+        if (examNightError) return res.status(400).json({ success: false, message: examNightError });
 
         if (!name) {
             return res.status(400).json({
@@ -162,6 +215,8 @@ module.exports.updateSubject = async (req, res) => {
         if (!existing) return res.status(404).json({ success: false, message: "Subject not found." });
 
         const updateData = { ...req.body };
+        const examNightError = examNightValidationError(updateData.units);
+        if (examNightError) return res.status(400).json({ success: false, message: examNightError });
         if (updateData.careerBridge !== undefined) {
             const careerBridgeError = careerBridgeValidationError(updateData.careerBridge);
             if (careerBridgeError) return res.status(400).json({ success: false, message: careerBridgeError });
@@ -232,11 +287,20 @@ module.exports.deleteSubject = async (req, res) => {
     try {
         const { id } = req.params;
         if (!mongoose.isValidObjectId(id)) return res.status(400).json({ success: false, message: "Invalid subject id." });
+        const activeBounty = await communityBountyModel.exists({ subject: id, status: { $in: ["PENDING", "OPEN", "FULFILLING", "CANCELLING"] } });
+        if (activeBounty) return res.status(409).json({ success: false, message: "This subject has active bounties. Close or resolve them before deleting the subject." });
 
         const deleted = await subjectModel.findByIdAndDelete(id);
         if (!deleted) return res.status(404).json({ success: false, message: "Subject not found." });
         // Cascade delete orphaned progress records
-        await progressModel.deleteMany({ subject: id });
+        const notes = await communityNoteModel.find({ subject: id }).select("_id").lean();
+        const noteIds = notes.map((note) => note._id);
+        await Promise.all([
+            progressModel.deleteMany({ subject: id }),
+            communityVoteModel.deleteMany({ note: { $in: noteIds } }),
+            communityNoteModel.deleteMany({ subject: id }),
+            communityBountyModel.deleteMany({ subject: id, status: { $in: ["FULFILLED", "CANCELLED"] } })
+        ]);
 
         return res.status(200).json({
             success: true,
@@ -305,11 +369,21 @@ module.exports.deleteUser = async (req, res) => {
             });
         }
 
+        const activeBounty = await communityBountyModel.exists({ creator: id, status: { $in: ["PENDING", "OPEN", "FULFILLING", "CANCELLING"] } });
+        if (activeBounty) return res.status(409).json({ success: false, message: "This account has active bounties. Resolve or cancel them before deleting the account." });
+
         const deleted = await userModel.findByIdAndDelete(id);
         if (!deleted) return res.status(404).json({ success: false, message: "User not found." });
+        const contributedNotes = await communityNoteModel.find({ contributor: id }).select("_id").lean();
+        const contributedNoteIds = contributedNotes.map((note) => note._id);
         await Promise.all([
             progressModel.deleteMany({ user: id }),
-            studyToolsModel.deleteOne({ user: id })
+            studyToolsModel.deleteOne({ user: id }),
+            communityNoteModel.deleteMany({ contributor: id }),
+            communityVoteModel.deleteMany({ user: id }),
+            communityVoteModel.deleteMany({ note: { $in: contributedNoteIds } }),
+            communityBountyModel.deleteMany({ creator: id }),
+            communityWalletModel.deleteOne({ user: id })
         ]);
 
         return res.status(200).json({

@@ -26,6 +26,30 @@ const topicSchema = new mongoose.Schema({
     }
 }, { _id: true });
 
+const examQuestionSchema = new mongoose.Schema({
+    question: { type: String, trim: true, required: true, maxlength: 2000 },
+    topic: { type: String, trim: true, required: true, maxlength: 160 },
+    year: { type: Number, min: 1980, max: 2100, required: true },
+    marks: { type: Number, min: 0, max: 100, default: null },
+    sourceLabel: { type: String, trim: true, required: true, maxlength: 160 },
+    sourceUrl: { type: String, trim: true, default: "", maxlength: 2048 }
+}, { _id: true });
+
+const quickSummarySchema = new mongoose.Schema({
+    definition: { type: String, trim: true, maxlength: 12000, default: "" },
+    diagram: { type: String, trim: true, maxlength: 12000, default: "" },
+    workingPrinciple: { type: String, trim: true, maxlength: 12000, default: "" },
+    advantages: { type: String, trim: true, maxlength: 12000, default: "" },
+    disadvantages: { type: String, trim: true, maxlength: 12000, default: "" }
+}, { _id: false });
+
+const rapidRevisionSchema = new mongoose.Schema({
+    formulas: { type: String, trim: true, maxlength: 12000, default: "" },
+    derivations: { type: String, trim: true, maxlength: 12000, default: "" },
+    diagrams: { type: String, trim: true, maxlength: 12000, default: "" },
+    keyPoints: { type: String, trim: true, maxlength: 12000, default: "" }
+}, { _id: false });
+
 const unitSchema = new mongoose.Schema({
     unitNumber: {
         type: Number,
@@ -40,7 +64,12 @@ const unitSchema = new mongoose.Schema({
     books: [resourceSchema],
     pyqs: [resourceSchema],
     youtubeLinks: [resourceSchema],
-    topics: [topicSchema]
+    topics: [topicSchema],
+    // Coverage is entered explicitly so recurrence scores have an honest denominator.
+    examYearsCovered: [{ type: Number, min: 1980, max: 2100 }],
+    examQuestions: { type: [examQuestionSchema], default: [] },
+    rapidRevision: { type: rapidRevisionSchema, default: () => ({}) },
+    quickSummary: { type: quickSummarySchema, default: () => ({}) }
 }, { _id: true });
 
 const careerQuestionSchema = new mongoose.Schema({

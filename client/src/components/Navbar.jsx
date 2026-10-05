@@ -1,3 +1,4 @@
+import { TRACKS } from "../constants";
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +13,8 @@ import {
   UserCircle,
   Users,
   PlusCircle,
-  Calculator
+  Calculator,
+  Trophy
 } from 'lucide-react';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -59,7 +61,7 @@ export const Navbar = () => {
           {user && !isAdmin && (
             <div className="hidden lg:flex items-center gap-2 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full text-xs font-medium text-gray-300">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              {user.track === 'COMPETITIVE' || user.track === 'JEE' || user.track === 'NEET' ? (
+              {user.track === 'COMPETITIVE' || user.track === TRACKS.JEE || user.track === TRACKS.NEET ? (
                 <span className="font-semibold text-amber-300">
                   {user.targetExam || user.track} Track
                 </span>
@@ -88,9 +90,13 @@ export const Navbar = () => {
                   <Link to="/progress" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/progress') ? 'text-blue-400' : ''}`}>
                     <BarChart3 className="w-3.5 h-3.5" /> Progress
                   </Link>
+                  <Link to="/rankings" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/rankings') ? 'text-amber-300' : ''}`}>
+                    <Trophy className="w-3.5 h-3.5" /> Rankings
+                  </Link>
                   <Link to="/study-tools" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/study-tools') ? 'text-blue-400' : ''}`}>
                     <Calculator className="w-3.5 h-3.5" /> Study Tools
                   </Link>
+                  {(user?.role === 'moderator' && user?.campusAmbassador?.active) && <Link to="/campus" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/campus') ? 'text-emerald-400' : ''}`}><Users className="w-3.5 h-3.5"/>Campus Desk</Link>}
                   <Link to="/profile" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/profile') ? 'text-blue-400' : ''}`}>
                     <UserCircle className="w-4 h-4" /> Profile
                   </Link>
@@ -106,6 +112,7 @@ export const Navbar = () => {
                   <Link to="/admin/users" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/admin/users') ? 'text-purple-400 font-black' : ''}`}>
                     <Users className="w-3.5 h-3.5" /> Manage Users
                   </Link>
+                  <Link to="/campus" className={`flex items-center gap-1.5 transition-colors hover:text-white ${isActive('/campus') ? 'text-emerald-400' : ''}`}><Users className="w-3.5 h-3.5"/>Campus</Link>
                   <Link to="/subjects/add" className="flex items-center gap-1.5 bg-white/10 text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-colors">
                     <PlusCircle className="w-3.5 h-3.5" /> Add Subject
                   </Link>
@@ -189,13 +196,16 @@ export const Navbar = () => {
                   <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Dashboard</Link>
                   <Link to="/subjects" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Subjects Catalog</Link>
                   <Link to="/progress" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Global Mastery</Link>
+                  <Link to="/rankings" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-amber-300 hover:text-amber-200">Campus Rankings</Link>
                   <Link to="/study-tools" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Study Tools</Link>
+                  {user?.role === 'moderator' && user?.campusAmbassador?.active && <Link to="/campus" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-emerald-400 hover:text-emerald-300">Campus Review Desk</Link>}
                   <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">My Profile</Link>
                 </>
               ) : (
                 <>
                   <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-purple-400 hover:text-purple-300">Admin Dashboard</Link>
                   <Link to="/admin/users" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Manage Users</Link>
+                  <Link to="/campus" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-emerald-400 hover:text-emerald-300">Campus Marketplace</Link>
                   <Link to="/subjects/add" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">+ Add Subject</Link>
                 </>
               )}

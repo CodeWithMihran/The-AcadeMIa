@@ -1,38 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import { TRACKS } from "../constants";
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { ArrowRight, Award, BookOpen, RotateCw } from 'lucide-react';
-import { progressService, subjectService } from '../services/api';
+import { useGlobalProgress, useStudentSubjects } from '../hooks/useAcademiaQueries';
 
 export const ProgressOverview = () => {
-  const [subjects, setSubjects] = useState([]);
-  const [progressMap, setProgressMap] = useState({});
-  const [overallProgress, setOverallProgress] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadProgress = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        const [subjectsResponse, progressResponse] = await Promise.all([
-          subjectService.getSubjects(),
-          progressService.getGlobalProgress()
-        ]);
-        if (cancelled) return;
-        setSubjects(subjectsResponse.data.subjects || []);
-        setProgressMap(progressResponse.data.subjectProgressMap || {});
-        setOverallProgress(progressResponse.data.averageReadiness || 0);
-      } catch (err) {
-        if (!cancelled) setError(err.response?.data?.message || 'Could not load your progress. Please try again.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    loadProgress();
-    return () => { cancelled = true; };
-  }, []);
+  const { user } = useAuth();
+  const subjectsQuery = useStudentSubjects(user);
+  const progressQuery = useGlobalProgress(user);
+  const subjects = subjectsQuery.data || [];
+  const progressMap = progressQuery.data?.subjectProgressMap || {};
+  const overallProgress = progressQuery.data?.averageReadiness || 0;
+  const loading = subjectsQuery.isLoading || progressQuery.isLoading;
+  const queryError = subjectsQuery.error || progressQuery.error;
+  const error = queryError?.response?.data?.message || (queryError ? 'Could not load your progress. Please try again.' : '');
 
   return (
     <main className="min-h-screen bg-[#fbfbfa] px-6 pb-20 pt-32">
@@ -75,7 +57,7 @@ export const ProgressOverview = () => {
                       <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">{subject.courseCode || subject.tenant?.shortCode || subject.track}</p>
                         <h3 className="mt-1 text-lg font-black text-gray-900">{subject.name}</h3>
-                        <p className="mt-1 text-xs text-gray-500">{subject.track === 'UNIVERSITY' ? `${subject.branch || 'Branch'} · Semester ${subject.semester || '—'}` : subject.examCategory || subject.track}</p>
+                        <p className="mt-1 text-xs text-gray-500">{subject.track === TRACKS.UNIVERSITY ? `${subject.branch || 'Branch'} · Semester ${subject.semester || '—'}` : subject.examCategory || subject.track}</p>
                       </div>
                       <span className="text-lg font-black text-blue-600">{percent}%</span>
                     </div>
@@ -88,7 +70,7 @@ export const ProgressOverview = () => {
               })}
             </div>
           )}
-          {error && <button onClick={() => window.location.reload()} className="inline-flex items-center gap-2 text-xs font-bold text-blue-600"><RotateCw className="h-3.5 w-3.5" /> Reload progress</button>}
+          {error && <button onClick={() => { subjectsQuery.refetch(); progressQuery.refetch(); }} className="inline-flex items-center gap-2 text-xs font-bold text-blue-600"><RotateCw className="h-3.5 w-3.5" /> Reload progress</button>}
         </section>
       </div>
     </main>

@@ -1,3 +1,4 @@
+import { TRACKS, TARGET_EXAMS } from "../constants";
 import React, { useState, useEffect } from 'react';
 import { tenantService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -5,14 +6,14 @@ import { GraduationCap, Target, Sparkles, ArrowRight } from 'lucide-react';
 
 export const OnboardingModal = ({ isOpen, onClose }) => {
   const { user, refreshUser } = useAuth();
-  const [track, setTrack] = useState('UNIVERSITY');
+  const [track, setTrack] = useState(TRACKS.UNIVERSITY);
   const [tenants, setTenants] = useState([]);
   const [selectedTenantId, setSelectedTenantId] = useState('');
   const [college, setCollege] = useState('');
   const [branch, setBranch] = useState('');
   const [year, setYear] = useState('1');
   const [semester, setSemester] = useState('1');
-  const [targetExam, setTargetExam] = useState('JEE_MAINS');
+  const [targetExam, setTargetExam] = useState(TARGET_EXAMS.JEE_MAINS);
   const [targetYear, setTargetYear] = useState('2027');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,7 +29,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
         const res = await tenantService.getTenants();
         if (res.data.success) {
           // Filter university tenants
-          const uniTenants = res.data.tenants.filter(t => t.type === 'UNIVERSITY');
+          const uniTenants = res.data.tenants.filter(t => t.type === TRACKS.UNIVERSITY);
           setTenants(uniTenants);
 
           // If user already had a detected tenant, auto-select
@@ -74,7 +75,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (track === 'UNIVERSITY' && !selectedTenantId) {
+    if (track === TRACKS.UNIVERSITY && !selectedTenantId) {
       setError('Choose an affiliated university before continuing.');
       return;
     }
@@ -83,13 +84,13 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
     try {
       const payload = {
         track,
-        tenantId: track === 'UNIVERSITY' ? selectedTenantId : undefined,
-        college: track === 'UNIVERSITY' ? college : undefined,
-        branch: track === 'UNIVERSITY' ? branch : undefined,
-        year: track === 'UNIVERSITY' ? parseInt(year) : undefined,
-        semester: track === 'UNIVERSITY' ? parseInt(semester) : undefined,
-        targetExam: track !== 'UNIVERSITY' ? targetExam : undefined,
-        targetYear: track !== 'UNIVERSITY' ? parseInt(targetYear) : undefined
+        tenantId: track === TRACKS.UNIVERSITY ? selectedTenantId : undefined,
+        college: track === TRACKS.UNIVERSITY ? college : undefined,
+        branch: track === TRACKS.UNIVERSITY ? branch : undefined,
+        year: track === TRACKS.UNIVERSITY ? parseInt(year) : undefined,
+        semester: track === TRACKS.UNIVERSITY ? parseInt(semester) : undefined,
+        targetExam: track !== TRACKS.UNIVERSITY ? targetExam : undefined,
+        targetYear: track !== TRACKS.UNIVERSITY ? parseInt(targetYear) : undefined
       };
 
       const res = await tenantService.completeOnboarding(payload);
@@ -133,9 +134,9 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
         <div className="grid grid-cols-2 gap-3 mb-8">
           <button
             type="button"
-            onClick={() => setTrack('UNIVERSITY')}
+            onClick={() => setTrack(TRACKS.UNIVERSITY)}
             className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${
-              track === 'UNIVERSITY'
+              track === TRACKS.UNIVERSITY
                 ? 'border-blue-600 bg-blue-50/50 text-blue-700 shadow-sm'
                 : 'border-gray-200 hover:border-gray-300 text-gray-600'
             }`}
@@ -147,9 +148,9 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
 
           <button
             type="button"
-            onClick={() => setTrack('JEE')}
+            onClick={() => setTrack(TRACKS.JEE)}
             className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${
-              track !== 'UNIVERSITY'
+              track !== TRACKS.UNIVERSITY
                 ? 'border-blue-600 bg-blue-50/50 text-blue-700 shadow-sm'
                 : 'border-gray-200 hover:border-gray-300 text-gray-600'
             }`}
@@ -161,7 +162,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {track === 'UNIVERSITY' ? (
+          {track === TRACKS.UNIVERSITY ? (
             <>
               {/* University Picker */}
               <div>
@@ -302,13 +303,13 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
                   value={targetExam}
                   onChange={(e) => {
                     setTargetExam(e.target.value);
-                    setTrack(e.target.value.includes('JEE') ? 'JEE' : 'NEET');
+                    setTrack(e.target.value.includes(TRACKS.JEE) ? TRACKS.JEE : TRACKS.NEET);
                   }}
                   className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white focus:outline-none focus:border-blue-500"
                 >
-                  <option value="JEE_MAINS">JEE Mains</option>
-                  <option value="JEE_ADVANCED">JEE Advanced</option>
-                  <option value="NEET">NEET (UG)</option>
+                  <option value={TARGET_EXAMS.JEE_MAINS}>JEE Mains</option>
+                  <option value={TARGET_EXAMS.JEE_ADVANCED}>JEE Advanced</option>
+                  <option value={TARGET_EXAMS.NEET}>NEET (UG)</option>
                 </select>
               </div>
 
@@ -331,7 +332,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
 
           <button
             type="submit"
-            disabled={loading || (track === 'UNIVERSITY' && (tenantsLoading || tenants.length === 0))}
+            disabled={loading || (track === TRACKS.UNIVERSITY && (tenantsLoading || tenants.length === 0))}
             className="w-full mt-4 bg-[#0a0a0a] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2"
           >
             {loading ? "Saving Profile..." : "Activate My Vault"}

@@ -1,6 +1,8 @@
+import { TRACKS, TARGET_EXAMS } from "../constants";
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { authService, tenantService } from "../services/api";
+import ActivityHeatmap from "../components/ActivityHeatmap";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -25,14 +27,15 @@ export const Profile = () => {
   // Form State
   const [formData, setFormData] = useState({
     name: "",
-    track: "UNIVERSITY",
+    track: TRACKS.UNIVERSITY,
     tenantId: "",
     college: "",
     branch: "",
     year: 1,
     semester: 1,
-    targetExam: "JEE_MAINS",
+    targetExam: TARGET_EXAMS.JEE_MAINS,
     targetYear: 2027,
+    leaderboardOptIn: false,
   });
 
   // Sync user data to form state when component mounts or user updates
@@ -40,14 +43,15 @@ export const Profile = () => {
     if (user) {
       setFormData({
         name: user.name || "",
-        track: user.track || "UNIVERSITY",
+        track: user.track || TRACKS.UNIVERSITY,
         tenantId: user.tenant?._id || user.tenant || "",
         college: user.college && user.college !== "Not Set" ? user.college : "",
         branch: user.branch || "",
         year: user.year || 1,
         semester: user.semester || 1,
-        targetExam: user.targetExam || "JEE_MAINS",
+        targetExam: user.targetExam || TARGET_EXAMS.JEE_MAINS,
         targetYear: user.targetYear || 2027,
+        leaderboardOptIn: user.leaderboardOptIn === true,
       });
     }
   }, [user]);
@@ -55,7 +59,7 @@ export const Profile = () => {
   useEffect(() => {
     setTenantLoading(true);
     tenantService.getTenants().then((res) => {
-      if (res.data.success) setUniversities((res.data.tenants || []).filter((tenant) => tenant.type === "UNIVERSITY"));
+      if (res.data.success) setUniversities((res.data.tenants || []).filter((tenant) => tenant.type === TRACKS.UNIVERSITY));
     }).catch((err) => setError(err.response?.data?.message || "Could not load universities.")).finally(() => setTenantLoading(false));
   }, []);
 
@@ -83,7 +87,7 @@ export const Profile = () => {
     try {
       const profile = {
         ...formData,
-        track: formData.track === "UNIVERSITY" ? "UNIVERSITY" : (formData.targetExam === "NEET" ? "NEET" : "JEE"),
+        track: formData.track === TRACKS.UNIVERSITY ? TRACKS.UNIVERSITY : (formData.targetExam === TARGET_EXAMS.NEET ? TRACKS.NEET : TRACKS.JEE),
         college: formData.college === "Other" ? otherCollege : formData.college,
       };
       await authService.updateProfile(profile);
@@ -101,7 +105,7 @@ export const Profile = () => {
 
   if (!user) return null; // Prevent rendering before user context loads
 
-  const isUniversity = formData.track === "UNIVERSITY";
+  const isUniversity = formData.track === TRACKS.UNIVERSITY;
   const selectedUniversity = universities.find((tenant) => tenant._id === formData.tenantId);
 
   return (
@@ -135,6 +139,8 @@ export const Profile = () => {
             <CheckCircle2 className="w-5 h-5" /> {success}
           </div>
         )}
+
+        <div className="mb-8"><ActivityHeatmap /></div>
 
         <div className="grid md:grid-cols-3 gap-8">
           {/* Left Column: Visual Profile Card */}
@@ -258,9 +264,9 @@ export const Profile = () => {
                 <div className="space-y-6 rounded-2xl border border-blue-100 bg-blue-50/40 p-5">
                   <div>
                     <label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">Learning Track</label>
-                    <select name="track" value={formData.track} onChange={(e) => setFormData((prev) => ({ ...prev, track: e.target.value, tenantId: e.target.value === "UNIVERSITY" && !universities.some((tenant) => tenant._id === prev.tenantId) ? universities[0]?._id || "" : prev.tenantId, college: e.target.value === "UNIVERSITY" ? prev.college : "" }))} className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-gray-800 focus:border-blue-500 focus:outline-none">
-                      <option value="UNIVERSITY">University / College</option>
-                      <option value="JEE">Competitive exams</option>
+                    <select name="track" value={formData.track} onChange={(e) => setFormData((prev) => ({ ...prev, track: e.target.value, tenantId: e.target.value === TRACKS.UNIVERSITY && !universities.some((tenant) => tenant._id === prev.tenantId) ? universities[0]?._id || "" : prev.tenantId, college: e.target.value === TRACKS.UNIVERSITY ? prev.college : "" }))} className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-gray-800 focus:border-blue-500 focus:outline-none">
+                      <option value={TRACKS.UNIVERSITY}>University / College</option>
+                      <option value={TRACKS.JEE}>Competitive exams</option>
                     </select>
                     <p className="mt-2 text-xs text-gray-500">Switching tracks changes the curriculum shown on your dashboard; your saved account and progress remain intact.</p>
                   </div>
@@ -282,10 +288,15 @@ export const Profile = () => {
                       {formData.college === "Other" && <input value={otherCollege} onChange={(e) => setOtherCollege(e.target.value)} required placeholder="Enter campus name" className="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm" />}
                     </div>
                   </div> : <div className="grid gap-5 md:grid-cols-2">
-                    <div className="space-y-2"><label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">Target Exam</label><select name="targetExam" value={formData.targetExam} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold"><option value="JEE_MAINS">JEE Mains</option><option value="JEE_ADVANCED">JEE Advanced</option><option value="NEET">NEET (UG)</option></select></div>
+                    <div className="space-y-2"><label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">Target Exam</label><select name="targetExam" value={formData.targetExam} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold"><option value={TARGET_EXAMS.JEE_MAINS}>JEE Mains</option><option value={TARGET_EXAMS.JEE_ADVANCED}>JEE Advanced</option><option value={TARGET_EXAMS.NEET}>NEET (UG)</option></select></div>
                     <div className="space-y-2"><label className="text-[11px] font-black text-gray-500 uppercase tracking-wider">Target Year</label><select name="targetYear" value={formData.targetYear} onChange={handleInputChange} className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold">{[2026, 2027, 2028, 2029, 2030].map((year) => <option key={year} value={year}>{year}</option>)}</select></div>
                   </div>}
                 </div>
+
+                <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5">
+                  <input type="checkbox" checked={formData.leaderboardOptIn} onChange={(event) => setFormData((prev) => ({ ...prev, leaderboardOptIn: event.target.checked }))} className="mt-0.5 h-4 w-4 accent-indigo-600" />
+                  <span><span className="block text-sm font-black text-gray-900">Join anonymous campus rankings</span><span className="mt-1 block text-xs leading-relaxed text-gray-600">Your readiness score can appear as an anonymous peer in your university, college, branch, and semester. Your name, email, and profile are never shown. You can opt out here at any time.</span></span>
+                </label>
 
                 {isUniversity ? (
                   <div className="grid md:grid-cols-3 gap-6">

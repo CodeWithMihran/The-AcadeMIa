@@ -62,7 +62,11 @@ export const subjectService = {
 export const progressService = {
   toggleTopic: (subjectId, topicId) => api.post('/progress/toggle', { subjectId, topicId }),
   getSubjectProgress: (subjectId) => api.get(`/progress/${subjectId}`),
-  getGlobalProgress: () => api.get('/progress/overview')
+  getGlobalProgress: () => api.get('/progress/overview'),
+  getLeaderboard: () => api.get('/progress/leaderboard'),
+  getActivity: () => api.get('/progress/activity'),
+  getCareerProgress: (subjectId) => api.get(`/progress/career/${subjectId}`),
+  setCareerCompletion: (data) => api.put('/progress/career-resource', data)
 };
 
 // Persistent student utility tools
@@ -73,10 +77,26 @@ export const studyToolsService = {
   savePlanner: (planner) => api.put('/study-tools/planner', planner)
 };
 
+export const communityService = {
+  getWallet: () => api.get('/community/wallet'),
+  getMyNotes: () => api.get('/community/my-notes'),
+  getSubjectNotes: (subjectId) => api.get(`/community/subjects/${subjectId}/notes`),
+  submitNote: (data) => api.post('/community/notes', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  upvoteNote: (noteId) => api.post(`/community/notes/${noteId}/upvote`),
+  createBounty: (data) => api.post('/community/bounties', data),
+  cancelBounty: (bountyId) => api.post(`/community/bounties/${bountyId}/cancel`),
+  getModerationQueue: () => api.get('/community/moderation/queue'),
+  reviewNote: (noteId, data) => api.patch(`/community/moderation/notes/${noteId}`, data),
+  noteFile: (noteId) => api.get(`/community/notes/${noteId}/file`, { responseType: 'blob' }),
+  grantAmbassador: (userId, data) => api.patch(`/community/admin/users/${userId}/ambassador`, data),
+  adjustCredits: (userId, data) => api.post(`/community/admin/users/${userId}/credits`, data)
+};
+
 // Admin Endpoints
 export const adminService = {
   getOverview: () => api.get('/admin/overview'),
   getSubjects: (params) => api.get('/admin/subjects', { params }),
+  getSubject: (id) => api.get(`/admin/subjects/${id}`),
   createSubject: (data) => api.post('/admin/subjects', data),
   updateSubject: (id, data) => api.put(`/admin/subjects/${id}`, data),
   deleteSubject: (id) => api.delete(`/admin/subjects/${id}`),

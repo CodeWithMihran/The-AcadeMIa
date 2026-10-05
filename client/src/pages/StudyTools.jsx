@@ -1,15 +1,25 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { studyToolsService, subjectService } from "../services/api";
+import { studyToolsService } from "../services/api";
+import { useStudentSubjects } from "../hooks/useAcademiaQueries";
 import {
   Activity,
   BookOpenCheck,
   Calculator,
   Check,
   Plus,
-  Save,
   Trash2,
 } from "lucide-react";
+import { ASSESSMENT_CATEGORIES, TRACKS } from "../constants";
+import {
+  AttendanceEntryCard,
+  AssessmentEntryRow,
+  SaveStudyToolsButton,
+  StudyToolField as Field,
+  StudyToolMetric as Metric,
+  cardClass,
+  inputClass,
+} from "../components/StudyToolFields";
 
 const DEFAULT_SCALE = [
   { label: "A+", minimumPercent: 90, gradePoint: 10 },
@@ -155,26 +165,9 @@ function projectedGrade(percent, scale) {
   );
 }
 
-const Field = ({ label, children, hint }) => (
-  <label className="block space-y-1.5">
-    <span className="text-[10px] font-black uppercase tracking-wider text-gray-400">
-      {label}
-    </span>
-    {children}
-    {hint && (
-      <span className="block text-[10px] leading-relaxed text-gray-400">
-        {hint}
-      </span>
-    )}
-  </label>
-);
-const inputClass =
-  "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-3 text-sm font-semibold text-gray-800 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10";
-const cardClass =
-  "rounded-3xl border border-gray-200 bg-white p-5 shadow-sm md:p-6";
-
 export const StudyTools = () => {
   const { user } = useAuth();
+  const subjectsQuery = useStudentSubjects(user);
   const [activeTab, setActiveTab] = useState("attendance");
   const [subjects, setSubjects] = useState([]);
   const [attendance, setAttendance] = useState([]);
@@ -193,23 +186,16 @@ export const StudyTools = () => {
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
+    if (subjectsQuery.isLoading) return undefined;
     let alive = true;
-    Promise.allSettled([
-      subjectService.getSubjects(),
-      studyToolsService.getTools(),
-    ])
-      .then(([subjectsResult, toolsResult]) => {
+    const loadedSubjects = subjectsQuery.data || [];
+    setLoading(true);
+    if (subjectsQuery.error) setError(subjectsQuery.error.response?.data?.message || "Could not load your semester subjects.");
+    else setError("");
+    Promise.allSettled([studyToolsService.getTools()])
+      .then(([toolsResult]) => {
         if (!alive) return;
-        const loadedSubjects =
-          subjectsResult.status === "fulfilled"
-            ? subjectsResult.value.data.subjects || []
-            : [];
         setSubjects(loadedSubjects);
-        if (subjectsResult.status === "rejected")
-          setError(
-            subjectsResult.reason.response?.data?.message ||
-              "Could not load your semester subjects.",
-          );
         if (toolsResult.status === "fulfilled") {
           const data = toolsResult.value.data;
           const savedAttendance = data.attendance || [];
@@ -286,7 +272,7 @@ export const StudyTools = () => {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [subjectsQuery.data, subjectsQuery.error, subjectsQuery.isLoading]);
 
   const saveData = useCallback(
     async (kind) => {
@@ -462,7 +448,7 @@ export const StudyTools = () => {
               Current curriculum
             </p>
             <p className="mt-1 text-sm font-bold text-gray-900">
-              {user?.track === "UNIVERSITY"
+              {user?.track === TRACKS.UNIVERSITY
                 ? `${user?.tenant?.shortCode || "University"} · ${user?.branch || "Branch"} · Sem ${user?.semester || "—"}`
                 : `${user?.targetExam || "Competitive"} track`}
             </p>
@@ -532,126 +518,17 @@ export const StudyTools = () => {
               </div>
             )}
             <div className="grid gap-4 lg:grid-cols-2">
-              {attendance.map((item, index) => {
-                const advice = attendanceAdvice(item);
-                return (
-                  <article
-                    key={recordKey(item)}
-                    className={cardClass + " space-y-5"}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1">
-                        <Field label="Subject">
-                          <input
-                            className={inputClass}
-                            value={item.subjectName}
-                            onChange={(e) =>
-                              updateEntry(
-                                setAttendance,
-                                attendance,
-                                index,
-                                "subjectName",
-                                e.target.value,
-                              )
-                            }
-                            placeholder="e.g. DBMS"
-                            maxLength={120}
-                          />
-                        </Field>
-                      </div>
-                      <button
-                        type="button"
-                        aria-label="Remove subject"
-                        onClick={() =>
-                          setAttendance((rows) =>
-                            rows.filter((_, i) => i !== index),
-                          )
-                        }
-                        className="mt-6 rounded-lg p-2 text-gray-300 hover:bg-red-50 hover:text-red-500"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <Field label="Classes held">
-                        <input
-                          type="number"
-                          min="0"
-                          max="100000"
-                          className={inputClass}
-                          value={item.classesHeld}
-                          onChange={(e) =>
-                            updateEntry(
-                              setAttendance,
-                              attendance,
-                              index,
-                              "classesHeld",
-                              e.target.value,
-                            )
-                          }
-                        />
-                      </Field>
-                      <Field label="Attended">
-                        <input
-                          type="number"
-                          min="0"
-                          max={item.classesHeld || 100000}
-                          className={inputClass}
-                          value={item.classesAttended}
-                          onChange={(e) =>
-                            updateEntry(
-                              setAttendance,
-                              attendance,
-                              index,
-                              "classesAttended",
-                              e.target.value,
-                            )
-                          }
-                        />
-                      </Field>
-                      <Field label="Required %">
-                        <input
-                          type="number"
-                          min="1"
-                          max="100"
-                          className={inputClass}
-                          value={item.threshold}
-                          onChange={(e) =>
-                            updateEntry(
-                              setAttendance,
-                              attendance,
-                              index,
-                              "threshold",
-                              e.target.value,
-                            )
-                          }
-                        />
-                      </Field>
-                    </div>
-                    <div
-                      className={`rounded-2xl p-4 ${advice.current !== null && advice.current < Number(item.threshold) ? "bg-amber-50 text-amber-900" : "bg-blue-50 text-blue-900"}`}
-                    >
-                      <div className="flex items-end justify-between gap-4">
-                        <div>
-                          <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
-                            Current attendance
-                          </p>
-                          <p className="mt-1 text-2xl font-black">
-                            {advice.current === null
-                              ? "—"
-                              : `${advice.current.toFixed(1)}%`}
-                          </p>
-                        </div>
-                        <p className="text-right text-xs font-bold leading-relaxed">
-                          {advice.message}
-                        </p>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
+              {attendance.map((item, index) => (
+                <AttendanceEntryCard
+                  key={recordKey(item)}
+                  item={item}
+                  advice={attendanceAdvice(item)}
+                  onChange={(field, value) => updateEntry(setAttendance, attendance, index, field, value)}
+                  onRemove={() => setAttendance((rows) => rows.filter((_, rowIndex) => rowIndex !== index))}
+                />
+              ))}
             </div>
-            <SaveButton
+            <SaveStudyToolsButton
               saving={saving}
               onClick={() => saveData("attendance")}
             />
@@ -660,7 +537,7 @@ export const StudyTools = () => {
 
         {activeTab === "planner" && (
           <section className="space-y-5">
-            {user?.track !== "UNIVERSITY" ? (
+            {user?.track !== TRACKS.UNIVERSITY ? (
               <div className={cardClass}>
                 <h2 className="text-xl font-black">University grade planner</h2>
                 <p className="mt-2 text-sm text-gray-500">
@@ -968,7 +845,7 @@ export const StudyTools = () => {
                     <Plus className="h-4 w-4" /> Add grade band
                   </button>
                 </div>
-                <SaveButton
+                <SaveStudyToolsButton
                   saving={saving}
                   onClick={() => saveData("planner")}
                 />
@@ -1115,7 +992,7 @@ export const StudyTools = () => {
                                         ...row.assessments,
                                         {
                                           name: "",
-                                          category: "MIDTERM",
+                                          category: ASSESSMENT_CATEGORIES[0].value,
                                           marks: 0,
                                           maxMarks: 20,
                                           localKey: crypto.randomUUID(),
@@ -1133,107 +1010,18 @@ export const StudyTools = () => {
                       </div>
                       {item.assessments.length ? (
                         <div className="space-y-2">
-                          {item.assessments.map(
-                            (assessment, assessmentIndex) => (
-                              <div
-                                key={
-                                  assessment._id ||
-                                  assessment.localKey ||
-                                  assessmentIndex
-                                }
-                                className="grid grid-cols-[1.2fr_1fr_0.7fr_0.7fr_auto] gap-2"
-                              >
-                                <input
-                                  className="min-w-0 rounded-lg border border-gray-200 px-3 py-2 text-xs"
-                                  value={assessment.name}
-                                  onChange={(e) =>
-                                    updateAssessment(
-                                      index,
-                                      assessmentIndex,
-                                      "name",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="Mid-term 1"
-                                  aria-label="Assessment name"
-                                />
-                                <select
-                                  className="min-w-0 rounded-lg border border-gray-200 bg-white px-2 py-2 text-xs"
-                                  value={assessment.category}
-                                  onChange={(e) =>
-                                    updateAssessment(
-                                      index,
-                                      assessmentIndex,
-                                      "category",
-                                      e.target.value,
-                                    )
-                                  }
-                                  aria-label="Assessment type"
-                                >
-                                  <option value="MIDTERM">Mid-term</option>
-                                  <option value="CLASS_TEST">Class test</option>
-                                  <option value="LAB_VIVA">Lab viva</option>
-                                  <option value="OTHER">Other</option>
-                                </select>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max={assessment.maxMarks}
-                                  step="0.1"
-                                  className="min-w-0 rounded-lg border border-gray-200 px-2 py-2 text-xs"
-                                  value={assessment.marks}
-                                  onChange={(e) =>
-                                    updateAssessment(
-                                      index,
-                                      assessmentIndex,
-                                      "marks",
-                                      e.target.value,
-                                    )
-                                  }
-                                  aria-label="Marks scored"
-                                />
-                                <input
-                                  type="number"
-                                  min="0.1"
-                                  step="0.1"
-                                  className="min-w-0 rounded-lg border border-gray-200 px-2 py-2 text-xs"
-                                  value={assessment.maxMarks}
-                                  onChange={(e) =>
-                                    updateAssessment(
-                                      index,
-                                      assessmentIndex,
-                                      "maxMarks",
-                                      e.target.value,
-                                    )
-                                  }
-                                  aria-label="Maximum marks"
-                                />
-                                <button
-                                  type="button"
-                                  aria-label="Remove assessment"
-                                  onClick={() =>
-                                    setSessionals((rows) =>
-                                      rows.map((row, i) =>
-                                        i === index
-                                          ? {
-                                              ...row,
-                                              assessments:
-                                                row.assessments.filter(
-                                                  (_, j) =>
-                                                    j !== assessmentIndex,
-                                                ),
-                                            }
-                                          : row,
-                                      ),
-                                    )
-                                  }
-                                  className="rounded-lg p-2 text-gray-300 hover:bg-red-50 hover:text-red-500"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            ),
-                          )}
+                          {item.assessments.map((assessment, assessmentIndex) => (
+                            <AssessmentEntryRow
+                              key={assessment._id || assessment.localKey || assessmentIndex}
+                              assessment={assessment}
+                              categories={ASSESSMENT_CATEGORIES}
+                              onChange={(field, value) => updateAssessment(index, assessmentIndex, field, value)}
+                              onRemove={() => setSessionals((rows) => rows.map((row, rowIndex) => rowIndex === index ? {
+                                ...row,
+                                assessments: row.assessments.filter((_, itemIndex) => itemIndex !== assessmentIndex),
+                              } : row))}
+                            />
+                          ))}
                         </div>
                       ) : (
                         <p className="rounded-xl bg-gray-50 p-4 text-xs text-gray-400">
@@ -1265,7 +1053,7 @@ export const StudyTools = () => {
                 );
               })}
             </div>
-            <SaveButton
+            <SaveStudyToolsButton
               saving={saving}
               onClick={() => saveData("sessionals")}
             />
@@ -1275,27 +1063,3 @@ export const StudyTools = () => {
     </main>
   );
 };
-
-function Metric({ label, value }) {
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">
-        {label}
-      </p>
-      <p className="mt-2 text-3xl font-black text-gray-900">{value}</p>
-    </div>
-  );
-}
-function SaveButton({ saving, onClick }) {
-  return (
-    <button
-      type="button"
-      disabled={saving}
-      onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-xl bg-[#0a0a0a] px-5 py-3.5 text-xs font-black uppercase tracking-widest text-white shadow-lg transition hover:bg-blue-600 disabled:cursor-wait disabled:opacity-60"
-    >
-      <Save className="h-4 w-4" />
-      {saving ? "Saving…" : "Save changes"}
-    </button>
-  );
-}

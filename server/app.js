@@ -1,5 +1,12 @@
 const path = require("path");
 require("dotenv").config({ path: path.resolve(__dirname, ".env") });
+
+const requiredEnvironment = ["MONGO_URI", "JWT_KEY", "EXPRESS_SESSION_SECRET"];
+const missingEnvironment = requiredEnvironment.filter((name) => !process.env[name]?.trim());
+if (missingEnvironment.length) {
+    throw new Error(`Missing required server configuration: ${missingEnvironment.join(", ")}`);
+}
+
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require("express-session");
@@ -21,10 +28,6 @@ app.set("trust proxy", 1);
 // ------------------
 // Database Connection
 // ------------------
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log("MongoDB Connected"))
-    .catch(err => console.log("MongoDB Connection Error:", err));
-
 // ------------------
 // Middlewares
 // ------------------
@@ -42,7 +45,7 @@ app.use(cookieParser());
 
 // Persistent Mongo Session Store
 app.use(session({
-    secret: process.env.EXPRESS_SESSION_SECRET || "academia-secret-key-2026",
+    secret: process.env.EXPRESS_SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
@@ -148,6 +151,7 @@ app.use("/api/tenants", require("./routes/api/tenantApiRouter"));
 app.use("/api/subjects", require("./routes/api/subjectApiRouter"));
 app.use("/api/progress", require("./routes/api/progressApiRouter"));
 app.use("/api/study-tools", require("./routes/api/studyToolsApiRouter"));
+app.use("/api/community", require("./routes/api/communityApiRouter"));
 app.use("/api/admin", require("./routes/api/adminApiRouter"));
 
 // Google OAuth callback bridging to React frontend
@@ -198,7 +202,7 @@ app.use((err, req, res, next) => {
     console.error("Server Error:", err);
     res.status(500).json({
         success: false,
-        message: err.message || "Internal server error"
+        message: "Internal server error"
     });
 });
 
@@ -206,6 +210,15 @@ app.use((err, req, res, next) => {
 // Server Startup
 // ------------------
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+async function startServer() {
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log("MongoDB Connected");
+        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    } catch (error) {
+        console.error("MongoDB connection failed; server was not started.", error.message);
+        process.exitCode = 1;
+    }
+}
+
+startServer();

@@ -1,3 +1,4 @@
+import { TRACKS, TARGET_EXAMS } from "../constants";
 import React, { useCallback, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { adminService, tenantService } from "../services/api";
@@ -42,11 +43,11 @@ export const AdminDashboard = () => {
     name: "",
     courseCode: "",
     credits: "",
-    track: "UNIVERSITY",
+    track: TRACKS.UNIVERSITY,
     tenantId: "",
     branch: "",
     semester: "1",
-    examCategory: "JEE_MAINS",
+    examCategory: TARGET_EXAMS.JEE_MAINS,
   });
 
   const fetchInitialData = useCallback(async () => {
@@ -61,7 +62,7 @@ export const AdminDashboard = () => {
         setStats(overviewRes.data.stats);
       }
       if (tenantsRes.data.success) {
-          setTenants((tenantsRes.data.tenants || []).filter(tenant => tenant.type === "UNIVERSITY"));
+          setTenants((tenantsRes.data.tenants || []).filter(tenant => tenant.type === TRACKS.UNIVERSITY));
       }
     } catch (err) {
       setError(
@@ -183,11 +184,11 @@ export const AdminDashboard = () => {
       name: "",
       courseCode: "",
       credits: "",
-      track: "UNIVERSITY",
-      tenantId: tenants.find(tenant => tenant.type === "UNIVERSITY")?._id || "",
+      track: TRACKS.UNIVERSITY,
+      tenantId: tenants.find(tenant => tenant.type === TRACKS.UNIVERSITY)?._id || "",
       branch: "",
       semester: "1",
-      examCategory: "JEE_MAINS",
+      examCategory: TARGET_EXAMS.JEE_MAINS,
     });
   };
 
@@ -329,9 +330,9 @@ export const AdminDashboard = () => {
                   className="px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-800"
                 >
                   <option value="ALL">All Tracks</option>
-                  <option value="UNIVERSITY">University Track</option>
-                  <option value="JEE">JEE Track</option>
-                  <option value="NEET">NEET Track</option>
+                  <option value={TRACKS.UNIVERSITY}>University Track</option>
+                  <option value={TRACKS.JEE}>JEE Track</option>
+                  <option value={TRACKS.NEET}>NEET Track</option>
                 </select>
               </div>
 
@@ -374,13 +375,13 @@ export const AdminDashboard = () => {
                       </td>
                       <td className="px-6 py-4">
                         <span className="px-2.5 py-1 rounded-md bg-blue-50 text-blue-600 text-[10px] font-black uppercase">
-                          {s.track === "UNIVERSITY"
+                          {s.track === TRACKS.UNIVERSITY
                             ? `Sem ${s.semester} (${s.branch})`
                             : s.examCategory || s.track}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm font-bold">
-                        {s.track !== "UNIVERSITY" ? "—" : Number(s.credits) > 0 ? s.credits : <span className="text-amber-600">Missing</span>}
+                        {s.track !== TRACKS.UNIVERSITY ? "—" : Number(s.credits) > 0 ? s.credits : <span className="text-amber-600">Missing</span>}
                       </td>
                       <td className="px-6 py-4 font-semibold text-gray-700">
                         {s.tenant?.shortCode || "National Track"}
@@ -543,7 +544,7 @@ export const AdminDashboard = () => {
                   className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold"
                 />
               </div>
-              {subjectForm.track === "UNIVERSITY" && <div>
+              {subjectForm.track === TRACKS.UNIVERSITY && <div>
                 <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">Official Course Credits</label>
                 <input type="number" min="0.1" max="100" step="0.1" required value={subjectForm.credits} onChange={(e) => setSubjectForm({ ...subjectForm, credits: e.target.value })} placeholder="e.g. 4" className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold" />
               </div>}
@@ -560,13 +561,13 @@ export const AdminDashboard = () => {
                     }
                     className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold bg-white"
                   >
-                    <option value="UNIVERSITY">University</option>
-                    <option value="JEE">JEE</option>
-                    <option value="NEET">NEET</option>
+                    <option value={TRACKS.UNIVERSITY}>University</option>
+                    <option value={TRACKS.JEE}>JEE</option>
+                    <option value={TRACKS.NEET}>NEET</option>
                   </select>
                 </div>
 
-                {subjectForm.track === "UNIVERSITY" ? (
+                {subjectForm.track === TRACKS.UNIVERSITY ? (
                   <div>
                     <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">
                       Institution
@@ -604,15 +605,15 @@ export const AdminDashboard = () => {
                       }
                       className="w-full p-3 rounded-xl border border-gray-200 text-xs font-semibold bg-white"
                     >
-                      <option value="JEE_MAINS">JEE Mains</option>
-                      <option value="JEE_ADVANCED">JEE Advanced</option>
-                      <option value="NEET">NEET</option>
+                      <option value={TARGET_EXAMS.JEE_MAINS}>JEE Mains</option>
+                      <option value={TARGET_EXAMS.JEE_ADVANCED}>JEE Advanced</option>
+                      <option value={TARGET_EXAMS.NEET}>NEET</option>
                     </select>
                   </div>
                 )}
               </div>
 
-              {subjectForm.track === "UNIVERSITY" && (
+              {subjectForm.track === TRACKS.UNIVERSITY && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] font-black uppercase text-gray-400 mb-1">

@@ -70,6 +70,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    leaderboardOptIn: {
+        type: Boolean,
+        default: false
+    },
     // Set only by trusted billing/admin workflows. A live entitlement also
     // requires an unexpired period end; client profile updates cannot set it.
     premiumSubscription: {
@@ -82,6 +86,15 @@ const userSchema = new mongoose.Schema({
             type: Date,
             default: null
         }
+    },
+    campusAmbassador: {
+        active: { type: Boolean, default: false },
+        tenant: { type: mongoose.Schema.Types.ObjectId, ref: "tenant", default: null },
+        college: { type: String, trim: true, default: "" },
+        branches: [{ type: String, trim: true, uppercase: true }],
+        semesters: [{ type: Number, min: 1, max: 8 }],
+        grantedBy: { type: mongoose.Schema.Types.ObjectId, ref: "user", default: null },
+        grantedAt: { type: Date, default: null }
     }
 }, { timestamps: true });
 

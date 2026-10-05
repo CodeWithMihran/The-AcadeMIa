@@ -33,7 +33,8 @@ const sendTokenResponse = (user, statusCode, res, message) => {
                 year: user.year,
                 semester: user.semester,
                 targetExam: user.targetExam,
-                onboardingCompleted: user.onboardingCompleted
+                onboardingCompleted: user.onboardingCompleted,
+                campusAmbassador: user.campusAmbassador
             }
         });
 };
@@ -192,8 +193,13 @@ module.exports.getMe = async (req, res) => {
 // Update only fields that users are allowed to edit from their profile.
 module.exports.updateProfile = async (req, res) => {
     try {
-        const { name, track, tenantId, college, branch, year, semester, targetExam, targetYear } = req.body;
+        const { name, track, tenantId, college, branch, year, semester, targetExam, targetYear, leaderboardOptIn } = req.body;
         const updates = {};
+
+        if (leaderboardOptIn !== undefined) {
+            if (typeof leaderboardOptIn !== "boolean") return res.status(400).json({ success: false, message: "Leaderboard visibility must be enabled or disabled." });
+            updates.leaderboardOptIn = leaderboardOptIn;
+        }
 
         if (name !== undefined) {
             if (typeof name !== "string" || name.trim().length < 2) {

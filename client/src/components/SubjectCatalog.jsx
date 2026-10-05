@@ -1,3 +1,4 @@
+import { TRACKS } from "../constants";
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -44,7 +45,7 @@ export const SubjectCatalog = () => {
 
   if (!user) return null;
 
-  const isUniversity = user.track === 'UNIVERSITY';
+  const isUniversity = user.track === TRACKS.UNIVERSITY;
 
   return (
     <div className="min-h-screen bg-[#fbfbfa] pt-32 pb-20 px-6 animate-in fade-in duration-500">
