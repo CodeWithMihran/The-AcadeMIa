@@ -10,6 +10,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
   const [tenants, setTenants] = useState([]);
   const [selectedTenantId, setSelectedTenantId] = useState('');
   const [college, setCollege] = useState('');
+  const [isCustomCollege, setIsCustomCollege] = useState(false);
   const [branch, setBranch] = useState('');
   const [year, setYear] = useState('1');
   const [semester, setSemester] = useState('1');
@@ -64,6 +65,8 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
   // Dynamic affiliated colleges for chosen university
   const selectedTenant = tenants.find(t => t._id === selectedTenantId);
   const affiliatedColleges = selectedTenant?.affiliatedColleges || [];
+  const selectedCollegeIsListed = affiliatedColleges.some(item => item.name === college);
+  const collegeSelectValue = isCustomCollege || (college && !selectedCollegeIsListed) ? 'Other' : college;
 
   const handleYearChange = (e) => {
     const y = parseInt(e.target.value);
@@ -109,17 +112,17 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-xl rounded-3xl p-8 md:p-10 shadow-2xl border border-gray-100 modal-animate max-h-[90vh] overflow-y-auto">
+      <div className="bg-surface w-full max-w-xl rounded-3xl p-8 md:p-10 shadow-2xl border border-line modal-animate max-h-[90vh] overflow-y-auto">
         
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wider mb-3">
             <Sparkles className="w-3.5 h-3.5" />
             Set Up Your Academic Profile
           </div>
-          <h2 className="text-2xl md:text-3xl font-black text-[#1a1a1a] tracking-tight">
+          <h2 className="text-2xl md:text-3xl font-black text-content tracking-tight">
             Configure Your Vault
           </h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-content-muted text-sm mt-1">
             Choose your academic track so we can personalize your curriculum and syllabus.
           </p>
         </div>
@@ -138,12 +141,12 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
             className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${
               track === TRACKS.UNIVERSITY
                 ? 'border-blue-600 bg-blue-50/50 text-blue-700 shadow-sm'
-                : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                : 'border-line hover:border-line-strong text-content-secondary'
             }`}
           >
             <GraduationCap className="w-6 h-6" />
             <span className="text-xs font-black uppercase tracking-wider">University Degree</span>
-            <span className="text-[10px] text-gray-400 font-medium">B.Tech / Semester Syllabus</span>
+            <span className="text-[10px] text-content-faint font-medium">B.Tech / Semester Syllabus</span>
           </button>
 
           <button
@@ -152,12 +155,12 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
             className={`p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all ${
               track !== TRACKS.UNIVERSITY
                 ? 'border-blue-600 bg-blue-50/50 text-blue-700 shadow-sm'
-                : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                : 'border-line hover:border-line-strong text-content-secondary'
             }`}
           >
             <Target className="w-6 h-6" />
             <span className="text-xs font-black uppercase tracking-wider">Competitive Exam</span>
-            <span className="text-[10px] text-gray-400 font-medium">JEE Mains / Advanced / NEET</span>
+            <span className="text-[10px] text-content-faint font-medium">JEE Mains / Advanced / NEET</span>
           </button>
         </div>
 
@@ -166,7 +169,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
             <>
               {/* University Picker */}
               <div>
-                <label className="block text-[11px] font-black uppercase tracking-wider text-gray-400 mb-2">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-content-faint mb-2">
                   Affiliated University
                 </label>
                 <select
@@ -175,9 +178,10 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
                   onChange={(e) => {
                     setSelectedTenantId(e.target.value);
                     setCollege('');
+                    setIsCustomCollege(false);
                   }}
                   required
-                  className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-800 bg-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold text-content-strong bg-surface focus:outline-none focus:border-blue-500"
                 >
                   <option value="" disabled>
                     {tenantsLoading ? 'Loading universities...' : 'Select an affiliated university'}
@@ -204,16 +208,20 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
 
               {/* College Picker or Input */}
               <div>
-                <label className="block text-[11px] font-black uppercase tracking-wider text-gray-400 mb-2">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-content-faint mb-2">
                   College / Campus Name
                 </label>
                 {affiliatedColleges.length > 0 ? (
                   <div className="space-y-2">
                     <select
-                      value={college}
-                      onChange={(e) => setCollege(e.target.value)}
+                      value={collegeSelectValue}
+                      onChange={(e) => {
+                        const nextCollege = e.target.value;
+                        setIsCustomCollege(nextCollege === 'Other');
+                        setCollege(nextCollege === 'Other' ? '' : nextCollege);
+                      }}
                       required
-                      className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-800 bg-white focus:outline-none focus:border-blue-500"
+                      className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold text-content-strong bg-surface focus:outline-none focus:border-blue-500"
                     >
                       <option value="">Select your affiliated college...</option>
                       {affiliatedColleges.map((c, i) => (
@@ -223,13 +231,14 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
                       ))}
                       <option value="Other">Other / Main Campus</option>
                     </select>
-                    {college === "Other" && (
+                    {collegeSelectValue === "Other" && (
                       <input
                         type="text"
                         placeholder="Type your exact college name..."
+                        value={college}
                         onChange={(e) => setCollege(e.target.value)}
                         required
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:border-blue-500"
+                        className="w-full px-4 py-3 rounded-xl border border-line text-sm focus:outline-none focus:border-blue-500"
                       />
                     )}
                   </div>
@@ -240,7 +249,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
                     value={college}
                     onChange={(e) => setCollege(e.target.value)}
                     required
-                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-800 focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold text-content-strong focus:outline-none focus:border-blue-500"
                   />
                 )}
               </div>
@@ -248,7 +257,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
               {/* Branch, Year, Semester */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-gray-400 mb-2">
+                  <label className="block text-[11px] font-black uppercase tracking-wider text-content-faint mb-2">
                     Branch
                   </label>
                   <input
@@ -257,18 +266,18 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
                     value={branch}
                     onChange={(e) => setBranch(e.target.value)}
                     required
-                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold uppercase focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold uppercase focus:outline-none focus:border-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-gray-400 mb-2">
+                  <label className="block text-[11px] font-black uppercase tracking-wider text-content-faint mb-2">
                     Year
                   </label>
                   <select
                     value={year}
                     onChange={handleYearChange}
-                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold bg-surface focus:outline-none focus:border-blue-500"
                   >
                     <option value="1">1st Year</option>
                     <option value="2">2nd Year</option>
@@ -278,13 +287,13 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-gray-400 mb-2">
+                  <label className="block text-[11px] font-black uppercase tracking-wider text-content-faint mb-2">
                     Semester
                   </label>
                   <select
                     value={semester}
                     onChange={(e) => setSemester(e.target.value)}
-                    className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold bg-surface focus:outline-none focus:border-blue-500"
                   >
                     <option value={(parseInt(year) * 2) - 1}>Sem {(parseInt(year) * 2) - 1}</option>
                     <option value={parseInt(year) * 2}>Sem {parseInt(year) * 2}</option>
@@ -296,7 +305,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
             <>
               {/* Competitive Track */}
               <div>
-                <label className="block text-[11px] font-black uppercase tracking-wider text-gray-400 mb-2">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-content-faint mb-2">
                   Target Competitive Exam
                 </label>
                 <select
@@ -305,7 +314,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
                     setTargetExam(e.target.value);
                     setTrack(e.target.value.includes(TRACKS.JEE) ? TRACKS.JEE : TRACKS.NEET);
                   }}
-                  className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold bg-surface focus:outline-none focus:border-blue-500"
                 >
                   <option value={TARGET_EXAMS.JEE_MAINS}>JEE Mains</option>
                   <option value={TARGET_EXAMS.JEE_ADVANCED}>JEE Advanced</option>
@@ -314,13 +323,13 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
               </div>
 
               <div>
-                <label className="block text-[11px] font-black uppercase tracking-wider text-gray-400 mb-2">
+                <label className="block text-[11px] font-black uppercase tracking-wider text-content-faint mb-2">
                   Target Examination Year
                 </label>
                 <select
                   value={targetYear}
                   onChange={(e) => setTargetYear(e.target.value)}
-                  className="w-full px-4 py-3.5 rounded-xl border border-gray-200 text-sm font-semibold bg-white focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold bg-surface focus:outline-none focus:border-blue-500"
                 >
                   <option value="2026">2026</option>
                   <option value="2027">2027</option>
@@ -333,7 +342,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
           <button
             type="submit"
             disabled={loading || (track === TRACKS.UNIVERSITY && (tenantsLoading || tenants.length === 0))}
-            className="w-full mt-4 bg-[#0a0a0a] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-full mt-4 bg-surface-inverse text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2"
           >
             {loading ? "Saving Profile..." : "Activate My Vault"}
             <ArrowRight className="w-4 h-4" />

@@ -38,7 +38,7 @@ export const Navbar = () => {
   }, []);
 
   return (
-    <nav className={`fixed w-full top-0 z-50 transition-all duration-300 backdrop-blur-md border-b border-white/10 text-white ${isScrolled ? 'bg-[#0a0a0a]/98 shadow-2xl py-0' : 'bg-[#0a0a0a]/90 py-1'}`}>
+    <nav className={`fixed w-full top-0 z-50 transition-all duration-300 backdrop-blur-md border-b border-white/10 text-white ${isScrolled ? 'bg-surface-inverse/98 shadow-2xl py-0' : 'bg-surface-inverse/90 py-1'}`}>
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           
@@ -51,7 +51,7 @@ export const Navbar = () => {
               <span className="text-xl font-black tracking-tight uppercase italic leading-none">
                 The <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-white bg-clip-text text-transparent">AcadeMIa</span>
               </span>
-              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.25em] mt-1">
+              <span className="text-[9px] font-bold text-content-faint uppercase tracking-[0.25em] mt-1">
                 {isAdmin ? <span className="text-blue-500">Admin Console</span> : "Academic OS"}
               </span>
             </div>
@@ -59,7 +59,7 @@ export const Navbar = () => {
 
           {/* Institution / Track Pill (Only for Students) */}
           {user && !isAdmin && (
-            <div className="hidden lg:flex items-center gap-2 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full text-xs font-medium text-gray-300">
+            <div className="hidden lg:flex items-center gap-2 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full text-xs font-medium text-content-faint">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               {user.track === 'COMPETITIVE' || user.track === TRACKS.JEE || user.track === TRACKS.NEET ? (
                 <span className="font-semibold text-amber-300">
@@ -76,7 +76,7 @@ export const Navbar = () => {
 
           {/* Desktop Navigation */}
           {isAuthenticated ? (
-            <div className="hidden md:flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-gray-400">
+            <div className="hidden lg:flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-content-faint">
               
               {/* STUDENT LINKS */}
               {!isAdmin && (
@@ -125,7 +125,7 @@ export const Navbar = () => {
               <div className="flex items-center gap-3">
                 <div className="text-right">
                   <p className="text-xs font-bold text-white leading-tight">{user?.name}</p>
-                  <p className="text-[10px] text-gray-400 font-medium">{user?.branch !== 'Not Set' ? user?.branch : user?.role}</p>
+                  <p className="text-[10px] text-content-faint font-medium">{user?.branch !== 'Not Set' ? user?.branch : user?.role}</p>
                 </div>
 
                 <button 
@@ -139,15 +139,15 @@ export const Navbar = () => {
             </div>
           ) : (
             /* UNAUTHENTICATED PUBLIC LINKS */
-            <div className="hidden md:flex items-center gap-8">
-              <div className="flex gap-8 text-[13px] font-semibold uppercase tracking-widest text-gray-400">
+            <div className="hidden lg:flex items-center gap-8">
+              <div className="flex gap-8 text-[13px] font-semibold uppercase tracking-widest text-content-faint">
                 <a href="#home" className="hover:text-white transition-colors">Home</a>
                 <a href="#features" className="hover:text-white transition-colors">Features</a>
                 <a href="#workflow" className="hover:text-white transition-colors">Workflow</a>
               </div>
               <div className="flex items-center gap-4 ml-2">
                 <a href="#auth" className="text-[13px] font-medium text-white/70 hover:text-white transition-colors">Log in</a>
-                <a href="#auth" className="theme-always-light bg-white text-black px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-gray-100 transition-all shadow-md active:scale-95">
+                <a href="#auth" className="theme-always-light bg-surface text-content px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-surface-subtle transition-all shadow-md active:scale-95">
                   Get Started
                 </a>
               </div>
@@ -159,7 +159,7 @@ export const Navbar = () => {
             onClick={toggleTheme}
             aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            className="ml-auto mr-2 inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 text-gray-200 transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 md:ml-0 md:mr-0"
+            className="ml-auto mr-2 inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 text-content-faint transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 md:ml-0 md:mr-0"
           >
             {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             <span className="hidden text-[10px] font-bold uppercase tracking-wider lg:inline">{theme === 'dark' ? 'Light' : 'Dark'}</span>
@@ -168,7 +168,7 @@ export const Navbar = () => {
           {/* Mobile Menu Toggle */}
           <button 
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="lg:hidden p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -178,12 +178,12 @@ export const Navbar = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0d0d0d] border-t border-white/10 px-6 py-6 space-y-4 shadow-2xl">
+        <div className="lg:hidden bg-surface-inverse border-t border-white/10 px-6 py-6 space-y-4 shadow-2xl">
           {isAuthenticated ? (
             <>
               <div className="pb-3 border-b border-white/10">
                 <p className="font-bold text-sm text-white">{user?.name}</p>
-                <p className="text-xs text-gray-400">{user?.email}</p>
+                <p className="text-xs text-content-faint">{user?.email}</p>
                 {!isAdmin && (
                   <p className="text-[10px] font-bold text-blue-400 uppercase mt-1">
                     {user?.tenant?.shortCode || "University"} • {user?.college}
@@ -193,20 +193,20 @@ export const Navbar = () => {
               
               {!isAdmin ? (
                 <>
-                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Dashboard</Link>
-                  <Link to="/subjects" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Subjects Catalog</Link>
-                  <Link to="/progress" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Global Mastery</Link>
+                  <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-content-faint hover:text-white">Dashboard</Link>
+                  <Link to="/subjects" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-content-faint hover:text-white">Subjects Catalog</Link>
+                  <Link to="/progress" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-content-faint hover:text-white">Global Mastery</Link>
                   <Link to="/rankings" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-amber-300 hover:text-amber-200">Campus Rankings</Link>
-                  <Link to="/study-tools" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Study Tools</Link>
+                  <Link to="/study-tools" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-content-faint hover:text-white">Study Tools</Link>
                   {user?.role === 'moderator' && user?.campusAmbassador?.active && <Link to="/campus" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-emerald-400 hover:text-emerald-300">Campus Review Desk</Link>}
-                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">My Profile</Link>
+                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-content-faint hover:text-white">My Profile</Link>
                 </>
               ) : (
                 <>
                   <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-purple-400 hover:text-purple-300">Admin Dashboard</Link>
-                  <Link to="/admin/users" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">Manage Users</Link>
+                  <Link to="/admin/users" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-content-faint hover:text-white">Manage Users</Link>
                   <Link to="/campus" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-emerald-400 hover:text-emerald-300">Campus Marketplace</Link>
-                  <Link to="/subjects/add" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-gray-300 hover:text-white">+ Add Subject</Link>
+                  <Link to="/subjects/add" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-semibold text-content-faint hover:text-white">+ Add Subject</Link>
                 </>
               )}
 
@@ -219,10 +219,10 @@ export const Navbar = () => {
             </>
           ) : (
             <div className="flex flex-col gap-4 text-center">
-              <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-gray-400">Features</a>
-              <a href="#workflow" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-gray-400">Workflow</a>
+              <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-content-faint">Features</a>
+              <a href="#workflow" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-content-faint">Workflow</a>
               <div className="h-[1px] bg-white/10 w-full"></div>
-              <a href="#auth" onClick={() => setMobileMenuOpen(false)} className="bg-white text-black py-3 rounded-xl font-bold text-sm">
+              <a href="#auth" onClick={() => setMobileMenuOpen(false)} className="bg-surface text-content py-3 rounded-xl font-bold text-sm">
                 Sign In
               </a>
             </div>

@@ -4,6 +4,22 @@ const userModel = require("../../models/user-model");
 const tenantModel = require("../../models/tenant-model");
 const { generateToken } = require("../../utils/generateToken");
 
+function ambassadorScopeUpdates(user, { track, tenant, college }) {
+    const assignment = user?.campusAmbassador;
+    if (!assignment?.active) return {};
+    const assignmentTenant = assignment.tenant?._id || assignment.tenant;
+    const nextTenant = tenant?._id || tenant;
+    const remainsInScope = track === "UNIVERSITY"
+        && assignmentTenant?.toString() === nextTenant?.toString()
+        && (!assignment.college || assignment.college === college);
+    if (remainsInScope) return {};
+
+    return {
+        campusAmbassador: { active: false, tenant: null, college: "", branches: [], semesters: [] },
+        ...(user.role === "moderator" ? { role: "student" } : {})
+    };
+}
+
 // Helper to configure cookie
 const sendTokenResponse = (user, statusCode, res, message) => {
     const token = generateToken(user);
@@ -270,7 +286,15 @@ module.exports.updateProfile = async (req, res) => {
             updates.targetYear = value;
             updates.tenant = competitiveTenant?._id || null;
             updates.college = "Not Set";
+            updates.branch = "Not Set";
+            updates.year = 1;
+            updates.semester = 1;
         }
+        Object.assign(updates, ambassadorScopeUpdates(req.user, {
+            track: requestedTrack,
+            tenant: updates.tenant ?? req.user.tenant,
+            college: updates.college ?? req.user.college
+        }));
         updates.onboardingCompleted = true;
 
         const user = await userModel.findByIdAndUpdate(req.user._id, updates, {

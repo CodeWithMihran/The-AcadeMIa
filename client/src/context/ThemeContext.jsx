@@ -4,8 +4,12 @@ const ThemeContext = createContext(null);
 const THEME_KEY = 'academia-theme';
 
 function getInitialTheme() {
-  const savedTheme = localStorage.getItem(THEME_KEY);
-  if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
+  try {
+    const savedTheme = window.localStorage.getItem(THEME_KEY);
+    if (savedTheme === 'light' || savedTheme === 'dark') return savedTheme;
+  } catch {
+    // Private browsing or a restrictive browser policy can disable storage.
+  }
   return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
@@ -15,7 +19,11 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     document.documentElement.style.colorScheme = theme;
-    localStorage.setItem(THEME_KEY, theme);
+    try {
+      window.localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      // Keep the selected theme for this session even if persistence is blocked.
+    }
   }, [theme]);
 
   const toggleTheme = () => setTheme((current) => current === 'dark' ? 'light' : 'dark');

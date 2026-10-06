@@ -181,6 +181,9 @@ export const StudyTools = () => {
   });
   const [projectedMarks, setProjectedMarks] = useState({});
   const [loading, setLoading] = useState(true);
+  const [dataReady, setDataReady] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [retryLoad, setRetryLoad] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -190,8 +193,13 @@ export const StudyTools = () => {
     let alive = true;
     const loadedSubjects = subjectsQuery.data || [];
     setLoading(true);
-    if (subjectsQuery.error) setError(subjectsQuery.error.response?.data?.message || "Could not load your semester subjects.");
-    else setError("");
+    setDataReady(false);
+    setLoadError("");
+    if (subjectsQuery.error) {
+      const message = subjectsQuery.error.response?.data?.message || "Could not load your semester subjects.";
+      setError(message);
+      setLoadError(message);
+    } else setError("");
     Promise.allSettled([studyToolsService.getTools()])
       .then(([toolsResult]) => {
         if (!alive) return;
@@ -246,13 +254,11 @@ export const StudyTools = () => {
               ]),
             ),
           );
+          setDataReady(!subjectsQuery.error);
         } else {
-          setError(
-            (current) =>
-              current ||
-              toolsResult.reason.response?.data?.message ||
-              "Could not load saved study tool data.",
-          );
+          const message = toolsResult.reason.response?.data?.message || "Could not load saved study tool data.";
+          setError((current) => current || message);
+          setLoadError((current) => current || message);
           setAttendance(
             loadedSubjects.map((subject) => emptyAttendance(subject)),
           );
@@ -272,7 +278,16 @@ export const StudyTools = () => {
     return () => {
       alive = false;
     };
-  }, [subjectsQuery.data, subjectsQuery.error, subjectsQuery.isLoading]);
+  }, [subjectsQuery.data, subjectsQuery.error, subjectsQuery.isLoading, retryLoad]);
+
+  const retryDataLoad = async () => {
+    if (subjectsQuery.error) {
+      const result = await subjectsQuery.refetch();
+      if (result.isError) setRetryLoad((current) => current + 1);
+      return;
+    }
+    setRetryLoad((current) => current + 1);
+  };
 
   const saveData = useCallback(
     async (kind) => {
@@ -422,32 +437,30 @@ export const StudyTools = () => {
 
   if (loading)
     return (
-      <div className="min-h-screen bg-[#fbfbfa] pt-40 text-center text-xs font-black uppercase tracking-widest text-gray-400">
-        Loading your study tools…
-      </div>
+      <main className="min-h-screen bg-app px-4 pb-16 pt-28 sm:px-6 lg:px-8"><div role="status" aria-label="Loading study tools" className="mx-auto max-w-7xl animate-pulse space-y-5"><div className="h-36 rounded-3xl border border-line bg-surface"/><div className="h-14 rounded-2xl border border-line bg-surface"/><div className="h-64 rounded-2xl border border-line bg-surface"/></div></main>
     );
 
   return (
-    <main className="min-h-screen bg-[#fbfbfa] px-5 pb-20 pt-32 md:px-8">
-      <div className="mx-auto max-w-7xl">
-        <header className="mb-8 flex flex-col justify-between gap-5 border-b border-gray-200 pb-8 md:flex-row md:items-end">
+    <main className="min-h-screen bg-app px-4 pb-16 pt-28 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6 sm:space-y-8">
+        <header className="flex flex-col justify-between gap-5 rounded-3xl border border-line bg-surface p-5 shadow-sm sm:p-7 md:flex-row md:items-end">
           <div>
             <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">
               Built for your semester
             </p>
-            <h1 className="text-3xl font-black tracking-tight text-gray-900 md:text-5xl">
+            <h1 className="text-3xl font-black tracking-tight text-content md:text-5xl">
               Daily Study Tools
             </h1>
-            <p className="mt-3 max-w-2xl text-sm text-gray-500">
+            <p className="mt-3 max-w-2xl text-sm text-content-muted">
               Plan attendance, marks, and semester outcomes. Your entries save
               to your account and stay private.
             </p>
           </div>
-          <div className="rounded-2xl border border-gray-200 bg-white px-5 py-3 text-right">
-            <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">
+          <div className="rounded-2xl border border-line bg-surface-muted px-4 py-3 text-left sm:text-right">
+            <p className="text-[9px] font-black uppercase tracking-widest text-content-faint">
               Current curriculum
             </p>
-            <p className="mt-1 text-sm font-bold text-gray-900">
+            <p className="mt-1 text-sm font-bold text-content">
               {user?.track === TRACKS.UNIVERSITY
                 ? `${user?.tenant?.shortCode || "University"} · ${user?.branch || "Branch"} · Sem ${user?.semester || "—"}`
                 : `${user?.targetExam || "Competitive"} track`}
@@ -458,32 +471,36 @@ export const StudyTools = () => {
         {error && (
           <div
             role="alert"
-            className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+            className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800"
           >
             {error}
+            {loadError && <button type="button" onClick={retryDataLoad} disabled={loading} className="ml-3 min-h-11 rounded-xl border border-red-200 bg-surface px-4 py-2 text-xs font-black">{loading ? "Retrying…" : "Retry loading"}</button>}
           </div>
         )}
+        {!dataReady && !loading && <p className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">Saved study-tool data is not confirmed as loaded. Saving is disabled to protect existing entries. Retry loading before making changes.</p>}
         {notice && (
           <div
             role="status"
-            className="mb-5 flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700"
+            aria-live="polite"
+            className="mb-5 flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800"
           >
             <Check className="h-4 w-4" />
             {notice}
           </div>
         )}
 
-        <div className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-gray-200 bg-white p-2 shadow-sm">
+        <div role="group" aria-label="Study tool sections" className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-2 shadow-sm sm:flex-row">
           {tabs.map(({ id, label, icon: Icon }) => (
             <button
               type="button"
               key={id}
+              aria-pressed={activeTab === id}
               onClick={() => {
                 setActiveTab(id);
                 setError("");
                 setNotice("");
               }}
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-3 text-xs font-black transition ${activeTab === id ? "bg-[#0a0a0a] text-white" : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"}`}
+              className={`inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl px-3 py-3 text-xs font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${activeTab === id ? "bg-surface-inverse text-white" : "text-content-muted hover:bg-surface-subtle hover:text-content"}`}
             >
               <Icon className="h-4 w-4" />
               {label}
@@ -495,10 +512,10 @@ export const StudyTools = () => {
           <section className="space-y-5">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
-                <h2 className="text-xl font-black text-gray-900">
+                <h2 className="text-xl font-black text-content">
                   75% Attendance Forecaster
                 </h2>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-content-muted">
                   Update classes held and attended after each lecture to see
                   your safe bunk buffer.
                 </p>
@@ -506,13 +523,13 @@ export const StudyTools = () => {
               <button
                 type="button"
                 onClick={addAttendance}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-wider hover:border-blue-300"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-xs font-black uppercase tracking-wider hover:border-blue-300"
               >
                 <Plus className="h-4 w-4" /> Add subject
               </button>
             </div>
             {attendance.length === 0 && (
-              <div className={cardClass + " text-sm text-gray-500"}>
+              <div className={cardClass + " text-sm text-content-muted"}>
                 No subjects are listed for this semester yet. Add a subject
                 manually to start tracking attendance.
               </div>
@@ -530,6 +547,7 @@ export const StudyTools = () => {
             </div>
             <SaveStudyToolsButton
               saving={saving}
+              disabled={!dataReady}
               onClick={() => saveData("attendance")}
             />
           </section>
@@ -540,7 +558,7 @@ export const StudyTools = () => {
             {user?.track !== TRACKS.UNIVERSITY ? (
               <div className={cardClass}>
                 <h2 className="text-xl font-black">University grade planner</h2>
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-content-muted">
                   Switch to a university track in your profile to import
                   semester subjects and credits here. Attendance and internal
                   marks tools are available for all tracks.
@@ -573,7 +591,7 @@ export const StudyTools = () => {
                 <div className={cardClass + " space-y-5"}>
                   <div>
                     <h2 className="text-lg font-black">Cumulative target</h2>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-content-muted">
                       Enter your current transcript values. The required SGPA
                       calculation uses credits from this semester’s subjects.
                     </p>
@@ -643,7 +661,7 @@ export const StudyTools = () => {
                     <h2 className="text-lg font-black">
                       Semester marks simulation
                     </h2>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-xs text-content-muted">
                       Subjects are imported from your current tenant, branch,
                       and semester. Set the official credits on each subject in
                       the Admin subject editor if they are missing.
@@ -653,7 +671,7 @@ export const StudyTools = () => {
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-[620px] text-left">
                         <thead>
-                          <tr className="border-b border-gray-100 text-[9px] font-black uppercase tracking-widest text-gray-400">
+                          <tr className="border-b border-line text-[9px] font-black uppercase tracking-widest text-content-faint">
                             <th className="py-3 pr-4">Subject</th>
                             <th className="py-3 pr-4">Credits</th>
                             <th className="py-3 pr-4">Projected marks %</th>
@@ -669,12 +687,12 @@ export const StudyTools = () => {
                               planner.gradeScale,
                             );
                             return (
-                              <tr key={id} className="border-b border-gray-50">
+                              <tr key={id} className="border-b border-line">
                                 <td className="py-4 pr-4">
-                                  <p className="text-sm font-bold text-gray-900">
+                                  <p className="text-sm font-bold text-content">
                                     {subject.name}
                                   </p>
-                                  <p className="text-[10px] text-gray-400">
+                                  <p className="text-[10px] text-content-faint">
                                     {subject.courseCode || subject.branch}
                                   </p>
                                 </td>
@@ -694,7 +712,7 @@ export const StudyTools = () => {
                                     max="100"
                                     step="0.1"
                                     aria-label={`Projected marks for ${subject.name}`}
-                                    className="w-32 rounded-lg border border-gray-200 px-3 py-2 text-sm"
+                                    className="w-32 rounded-lg border border-line px-3 py-2 text-sm"
                                     value={projectedMarks[id] ?? ""}
                                     onChange={(e) =>
                                       setProjectedMarks((scores) => ({
@@ -718,7 +736,7 @@ export const StudyTools = () => {
                       </table>
                     </div>
                   ) : (
-                    <p className="rounded-xl bg-gray-50 p-5 text-sm text-gray-500">
+                    <p className="rounded-xl bg-surface-muted p-5 text-sm text-content-muted">
                       No subjects matched your current university, branch, and
                       semester.
                     </p>
@@ -726,7 +744,7 @@ export const StudyTools = () => {
                   {semesterSummary.courses <
                     subjects.filter((subject) => Number(subject.credits) > 0)
                       .length && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-content-muted">
                       SGPA is provisional and includes {semesterSummary.courses}{" "}
                       of{" "}
                       {
@@ -825,7 +843,7 @@ export const StudyTools = () => {
                               ),
                             }))
                           }
-                          className="mb-1 rounded-lg p-2 text-gray-300 hover:bg-red-50 hover:text-red-500 disabled:opacity-30"
+                          className="mb-1 rounded-lg p-2 text-content-faint hover:bg-red-50 hover:text-red-500 disabled:opacity-30"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -847,6 +865,7 @@ export const StudyTools = () => {
                 </div>
                 <SaveStudyToolsButton
                   saving={saving}
+                  disabled={!dataReady}
                   onClick={() => saveData("planner")}
                 />
               </>
@@ -858,10 +877,10 @@ export const StudyTools = () => {
           <section className="space-y-5">
             <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
               <div>
-                <h2 className="text-xl font-black text-gray-900">
+                <h2 className="text-xl font-black text-content">
                   Internal / Sessional Marks
                 </h2>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-content-muted">
                   Record tests and viva scores; see the external marks needed
                   for your chosen aggregate pass target.
                 </p>
@@ -869,13 +888,13 @@ export const StudyTools = () => {
               <button
                 type="button"
                 onClick={addSessional}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-xs font-black uppercase tracking-wider hover:border-blue-300"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-xs font-black uppercase tracking-wider hover:border-blue-300"
               >
                 <Plus className="h-4 w-4" /> Add subject
               </button>
             </div>
             {sessionals.length === 0 && (
-              <div className={cardClass + " text-sm text-gray-500"}>
+              <div className={cardClass + " text-sm text-content-muted"}>
                 No subjects are listed yet. Add a subject manually to begin
                 tracking assessments.
               </div>
@@ -916,7 +935,7 @@ export const StudyTools = () => {
                             rows.filter((_, i) => i !== index),
                           )
                         }
-                        className="mt-6 rounded-lg p-2 text-gray-300 hover:bg-red-50 hover:text-red-500"
+                        className="mt-6 rounded-lg p-2 text-content-faint hover:bg-red-50 hover:text-red-500"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -977,7 +996,7 @@ export const StudyTools = () => {
                     </div>
                     <div>
                       <div className="mb-3 flex items-center justify-between">
-                        <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-content-muted">
                           Assessments
                         </h3>
                         <button
@@ -1024,7 +1043,7 @@ export const StudyTools = () => {
                           ))}
                         </div>
                       ) : (
-                        <p className="rounded-xl bg-gray-50 p-4 text-xs text-gray-400">
+                        <p className="rounded-xl bg-surface-muted p-4 text-xs text-content-faint">
                           Add assessment scores to calculate the external marks
                           you need.
                         </p>
@@ -1055,6 +1074,7 @@ export const StudyTools = () => {
             </div>
             <SaveStudyToolsButton
               saving={saving}
+              disabled={!dataReady}
               onClick={() => saveData("sessionals")}
             />
           </section>

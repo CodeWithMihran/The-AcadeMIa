@@ -39,8 +39,10 @@ app.use(cors({
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Subject editor requests can contain structured exam and career resources,
+// which exceed Express's 100 KB default. Keep a finite cap for abuse resistance.
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 app.use(cookieParser());
 
 // Persistent Mongo Session Store
@@ -200,9 +202,15 @@ app.use((req, res) => {
 
 app.use((err, req, res, next) => {
     console.error("Server Error:", err);
-    res.status(500).json({
+    const status = Number.isInteger(err.status) && err.status >= 400 && err.status < 500 ? err.status : 500;
+    const message = status === 413
+        ? "Request payload is too large. Reduce the submitted content and try again."
+        : status === 400
+            ? "Request data could not be parsed. Check the submitted fields and try again."
+            : "Internal server error";
+    res.status(status).json({
         success: false,
-        message: "Internal server error"
+        message
     });
 });
 

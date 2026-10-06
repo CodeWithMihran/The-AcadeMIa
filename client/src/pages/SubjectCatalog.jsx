@@ -1,236 +1,143 @@
+import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { TRACKS } from "../constants";
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useStudentSubjects } from '../hooks/useAcademiaQueries';
-import { 
-  Database, 
-  Cloud, 
-  ShieldCheck, 
-  FolderOpen,
+import { useAuth } from "../context/AuthContext";
+import { useStudentSubjects } from "../hooks/useAcademiaQueries";
+import {
   ArrowRight,
   BookOpen,
-  PlayCircle,
-  FileText
-} from 'lucide-react';
+  ChevronRight,
+  GraduationCap,
+  Layers3,
+  RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
 
 export const SubjectCatalog = () => {
   const { user } = useAuth();
-  
-  const { data: subjects = [], isLoading: loading, error: queryError } = useStudentSubjects(user);
-  const error = queryError?.response?.data?.message || (queryError ? 'Failed to load curriculum vault.' : '');
+  const { data: subjects = [], isLoading, isFetching, error: queryError, refetch } = useStudentSubjects(user);
+  const [search, setSearch] = useState("");
+  const error = queryError?.response?.data?.message || (queryError ? "Could not load your subject catalog." : "");
 
-  // Array of icons to cycle through for subject cards
-  const courseIcons = ['📓', '⚙️', '💻', '📐', '🔬'];
+  const isUniversity = user?.track === TRACKS.UNIVERSITY;
+  const filteredSubjects = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase();
+    if (!query) return subjects;
+    return subjects.filter((subject) => [subject.name, subject.courseCode, subject.branch, subject.examCategory, subject.tenant?.shortCode]
+      .some((value) => String(value || "").toLocaleLowerCase().includes(query)));
+  }, [subjects, search]);
+
+  const totalUnits = subjects.reduce((total, subject) => total + (subject.units?.length || 0), 0);
+  const totalTopics = subjects.reduce((total, subject) => total + (subject.units || []).reduce((unitTotal, unit) => unitTotal + (unit.topics?.length || 0), 0), 0);
 
   if (!user) return null;
 
-  const isUniversity = user.track === TRACKS.UNIVERSITY;
-
   return (
-    <div className="min-h-screen bg-[#fbfbfa] pt-32 pb-20 px-6 animate-in fade-in duration-500">
-      <div className="max-w-7xl mx-auto">
-        
-        {/* Header Section */}
-        <div className="mb-16 flex flex-col md:flex-row justify-between items-start md:items-end gap-8">
-          <div>
-            <h1 className="text-5xl font-black tracking-tighter text-[#1a1a1a] mb-4 italic">
-              The <span className="text-gray-300 font-light not-italic">Curriculum</span> Vault
-            </h1>
-            
-            <div className="flex flex-wrap items-center gap-4">
-              <span className="bg-black/5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-gray-500">
-                {isUniversity ? user.branch : user.targetExam}
-              </span>
-              <span className="h-1 w-1 bg-gray-300 rounded-full"></span>
-              <span className="text-xs font-bold text-gray-400">
-                {isUniversity ? `Semester ${user.semester}` : `Target ${user.targetYear}`}
-              </span>
-              {!isUniversity && (
-                <>
-                  <span className="h-1 w-1 bg-gray-300 rounded-full"></span>
-                  <span className="text-xs font-bold text-emerald-500">Competitive Track</span>
-                </>
-              )}
+    <main className="min-h-screen bg-app px-4 pb-16 pt-28 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-8 sm:space-y-10">
+        <header className="flex flex-col gap-5 rounded-3xl border border-line bg-surface p-5 shadow-sm sm:p-7 lg:flex-row lg:items-end lg:justify-between lg:p-8">
+          <div className="min-w-0">
+            <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-blue-700"><BookOpen className="h-4 w-4" />Your learning space</p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-content sm:text-4xl">Subject catalog</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-content-muted">Find a subject to open its units, study material, exam revision, and progress.</p>
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+              <span className="rounded-full bg-surface-muted px-3 py-1.5 font-bold text-content-secondary">{isUniversity ? user.branch || "University track" : user.targetExam || "Competitive track"}</span>
+              <span className="rounded-full bg-surface-muted px-3 py-1.5 font-semibold text-content-muted">{isUniversity ? `Semester ${user.semester || "—"}` : `Target ${user.targetYear || "year not set"}`}</span>
+              {isUniversity && user.tenant?.shortCode && <span className="rounded-full bg-surface-muted px-3 py-1.5 font-semibold text-content-muted">{user.tenant.shortCode}</span>}
             </div>
           </div>
-          
-          <div className="bg-[#0a0a0a] text-white px-8 py-4 rounded-3xl shadow-2xl shadow-gray-200 border border-white/10">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 mb-1 flex items-center gap-1.5">
-              <ShieldCheck className="w-3 h-3" /> Authenticated Access
-            </p>
-            <p className="text-xl font-black tracking-tighter">
-              {loading ? '...' : subjects.length} Active Modules
-            </p>
-          </div>
-        </div>
+          <Link to="/profile" className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-xl border border-line bg-surface px-4 py-2.5 text-xs font-bold text-content-secondary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 lg:self-auto">
+            <GraduationCap className="h-4 w-4" />Study profile <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </header>
 
-        {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-          <div className="bg-white/60 backdrop-blur-md border border-gray-100 p-8 rounded-[2rem] shadow-sm">
-            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-              <Database className="w-3 h-3" /> Study Load
-            </p>
-            <p className="text-2xl font-black italic tracking-tighter text-[#1a1a1a]">Full Capacity</p>
-          </div>
-          
-          <div className="bg-blue-50/50 backdrop-blur-md border border-blue-100/50 p-8 rounded-[2rem] shadow-sm">
-            <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-              <Cloud className="w-3 h-3" /> Resources
-            </p>
-            <p className="text-2xl font-black italic tracking-tighter text-blue-600">Cloud Synced</p>
-          </div>
+        <section className="grid gap-3 sm:grid-cols-3" aria-label="Catalog overview">
+          <CatalogStat label="Subjects available" value={isLoading ? "—" : subjects.length} icon={BookOpen} />
+          <CatalogStat label="Course units" value={isLoading ? "—" : totalUnits} icon={Layers3} />
+          <CatalogStat label="Topics to explore" value={isLoading ? "—" : totalTopics} icon={GraduationCap} />
+        </section>
 
-          <div className="bg-[#0a0a0a] border border-white/10 p-8 rounded-[2rem] relative overflow-hidden shadow-xl">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/20 blur-3xl rounded-full"></div>
-            <p className="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-1 relative z-10">System Status</p>
-            <div className="flex items-center gap-3 relative z-10">
-              <span className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_12px_rgba(16,185,129,0.8)]"></span>
-              <p className="text-xl font-bold italic tracking-tight text-white">Vault Secured</p>
+        <section aria-labelledby="available-subjects-title">
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 id="available-subjects-title" className="text-xl font-black tracking-tight text-content">Available subjects</h2>
+              <p className="mt-1 text-sm text-content-muted">{isLoading ? "Loading your subjects…" : `${filteredSubjects.length} of ${subjects.length} subjects`}</p>
             </div>
+            <label className="relative block w-full sm:max-w-sm">
+              <span className="sr-only">Search subjects</span>
+              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-content-faint" />
+              <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by subject or course code" className="min-h-11 w-full rounded-xl border border-line bg-surface py-2.5 pl-10 pr-10 text-sm text-content placeholder:text-content-faint focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+              {search && <button type="button" aria-label="Clear subject search" onClick={() => setSearch("")} className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-content-muted hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"><X className="h-4 w-4" /></button>}
+            </label>
           </div>
-        </div>
 
-        {/* Divider */}
-        <div className="flex items-center gap-4 mb-10">
-          <h2 className="text-xs font-black tracking-[0.4em] text-gray-400 uppercase">Available Courses</h2>
-          <div className="h-[1px] flex-grow bg-gray-200"></div>
-        </div>
-
-        {/* Content Area */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-[2.5rem] border border-gray-100 h-96 animate-pulse p-10 flex flex-col justify-between">
-                <div className="space-y-4">
-                  <div className="w-14 h-14 bg-gray-100 rounded-2xl"></div>
-                  <div className="w-3/4 h-8 bg-gray-100 rounded-lg"></div>
-                  <div className="w-full h-4 bg-gray-100 rounded-md"></div>
-                  <div className="w-5/6 h-4 bg-gray-100 rounded-md"></div>
-                </div>
-                <div className="w-full h-12 bg-gray-100 rounded-2xl"></div>
-              </div>
-            ))}
-          </div>
-        ) : error ? (
-          <div className="bg-red-50 border border-red-100 p-12 rounded-[3rem] text-center">
-            <p className="text-red-500 font-bold text-sm">⚠️ {error}</p>
-          </div>
-        ) : subjects.length === 0 ? (
-          <div className="bg-white border-2 border-dashed border-gray-200 p-24 rounded-[3rem] text-center flex flex-col items-center justify-center">
-            <FolderOpen className="w-12 h-12 text-gray-300 mb-4" />
-            <p className="text-gray-400 font-bold text-lg mb-2">No curriculum data found.</p>
-            <p className="text-gray-400 text-xs">Update your profile settings to load the correct subjects.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
-            {subjects.map((subject, index) => (
-              <div 
-                key={subject._id}
-                className="bg-white border border-gray-200 rounded-[2.5rem] p-10 flex flex-col justify-between group hover:border-[#1a1a1a] hover:-translate-y-2 hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-400"
-              >
-                <div>
-                  <div className="flex justify-between items-start mb-10">
-                    <div className="h-14 w-14 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl shadow-sm border border-gray-100 group-hover:scale-110 transition-transform duration-300">
-                      {courseIcons[index % courseIcons.length]}
-                    </div>
-                    <span className="text-[10px] font-black text-gray-400 border border-gray-100 px-3 py-1.5 rounded-xl uppercase tracking-tighter bg-gray-50">
-                      {subject.courseCode || `Course 0${index + 1}`}
-                    </span>
-                  </div>
-
-                  <h2 className="text-2xl font-black text-[#1a1a1a] mb-4 leading-tight tracking-tighter group-hover:text-blue-600 transition-colors">
-                    {subject.name}
-                  </h2>
-                  
-                  <p className="text-sm text-gray-500 font-medium mb-8 line-clamp-2 italic">
-                    Organized resources including unit-wise notes, textbooks, and previous year papers for {isUniversity ? subject.branch : subject.examCategory}.
-                  </p>
-
-                  <div className="flex gap-4 mb-10">
-                    <div className="flex flex-col">
-                      <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Syllabus</span>
-                      <span className="text-sm font-bold text-gray-800">{subject.units?.length || 0} Units</span>
-                    </div>
-                    <div className="w-[1px] h-8 bg-gray-100 self-center"></div>
-                    <div className="flex flex-col">
-                      <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Type</span>
-                      <span className="text-[10px] font-bold text-blue-500 uppercase italic mt-0.5">Core Subject</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <Link 
-                    to={`/subjects/${subject._id}`}
-                    className="flex items-center justify-center gap-2 w-full bg-[#0a0a0a] text-white py-4 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-gray-200/50 active:scale-95"
-                  >
-                    Enter Subject Vault <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                  <Link 
-                    to={`/progress/${subject._id}`}
-                    className="flex items-center justify-center gap-2 w-full bg-white border border-gray-200 text-gray-500 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 hover:text-black transition-all"
-                  >
-                    Progress Tracker
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Footer Info Section */}
-        <div className="mt-32 grid md:grid-cols-2 gap-12 items-center mb-10">
-          <div className="bg-gray-100/50 rounded-[3rem] p-12 border border-gray-200/50">
-            <h3 className="text-xs font-black tracking-[0.4em] text-blue-500 uppercase mb-4">Pro Tip</h3>
-            <p className="text-2xl font-black italic tracking-tighter mb-6 leading-tight text-[#1a1a1a]">
-              Mastery comes from repetition and solving PYQs.
-            </p>
-            <p className="text-gray-500 text-sm leading-relaxed mb-8">
-              Don't just read the notes. Watch the curated video lectures and immediately try to solve at least 2 questions from the Previous Year section of that unit.
-            </p>
-            <div className="flex gap-2">
-              <span className="w-8 h-1.5 bg-gray-800 rounded-full"></span>
-              <span className="w-2 h-1.5 bg-gray-300 rounded-full"></span>
-              <span className="w-2 h-1.5 bg-gray-300 rounded-full"></span>
+          {isLoading ? (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading subject catalog">
+              {[1, 2, 3].map((item) => <div key={item} className="h-64 animate-pulse rounded-2xl border border-line bg-surface p-5"><div className="h-10 w-10 rounded-xl bg-surface-subtle" /><div className="mt-5 h-5 w-3/4 rounded bg-surface-subtle" /><div className="mt-3 h-3 w-1/2 rounded bg-surface-subtle" /><div className="mt-8 h-10 rounded-xl bg-surface-subtle" /></div>)}
             </div>
-          </div>
-          
-          <div className="p-8">
-            <h3 className="text-xs font-black tracking-[0.4em] text-gray-400 uppercase mb-8">Resources Overview</h3>
-            <ul className="space-y-8">
-              <li className="flex items-start gap-4">
-                <div className="bg-blue-50 p-3 rounded-xl text-blue-500">
-                  <FileText className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-xs font-black uppercase tracking-widest text-gray-800">Handwritten Notes</p>
-                  <p className="text-[11px] text-gray-500 italic mt-1">Curated by top-performing seniors and faculty.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <div className="bg-red-50 p-3 rounded-xl text-red-500">
-                  <PlayCircle className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-xs font-black uppercase tracking-widest text-gray-800">Video Tutorials</p>
-                  <p className="text-[11px] text-gray-500 italic mt-1">YouTube links specifically mapped to your syllabus.</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <div className="bg-amber-50 p-3 rounded-xl text-amber-500">
-                  <BookOpen className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-xs font-black uppercase tracking-widest text-gray-800">Exam Archives</p>
-                  <p className="text-[11px] text-gray-500 italic mt-1">5+ years of PYQs organized unit-wise.</p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
+          ) : error ? (
+            <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-6 sm:p-8">
+              <p className="text-sm font-bold text-red-800">Your subject catalog couldn’t load.</p>
+              <p className="mt-1 text-sm text-red-700">{error}</p>
+              <button type="button" onClick={() => refetch()} disabled={isFetching} className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-xs font-bold text-content shadow-sm disabled:opacity-60"><RefreshCw className={`h-3.5 w-3.5 ${isFetching ? "animate-spin" : ""}`} />Try again</button>
+            </div>
+          ) : subjects.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-line-strong bg-surface p-8 text-center sm:p-12">
+              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-muted text-content-muted"><BookOpen className="h-6 w-6" /></span>
+              <h3 className="mt-4 text-lg font-black text-content">No subjects are available yet</h3>
+              <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-content-muted">There are no subjects for {isUniversity ? `${user.branch || "your branch"}, semester ${user.semester || "—"}` : user.targetExam || "your exam track"} right now. Check your study profile or try again later.</p>
+              <Link to="/profile" className="mt-5 inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-surface-inverse px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700">Review study profile <ArrowRight className="h-4 w-4" /></Link>
+            </div>
+          ) : filteredSubjects.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-line-strong bg-surface p-8 text-center sm:p-10">
+              <Search className="mx-auto h-8 w-8 text-content-faint" />
+              <h3 className="mt-3 font-bold text-content">No subjects match “{search}”</h3>
+              <p className="mt-1 text-sm text-content-muted">Try another name or course code.</p>
+              <button type="button" onClick={() => setSearch("")} className="mt-4 min-h-10 rounded-xl border border-line px-4 py-2 text-xs font-bold text-content-secondary hover:bg-surface-muted">Clear search</button>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {filteredSubjects.map((subject) => <CatalogSubjectCard key={subject._id} subject={subject} isUniversity={isUniversity} />)}
+            </div>
+          )}
+        </section>
 
+        {subjects.length > 0 && <aside className="flex flex-col gap-3 rounded-2xl border border-line bg-surface-muted p-4 sm:flex-row sm:items-center sm:p-5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface text-blue-700"><GraduationCap className="h-5 w-5" /></span>
+          <p className="text-sm leading-6 text-content-secondary"><span className="font-bold text-content">Start with one unit.</span> Open a subject vault to find its notes, books, videos, PYQs, exam revision resources, and related career practice.</p>
+        </aside>}
       </div>
-    </div>
+    </main>
   );
 };
+
+function CatalogStat({ label, value, icon: Icon }) {
+  return <div className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-4 sm:p-5">
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-content-secondary"><Icon className="h-5 w-5" /></span>
+    <div><p className="text-xs font-semibold text-content-muted">{label}</p><p className="mt-0.5 text-xl font-black text-content">{value}</p></div>
+  </div>;
+}
+
+function CatalogSubjectCard({ subject, isUniversity }) {
+  const units = subject.units || [];
+  const topicCount = units.reduce((total, unit) => total + (unit.topics?.length || 0), 0);
+  return <article className="group flex min-h-64 flex-col rounded-2xl border border-line bg-surface p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md sm:p-6">
+    <div className="flex items-start justify-between gap-3">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><BookOpen className="h-5 w-5" /></span>
+      {subject.courseCode && <span className="max-w-[60%] truncate rounded-lg bg-surface-muted px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wide text-content-muted">{subject.courseCode}</span>}
+    </div>
+    <div className="mt-4 flex-1">
+      <h3 className="text-lg font-black leading-snug text-content transition-colors group-hover:text-blue-700">{subject.name}</h3>
+      <p className="mt-1.5 text-xs text-content-muted">{subject.tenant?.shortCode || (isUniversity ? subject.branch : subject.examCategory) || "Core subject"}</p>
+      <div className="mt-4 flex flex-wrap gap-2 text-xs">
+        <span className="rounded-lg bg-surface-muted px-2.5 py-1.5 font-semibold text-content-secondary">{units.length} {units.length === 1 ? "unit" : "units"}</span>
+        <span className="rounded-lg bg-surface-muted px-2.5 py-1.5 font-semibold text-content-secondary">{topicCount} {topicCount === 1 ? "topic" : "topics"}</span>
+      </div>
+    </div>
+    <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto]">
+      <Link to={`/subjects/${subject._id}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-surface-inverse px-4 py-3 text-xs font-bold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Open subject vault <ArrowRight className="h-4 w-4" /></Link>
+      <Link to={`/progress/${subject._id}`} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-surface px-4 py-3 text-xs font-bold text-content-secondary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Progress</Link>
+    </div>
+  </article>;
+}

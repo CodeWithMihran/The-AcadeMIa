@@ -14,7 +14,7 @@ import { prepareCareerBridge } from "../utils/careerBridge";
 import { prepareExamNightUnit } from "../utils/examNight";
 import { blankSubjectUnit, subjectEditorSchema, subjectToEditorValues } from "../utils/subjectForm";
 
-const inputClass = "w-full rounded-xl border border-gray-200 px-4 py-3 text-sm font-semibold focus:border-blue-500 focus:outline-none";
+const inputClass = "min-h-11 w-full rounded-xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-content focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20";
 
 export const EditSubject = () => {
   const { id } = useParams();
@@ -22,8 +22,8 @@ export const EditSubject = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const userId = user?._id || user?.id;
-  const { data: subject, isLoading: subjectLoading, error: subjectError } = useAdminSubject(userId, id);
-  const { data: allTenants = [], isLoading: tenantsLoading } = useTenants();
+  const { data: subject, isLoading: subjectLoading, error: subjectError, refetch: refetchSubject } = useAdminSubject(userId, id);
+  const { data: allTenants = [], isLoading: tenantsLoading, error: tenantsError, refetch: refetchTenants } = useTenants();
   const tenants = allTenants.filter((tenant) => tenant.type === TRACKS.UNIVERSITY);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -69,30 +69,32 @@ export const EditSubject = () => {
     }
   };
 
-  if (subjectLoading) return <div className="min-h-screen bg-[#fbfbfa] px-6 pt-32"><div className="mx-auto max-w-5xl animate-pulse rounded-3xl bg-white p-10 text-sm font-bold text-gray-500">Loading subject editor…</div></div>;
+  if (subjectLoading) return <main role="status" aria-label="Loading subject editor" className="min-h-screen bg-app px-4 pb-16 pt-28 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl animate-pulse space-y-5"><div className="h-32 rounded-3xl border border-line bg-surface"/><div className="h-64 rounded-2xl border border-line bg-surface"/><div className="h-64 rounded-2xl border border-line bg-surface"/></div></main>;
+  if (subjectError || !subject) return <main className="min-h-screen bg-app px-4 pb-16 pt-28 sm:px-6 lg:px-8"><section className="mx-auto max-w-2xl rounded-2xl border border-line bg-surface p-6 text-center sm:p-8"><h1 className="text-xl font-black text-content">Subject could not be loaded</h1><p role="alert" className="mt-3 text-sm text-red-700">{subjectError?.response?.data?.message || (subjectError ? "Failed to load subject for editing." : "This subject may have been removed or is unavailable.")}</p><div className="mt-6 flex flex-wrap justify-center gap-3"><button type="button" onClick={() => refetchSubject()} className="min-h-11 rounded-xl bg-surface-inverse px-4 py-3 text-xs font-bold text-white hover:bg-blue-600">Retry</button><Link to="/admin" className="inline-flex min-h-11 items-center rounded-xl border border-line px-4 py-3 text-xs font-bold text-content-secondary hover:bg-surface-muted">Back to admin</Link></div></section></main>;
 
-  return <div className="min-h-screen bg-[#fbfbfa] px-6 pb-20 pt-32 animate-in fade-in duration-500"><div className="mx-auto max-w-5xl">
-    <header className="mb-10 border-b border-gray-200 pb-8"><Link to="/admin" className="mb-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-black"><ArrowLeft className="h-3.5 w-3.5"/>Back to Console</Link><h1 className="text-4xl font-black italic tracking-tighter">Edit <span className="font-light not-italic text-gray-400">Subject Vault</span></h1><p className="mt-2 font-medium text-gray-500">Update curriculum, resources, and career preparation materials.</p></header>
-    {error && <div role="alert" className="mb-6 flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50 px-5 py-4 text-sm font-bold text-red-600"><AlertTriangle className="h-5 w-5"/>{error}</div>}
-    {success && <div role="status" className="mb-6 flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-600"><CheckCircle2 className="h-5 w-5"/>{success}</div>}
+  return <main className="min-h-screen bg-app px-4 pb-16 pt-28 sm:px-6 lg:px-8"><div className="mx-auto max-w-7xl space-y-6 sm:space-y-8">
+    <header className="rounded-3xl border border-line bg-surface p-5 shadow-sm sm:p-7"><Link to="/admin" className="mb-3 inline-flex min-h-9 items-center gap-1.5 text-xs font-bold text-content-muted hover:text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"><ArrowLeft className="h-3.5 w-3.5"/>Back to admin</Link><h1 className="text-3xl font-black tracking-tight text-content sm:text-4xl">Edit subject</h1><p className="mt-2 text-sm text-content-muted">Update curriculum, resources, and career preparation materials.</p></header>
+    {tenantsError && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"><span>University options could not be loaded. Verify the selected subject institution before saving.</span><button type="button" onClick={() => refetchTenants()} className="min-h-10 rounded-xl bg-surface px-4 py-2 text-xs font-bold text-content">Retry universities</button></div>}
+    {error && <div role="alert" className="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-semibold text-red-800"><AlertTriangle className="h-5 w-5"/>{error}</div>}
+    {success && <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-4 text-sm font-semibold text-emerald-800"><CheckCircle2 className="h-5 w-5"/>{success}</div>}
     <FormProvider {...methods}><form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-8">
-      <div role="tablist" aria-label="Subject data" className="flex gap-2 rounded-2xl bg-gray-100 p-2">{[["syllabus", "University Syllabus"], ["career", "Career Bridge"]].map(([tab, label]) => <button key={tab} type="button" role="tab" aria-selected={activeTab === tab} onClick={() => setActiveTab(tab)} className={`rounded-xl px-5 py-3 text-sm font-bold ${activeTab === tab ? "bg-white text-blue-700 shadow-sm" : "text-gray-500"}`}>{label}</button>)}</div>
+      <div role="group" aria-label="Subject editing sections" className="flex gap-2 rounded-2xl border border-line bg-surface p-2">{[["syllabus", "University Syllabus"], ["career", "Career Bridge"]].map(([tab, label]) => <button key={tab} type="button" aria-pressed={activeTab === tab} onClick={() => setActiveTab(tab)} className={`min-h-11 flex-1 rounded-xl px-4 py-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${activeTab === tab ? "bg-surface-muted text-blue-700 shadow-sm" : "text-content-muted hover:bg-surface-muted"}`}>{label}</button>)}</div>
       {activeTab === "syllabus" ? <div className="space-y-8">
-        <section className="rounded-[2rem] border border-gray-200 bg-white p-8 shadow-sm"><h2 className="mb-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Subject Parameters</h2><div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          <label className="text-xs font-bold text-gray-700">University<select {...register("tenantId")} disabled={tenantsLoading || !tenants.length} className={`${inputClass} mt-2`}><option value="">Select university</option>{tenants.map((tenant) => <option key={tenant._id} value={tenant._id}>{tenant.name} ({tenant.shortCode})</option>)}</select>{errors.tenantId && <span className="text-red-600">{errors.tenantId.message}</span>}</label>
-          <label className="text-xs font-bold text-gray-700">Subject Name<input {...register("name")} className={`${inputClass} mt-2`} />{errors.name && <span className="text-red-600">{errors.name.message}</span>}</label>
-          <label className="text-xs font-bold text-gray-700">Course Code<input {...register("courseCode")} className={`${inputClass} mt-2`} /></label>
-          <label className="text-xs font-bold text-gray-700">Branch<input {...register("branch")} className={`${inputClass} mt-2 uppercase`} />{errors.branch && <span className="text-red-600">{errors.branch.message}</span>}</label>
-          <label className="text-xs font-bold text-gray-700">Semester<input {...register("semester")} type="number" min="1" max="8" className={`${inputClass} mt-2`} />{errors.semester && <span className="text-red-600">{errors.semester.message}</span>}</label>
-          <label className="text-xs font-bold text-gray-700">Official Course Credits<input {...register("credits")} type="number" min="0.1" max="100" step="0.1" className={`${inputClass} mt-2`} />{errors.credits && <span className="text-red-600">{errors.credits.message}</span>}</label>
+        <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-7"><h2 className="mb-5 text-xs font-bold uppercase tracking-widest text-content-faint">Subject details</h2><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <label className="text-xs font-bold text-content-secondary">University<select {...register("tenantId")} disabled={tenantsLoading || !tenants.length} className={`${inputClass} mt-2`}><option value="">Select university</option>{tenants.map((tenant) => <option key={tenant._id} value={tenant._id}>{tenant.name} ({tenant.shortCode})</option>)}</select>{errors.tenantId && <span className="text-red-600">{errors.tenantId.message}</span>}</label>
+          <label className="text-xs font-bold text-content-secondary">Subject Name<input {...register("name")} className={`${inputClass} mt-2`} />{errors.name && <span className="text-red-600">{errors.name.message}</span>}</label>
+          <label className="text-xs font-bold text-content-secondary">Course Code<input {...register("courseCode")} className={`${inputClass} mt-2`} /></label>
+          <label className="text-xs font-bold text-content-secondary">Branch<input {...register("branch")} className={`${inputClass} mt-2 uppercase`} />{errors.branch && <span className="text-red-600">{errors.branch.message}</span>}</label>
+          <label className="text-xs font-bold text-content-secondary">Semester<input {...register("semester")} type="number" min="1" max="8" className={`${inputClass} mt-2`} />{errors.semester && <span className="text-red-600">{errors.semester.message}</span>}</label>
+          <label className="text-xs font-bold text-content-secondary">Official Course Credits<input {...register("credits")} type="number" min="0.1" max="100" step="0.1" className={`${inputClass} mt-2`} />{errors.credits && <span className="text-red-600">{errors.credits.message}</span>}</label>
         </div></section>
-        <div className="flex items-center gap-4"><h2 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Curriculum Units</h2><div className="h-px flex-grow bg-gray-200"/></div>
-        <div className="space-y-8">{fields.map((field, index) => <SubjectUnitEditor key={field.id} index={index} editing removable={fields.length > 1} onRemove={() => remove(index)} />)}</div>
-        <button type="button" onClick={() => append(blankSubjectUnit({ editing: true, unitNumber: fields.length + 1 }))} className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-gray-300 bg-white px-8 py-4 font-bold text-gray-600 hover:border-blue-500 hover:text-blue-500 md:w-auto"><Plus className="h-4 w-4"/>Append New Unit</button>
-      </div> : <Controller name="careerBridge" control={control} render={({ field }) => <section className="rounded-[2rem] border border-gray-200 bg-white p-6 shadow-sm md:p-8"><CareerBridgeEditor value={field.value} onChange={field.onChange}/></section>} />}
+        <div className="flex items-center gap-4"><h2 className="text-[10px] font-black uppercase tracking-widest text-content-faint">Curriculum Units</h2><div className="h-px flex-grow bg-surface-hover"/></div>
+        <div className="space-y-4">{fields.map((field, index) => <SubjectUnitEditor key={field.id} index={index} editing removable={fields.length > 1} onRemove={() => remove(index)} />)}</div>
+        <button type="button" onClick={() => append(blankSubjectUnit({ editing: true, unitNumber: fields.length + 1 }))} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-dashed border-line-strong bg-surface px-5 py-3 font-bold text-content-secondary hover:border-blue-500 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 sm:w-auto"><Plus className="h-4 w-4"/>Add unit</button>
+      </div> : <Controller name="careerBridge" control={control} render={({ field }) => <section className="rounded-2xl border border-line bg-surface p-5 shadow-sm sm:p-7"><CareerBridgeEditor value={field.value} onChange={field.onChange}/></section>} />}
       {Object.keys(errors).length > 0 && <p role="alert" className="text-sm font-semibold text-red-600">Please correct the highlighted fields before submitting.</p>}
-      <div className="flex justify-end"><button type="submit" disabled={isSubmitting || updateMutation.isPending || tenantsLoading} className="w-full rounded-2xl bg-[#0a0a0a] px-12 py-5 text-xs font-black uppercase tracking-widest text-white shadow-2xl transition hover:bg-blue-600 disabled:opacity-50 md:w-auto">{isSubmitting || updateMutation.isPending ? "Updating Vault..." : "Commit Changes to Vault"}</button></div>
+      <div className="flex justify-end"><button type="submit" disabled={isSubmitting || updateMutation.isPending || tenantsLoading} className="min-h-12 w-full rounded-xl bg-surface-inverse px-6 py-3 text-xs font-black uppercase tracking-widest text-white shadow-sm transition hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 sm:w-auto">{isSubmitting || updateMutation.isPending ? "Updating subject…" : "Save subject changes"}</button></div>
       <input type="hidden" {...register("track")} /><input type="hidden" {...register("examCategory")} />
     </form></FormProvider>
-  </div></div>;
+  </div></main>;
 };

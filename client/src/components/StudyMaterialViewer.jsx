@@ -54,17 +54,17 @@ export default function StudyMaterialViewer({ material, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-2 backdrop-blur-sm md:p-6" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section role="dialog" aria-modal="true" aria-label={material.title} className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-        <header className="flex min-h-16 items-center justify-between gap-4 border-b border-gray-100 px-4 py-3 md:px-6">
-          <div className="min-w-0"><h2 className="truncate text-sm font-black text-gray-900 md:text-lg">{material.title}</h2><p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Study Material Viewer</p></div>
-          <button type="button" onClick={onClose} aria-label="Close viewer" className="rounded-xl p-2 text-gray-500 transition hover:bg-red-50 hover:text-red-600"><X className="h-5 w-5"/></button>
+      <section role="dialog" aria-modal="true" aria-label={material.title} className="flex max-h-[94vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-surface shadow-2xl">
+        <header className="flex min-h-16 items-center justify-between gap-4 border-b border-line px-4 py-3 md:px-6">
+          <div className="min-w-0"><h2 className="truncate text-sm font-black text-content md:text-lg">{material.title}</h2><p className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Study Material Viewer</p></div>
+          <button type="button" onClick={onClose} aria-label="Close viewer" className="rounded-xl p-2 text-content-muted transition hover:bg-red-50 hover:text-red-600"><X className="h-5 w-5"/></button>
         </header>
-        {embedUrl ? <div className={`relative min-h-0 flex-1 bg-gray-100 ${material.kind === "video" ? "flex items-center justify-center" : "h-[78vh]"}`}>
+        {embedUrl ? <div className={`relative min-h-0 flex-1 bg-surface-subtle ${material.kind === "video" ? "flex items-center justify-center" : "h-[78vh]"}`}>
           <iframe
             key={embedUrl}
             title={material.title}
             src={embedUrl}
-            className={material.kind === "video" ? "aspect-video max-h-[78vh] w-full bg-black" : "h-full w-full bg-white"}
+            className={material.kind === "video" ? "aspect-video max-h-[78vh] w-full bg-surface-inverse" : "h-full w-full bg-surface"}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
             allowFullScreen
             referrerPolicy="strict-origin-when-cross-origin"

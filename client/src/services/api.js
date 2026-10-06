@@ -1,13 +1,19 @@
 import axios from 'axios';
 
-// Keep local frontend/API requests on the same loopback hostname. Browsers can
-// resolve `localhost` differently from `127.0.0.1` (especially on Windows/IPv6).
-const localApiBase = `${window.location.protocol}//${window.location.hostname}:3000/api`;
-const API_BASE = (import.meta.env.VITE_API_BASE_URL || localApiBase).replace(/\/$/, '');
+// In development, send requests through Vite so the browser sees same-origin
+// API calls regardless of whether the app is opened on localhost, 127.0.0.1,
+// or a fallback Vite port. In production, same-origin is the safe default;
+// deployments with a separately hosted API must configure VITE_API_BASE_URL.
+const API_BASE = (
+  import.meta.env.DEV
+    ? '/api'
+    : (import.meta.env.VITE_API_BASE_URL || '/api')
+).replace(/\/$/, '');
 
 const api = axios.create({
   baseURL: API_BASE,
   withCredentials: true,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -15,7 +21,8 @@ const api = axios.create({
 
 // Attach token from localStorage if available
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('academia_token');
+  let token = null;
+  try { token = localStorage.getItem('academia_token'); } catch { /* HttpOnly cookies can authenticate requests when storage is blocked. */ }
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -28,7 +35,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       if (window.location.pathname !== '/' && !window.location.pathname.startsWith('/auth')) {
-        localStorage.removeItem('academia_token');
+        try { localStorage.removeItem('academia_token'); } catch { /* Continue clearing the in-memory session. */ }
         window.location.href = '/'; // ✅ Added forced redirect to login page on session expiry
       }
     }

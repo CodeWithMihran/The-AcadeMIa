@@ -5,7 +5,7 @@ import API, { progressService } from "../services/api";
 import { DIFFICULTY_LEVELS, DIFFICULTY_RANK } from "../constants";
 import MarkdownAnswer from "./MarkdownAnswer";
 
-const selectClass = "block w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-xs font-semibold normal-case tracking-normal text-gray-800";
+const selectClass = "block w-full rounded-xl border border-line bg-surface px-3 py-2.5 text-xs font-semibold normal-case tracking-normal text-content-strong";
 const EMPTY_LIST = Object.freeze([]);
 const EMPTY_GATE = Object.freeze({});
 
@@ -29,16 +29,16 @@ function CareerFilters({
   ];
 
   return (
-    <div className="grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 rounded-2xl border border-line bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4">
       {filters.map((filter) => (
-        <label key={filter.key} className="space-y-1 text-[10px] font-black uppercase tracking-wider text-gray-500">
+        <label key={filter.key} className="space-y-1 text-[10px] font-black uppercase tracking-wider text-content-muted">
           {filter.label}
           <select value={filter.value} onChange={(event) => onChange(filter.key, event.target.value)} className={selectClass}>
             {filter.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
         </label>
       ))}
-      <div className="flex items-end justify-between gap-3 text-xs text-gray-500 sm:col-span-2 lg:col-span-4">
+      <div className="flex items-end justify-between gap-3 text-xs text-content-muted sm:col-span-2 lg:col-span-4">
         <span>Showing {filteredQuestionCount} of {questionCount} interview questions · {filteredGateCount} of {gateCount} GATE PYQs</span>
         <button type="button" onClick={onClear} className="font-bold text-blue-700 hover:underline">Clear filters</button>
       </div>
@@ -49,7 +49,7 @@ function CareerFilters({
 function CareerActionButton({ completed, busy, completedLabel, onClick }) {
   return (
     <button type="button" onClick={onClick} disabled={busy} aria-pressed={completed}
-      className={`rounded-lg border px-3 py-2 text-[11px] font-bold transition disabled:opacity-60 ${completed ? "border-emerald-300 bg-emerald-100 text-emerald-900" : "border-gray-200 bg-white text-gray-700 hover:border-emerald-300 hover:text-emerald-800"}`}>
+      className={`rounded-lg border px-3 py-2 text-[11px] font-bold transition disabled:opacity-60 ${completed ? "border-emerald-300 bg-emerald-100 text-emerald-900" : "border-line bg-surface text-content-secondary hover:border-emerald-300 hover:text-emerald-800"}`}>
       {busy ? "Saving…" : completed ? `✓ ${completedLabel}` : `Mark ${completedLabel.toLowerCase()}`}
     </button>
   );
@@ -60,11 +60,11 @@ function BrokenLinkReport({ resource, resourceType, state, onReport }) {
     <span className="inline-flex flex-col items-start gap-1">
       <button type="button" onClick={() => onReport(resourceType, resource)} disabled={state?.status === "sending" || state?.status === "sent"}
         aria-label={`Report broken link: ${resource.title}`}
-        className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600 hover:border-amber-300 hover:text-amber-800 disabled:cursor-default disabled:opacity-70">
+        className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-line bg-surface px-3 py-2 text-xs font-bold text-content-secondary hover:border-amber-300 hover:text-amber-800 disabled:cursor-default disabled:opacity-70">
         {state?.status === "sent" ? <Check className="h-3.5 w-3.5" /> : <Flag className="h-3.5 w-3.5" />}
         {state?.status === "sending" ? "Sending…" : state?.status === "sent" ? "Reported" : "Report broken link"}
       </button>
-      {state?.message && <span role="status" className={`max-w-52 text-[10px] ${state.status === "error" ? "text-red-600" : "text-gray-500"}`}>{state.message}</span>}
+      {state?.message && <span role="status" className={`max-w-52 text-[10px] ${state.status === "error" ? "text-red-600" : "text-content-muted"}`}>{state.message}</span>}
     </span>
   );
 }
@@ -74,16 +74,16 @@ function InterviewQuestion({ question, index, completion, busy, onToggle }) {
   return (
     <li key={question._id || index} className="rounded-2xl bg-indigo-50/70 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <p className="text-sm font-semibold text-gray-900">{question.question || "Premium interview question"}</p>
+        <p className="text-sm font-semibold text-content">{question.question || "Premium interview question"}</p>
         {question.question && <CareerActionButton completed={completion} busy={busy} completedLabel="Understood" onClick={onToggle} />}
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-        {companies.map((name) => <span key={name} className="rounded-full bg-white px-2.5 py-1 font-semibold text-indigo-700">{name}</span>)}
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-content-muted">
+        {companies.map((name) => <span key={name} className="rounded-full bg-surface px-2.5 py-1 font-semibold text-indigo-700">{name}</span>)}
         {question.difficulty && <span>{companies.length ? "· " : ""}{question.difficulty}</span>}
         <PremiumBadge premium={question.isPremium} />
       </div>
       {question.answerMarkdown && (
-        <details className="mt-4 rounded-xl border border-indigo-100 bg-white">
+        <details className="mt-4 rounded-xl border border-indigo-100 bg-surface">
           <summary className="cursor-pointer px-4 py-3 text-xs font-black text-indigo-800">View answer &amp; explanation</summary>
           <div className="border-t border-indigo-100 px-4 py-4"><MarkdownAnswer value={question.answerMarkdown} /></div>
         </details>
@@ -95,10 +95,10 @@ function InterviewQuestion({ question, index, completion, busy, onToggle }) {
 function CodingLink({ item, completion, busy, reportState, onToggle, onReport }) {
   return (
     <li className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-emerald-50/70 p-4">
-      <div><p className="text-sm font-bold text-gray-900">{item.title}</p><p className="mt-1 text-xs text-gray-500">{item.platform}{item.difficulty ? ` · ${item.difficulty}` : ""}</p><PremiumBadge premium={item.isPremium} /></div>
+      <div><p className="text-sm font-bold text-content">{item.title}</p><p className="mt-1 text-xs text-content-muted">{item.platform}{item.difficulty ? ` · ${item.difficulty}` : ""}</p><PremiumBadge premium={item.isPremium} /></div>
       {item.url ? (
         <div className="flex flex-wrap items-center gap-2">
-          <a href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-white px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm hover:bg-emerald-100">Practice <ExternalLink className="h-3.5 w-3.5" /><span className="sr-only"> (opens in a new tab)</span></a>
+          <a href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-surface px-3 py-2 text-xs font-bold text-emerald-800 shadow-sm hover:bg-emerald-100">Practice <ExternalLink className="h-3.5 w-3.5" /><span className="sr-only"> (opens in a new tab)</span></a>
           <CareerActionButton completed={completion} busy={busy} completedLabel="Solved" onClick={onToggle} />
           <BrokenLinkReport resource={item} resourceType="CODING_LINK" state={reportState} onReport={onReport} />
         </div>
@@ -111,16 +111,16 @@ function GateInsights({ gate, pyqs, gateRange, reportState, onReport }) {
   return (
     <article className="rounded-3xl border border-amber-200 bg-amber-50 p-6 md:p-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div><p className="text-xs font-black uppercase tracking-widest text-amber-800">{gate.examCode || "GATE CS"} insights</p><h3 className="mt-2 text-2xl font-black text-gray-900">{gateRange}</h3><p className="mt-1 text-sm text-gray-600">Approximate subject weightage{gate.weightagePeriod ? ` · based on ${gate.weightagePeriod}` : ""}. Use it as a planning guide.</p></div>
-        <span className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-amber-300 bg-white text-center text-[10px] font-black uppercase text-amber-800">GATE<br />INSIGHT</span>
+        <div><p className="text-xs font-black uppercase tracking-widest text-amber-800">{gate.examCode || "GATE CS"} insights</p><h3 className="mt-2 text-2xl font-black text-content">{gateRange}</h3><p className="mt-1 text-sm text-content-secondary">Approximate subject weightage{gate.weightagePeriod ? ` · based on ${gate.weightagePeriod}` : ""}. Use it as a planning guide.</p></div>
+        <span className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-amber-300 bg-surface text-center text-[10px] font-black uppercase text-amber-800">GATE<br />INSIGHT</span>
       </div>
-      {pyqs.length > 0 && <div className="mt-6"><h4 className="mb-3 font-black text-gray-900">Previous year questions</h4><div className="grid gap-3 md:grid-cols-2">
+      {pyqs.length > 0 && <div className="mt-6"><h4 className="mb-3 font-black text-content">Previous year questions</h4><div className="grid gap-3 md:grid-cols-2">
         {pyqs.map((item, index) => item.url ? (
-          <div key={item._id || index} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-white p-4 text-sm font-semibold text-gray-800 shadow-sm">
+          <div key={item._id || index} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-surface p-4 text-sm font-semibold text-content-strong shadow-sm">
             <a href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2">{item.title}{item.year ? ` · ${item.year}` : ""}{item.topic ? ` · ${item.topic}` : ""}<PremiumBadge premium={item.isPremium} /><ExternalLink className="h-4 w-4 shrink-0 text-amber-700" /></a>
             <BrokenLinkReport resource={item} resourceType="GATE_PYQ" state={reportState(item)} onReport={onReport} />
           </div>
-        ) : <div key={item._id || index} className="flex items-center justify-between gap-3 rounded-2xl bg-white p-4 text-sm font-semibold text-gray-800 shadow-sm"><span>{item.title}{item.year ? ` · ${item.year}` : ""}{item.topic ? ` · ${item.topic}` : ""} <PremiumBadge premium={item.isPremium} /></span><span className="text-xs text-violet-700">Unlock PYQ</span></div>)}
+        ) : <div key={item._id || index} className="flex items-center justify-between gap-3 rounded-2xl bg-surface p-4 text-sm font-semibold text-content-strong shadow-sm"><span>{item.title}{item.year ? ` · ${item.year}` : ""}{item.topic ? ` · ${item.topic}` : ""} <PremiumBadge premium={item.isPremium} /></span><span className="text-xs text-violet-700">Unlock PYQ</span></div>)}
       </div></div>}
     </article>
   );
@@ -201,7 +201,7 @@ export default function SubjectCareerResources({ subject, subjectId }) {
   return (
     <section className="space-y-6">
       {actionMessage && <p role="status" className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800">{actionMessage}</p>}
-      <div><p className="text-xs font-black uppercase tracking-widest text-blue-700">Beyond the syllabus</p><h2 className="mt-1 text-2xl font-black text-gray-900">Turn {subject.name} into career skills</h2><p className="mt-1 text-sm text-gray-500">Interview prep and practice matched to your syllabus topics.</p></div>
+      <div><p className="text-xs font-black uppercase tracking-widest text-blue-700">Beyond the syllabus</p><h2 className="mt-1 text-2xl font-black text-content">Turn {subject.name} into career skills</h2><p className="mt-1 text-sm text-content-muted">Interview prep and practice matched to your syllabus topics.</p></div>
       <CareerFilters difficulty={difficulty} company={company} sort={sort} gateYear={gateYear} companies={companies} gateYears={gateYears} questionCount={questions.length} filteredQuestionCount={filteredQuestions.length} gateCount={gatePyqs.length} filteredGateCount={filteredPyqs.length} onChange={changeFilter} onClear={() => { setDifficulty("ALL"); setCompany("ALL"); setSort("TOPIC"); setGateYear("ALL"); }} />
 
       {(questions.length > 0 || codingLinks.length > 0) ? <div className="space-y-6">
@@ -210,8 +210,8 @@ export default function SubjectCareerResources({ subject, subjectId }) {
           const topicQuestions = filteredQuestions.filter((item) => String(item.topic || "").trim().toLocaleLowerCase() === normalizedTopic);
           const topicLinks = codingLinks.filter((item) => String(item.topic || "").trim().toLocaleLowerCase() === normalizedTopic);
           if (!topicQuestions.length && !topicLinks.length) return null;
-          return <article key={topic} className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm md:p-8">
-            <h3 className="mb-5 text-lg font-black text-gray-900">{topic}</h3>
+          return <article key={topic} className="rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8">
+            <h3 className="mb-5 text-lg font-black text-content">{topic}</h3>
             <div className="grid gap-5 md:grid-cols-2">
               {topicQuestions.length > 0 && <div><h4 className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-indigo-700"><BriefcaseBusiness className="h-4 w-4" />Interview questions</h4><ul className="space-y-3">{topicQuestions.map((item, index) => <InterviewQuestion key={item._id || index} question={item} index={index} completion={completions[`INTERVIEW_QUESTION:${item._id}`] === true} busy={busyKey === `INTERVIEW_QUESTION:${item._id}`} onToggle={() => toggleResource("INTERVIEW_QUESTION", item)} />)}</ul></div>}
               {topicLinks.length > 0 && <div><h4 className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-emerald-700"><Code2 className="h-4 w-4" />Coding practice</h4><ul className="space-y-3">{topicLinks.map((item, index) => <CodingLink key={item._id || index} item={item} completion={completions[`CODING_LINK:${item._id}`] === true} busy={busyKey === `CODING_LINK:${item._id}`} reportState={reportState("CODING_LINK", item)} onToggle={() => toggleResource("CODING_LINK", item)} onReport={reportLink} />)}</ul></div>}
@@ -219,7 +219,7 @@ export default function SubjectCareerResources({ subject, subjectId }) {
           </article>;
         })}
         {[...filteredQuestions, ...codingLinks].some((item) => !item.topic?.trim()) && <GeneralPractice questions={filteredQuestions.filter((item) => !item.topic?.trim())} codingLinks={codingLinks.filter((item) => !item.topic?.trim())} completions={completions} busyKey={busyKey} reportState={reportState} onToggle={toggleResource} onReport={reportLink} />}
-      </div> : <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center"><Radar className="mx-auto h-8 w-8 text-gray-400" /><p className="mt-3 font-bold text-gray-700">Career resources are on the way</p><p className="mt-1 text-sm text-gray-500">Your admin can add interview questions and practice links for this subject.</p></div>}
+      </div> : <div className="rounded-3xl border border-dashed border-line-strong bg-surface p-12 text-center"><Radar className="mx-auto h-8 w-8 text-content-faint" /><p className="mt-3 font-bold text-content-secondary">Career resources are on the way</p><p className="mt-1 text-sm text-content-muted">Your admin can add interview questions and practice links for this subject.</p></div>}
 
       <GateInsights gate={gate} pyqs={filteredPyqs} gateRange={gateRange} reportState={(item) => reportState("GATE_PYQ", item)} onReport={reportLink} />
     </section>
@@ -227,7 +227,7 @@ export default function SubjectCareerResources({ subject, subjectId }) {
 }
 
 function GeneralPractice({ questions, codingLinks, completions, busyKey, reportState, onToggle, onReport }) {
-  return <article className="rounded-3xl border border-gray-200 bg-white p-6"><h3 className="mb-4 text-lg font-black">General practice</h3><div className="grid gap-4 md:grid-cols-2">
+  return <article className="rounded-3xl border border-line bg-surface p-6"><h3 className="mb-4 text-lg font-black">General practice</h3><div className="grid gap-4 md:grid-cols-2">
     {questions.map((item, index) => <div key={item._id || index} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-indigo-50 p-4 text-sm font-semibold"><span>{item.question || "Premium interview question"} <PremiumBadge premium={item.isPremium} /></span>{item.question && <CareerActionButton completed={completions[`INTERVIEW_QUESTION:${item._id}`] === true} busy={busyKey === `INTERVIEW_QUESTION:${item._id}`} completedLabel="Understood" onClick={() => onToggle("INTERVIEW_QUESTION", item)} />}</div>)}
     {codingLinks.map((item, index) => item.url ? <div key={item._id || index} className="flex flex-wrap items-center gap-2 rounded-xl bg-emerald-50 p-4"><a href={item.url} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-emerald-800">{item.title} · {item.platform} <ExternalLink className="inline h-3.5 w-3.5" /><span className="sr-only"> (opens in a new tab)</span><PremiumBadge premium={item.isPremium} /></a><CareerActionButton completed={completions[`CODING_LINK:${item._id}`] === true} busy={busyKey === `CODING_LINK:${item._id}`} completedLabel="Solved" onClick={() => onToggle("CODING_LINK", item)} /><BrokenLinkReport resource={item} resourceType="CODING_LINK" state={reportState("CODING_LINK", item)} onReport={onReport} /></div> : <div key={item._id || index} className="rounded-xl bg-emerald-50 p-4 text-sm font-bold text-emerald-800">{item.title} · {item.platform} · Unlock to practice <PremiumBadge premium={item.isPremium} /></div>)}
   </div></article>;

@@ -9,7 +9,7 @@ function renderInline(text, keyPrefix) {
   return text.split(inlineToken).filter(Boolean).map((token, index) => {
     const key = `${keyPrefix}-${index}`;
     if (token.startsWith("`") && token.endsWith("`")) {
-      return <code key={key} className="rounded bg-gray-200 px-1.5 py-0.5 font-mono text-[0.9em]">{token.slice(1, -1)}</code>;
+      return <code key={key} className="rounded bg-surface-hover px-1.5 py-0.5 font-mono text-[0.9em]">{token.slice(1, -1)}</code>;
     }
     if ((token.startsWith("**") && token.endsWith("**")) || (token.startsWith("__") && token.endsWith("__"))) {
       return <strong key={key}>{token.slice(2, -2)}</strong>;
@@ -86,12 +86,12 @@ function parseBlocks(markdown) {
 
 export default function MarkdownAnswer({ value }) {
   const blocks = parseBlocks(value);
-  return <div className="space-y-3 text-sm leading-6 text-gray-700">
+  return <div className="space-y-3 text-sm leading-6 text-content-secondary">
     {blocks.map((block, index) => {
       if (block.type === "code") return <pre key={index} className="overflow-x-auto rounded-xl bg-gray-950 p-4 text-xs leading-5 text-gray-100"><code>{block.text}</code></pre>;
       if (block.type === "heading") {
         const Tag = `h${block.level + 2}`;
-        return <Tag key={index} className="font-bold text-gray-900">{renderInline(block.text, `h-${index}`)}</Tag>;
+        return <Tag key={index} className="font-bold text-content">{renderInline(block.text, `h-${index}`)}</Tag>;
       }
       if (block.type === "ul" || block.type === "ol") {
         const Tag = block.type;

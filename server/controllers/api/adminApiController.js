@@ -8,6 +8,8 @@ const communityNoteModel = require("../../models/community-note-model");
 const communityVoteModel = require("../../models/community-vote-model");
 const communityBountyModel = require("../../models/community-bounty-model");
 const communityWalletModel = require("../../models/community-wallet-model");
+const careerProgressModel = require("../../models/career-progress-model");
+const userActivityModel = require("../../models/user-activity-tracker-model");
 const mongoose = require("mongoose");
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -297,6 +299,9 @@ module.exports.deleteSubject = async (req, res) => {
         const noteIds = notes.map((note) => note._id);
         await Promise.all([
             progressModel.deleteMany({ subject: id }),
+            careerProgressModel.deleteMany({ subject: id }),
+            userActivityModel.deleteMany({ subject: id }),
+            linkReportModel.deleteMany({ subject: id }),
             communityVoteModel.deleteMany({ note: { $in: noteIds } }),
             communityNoteModel.deleteMany({ subject: id }),
             communityBountyModel.deleteMany({ subject: id, status: { $in: ["FULFILLED", "CANCELLED"] } })
@@ -362,28 +367,33 @@ module.exports.deleteUser = async (req, res) => {
         const { id } = req.params;
         if (!mongoose.isValidObjectId(id)) return res.status(400).json({ success: false, message: "Invalid user id." });
 
-        if (id === req.user._id.toString()) {
+        const userId = new mongoose.Types.ObjectId(id);
+        if (userId.equals(req.user._id)) {
             return res.status(403).json({
                 success: false,
                 message: "Security Alert: You cannot delete your own administrative account."
             });
         }
 
-        const activeBounty = await communityBountyModel.exists({ creator: id, status: { $in: ["PENDING", "OPEN", "FULFILLING", "CANCELLING"] } });
+        const activeBounty = await communityBountyModel.exists({ creator: userId, status: { $in: ["PENDING", "OPEN", "FULFILLING", "CANCELLING"] } });
         if (activeBounty) return res.status(409).json({ success: false, message: "This account has active bounties. Resolve or cancel them before deleting the account." });
 
-        const deleted = await userModel.findByIdAndDelete(id);
+        const deleted = await userModel.findByIdAndDelete(userId);
         if (!deleted) return res.status(404).json({ success: false, message: "User not found." });
         const contributedNotes = await communityNoteModel.find({ contributor: id }).select("_id").lean();
         const contributedNoteIds = contributedNotes.map((note) => note._id);
         await Promise.all([
             progressModel.deleteMany({ user: id }),
+            careerProgressModel.deleteMany({ user: userId }),
+            userActivityModel.deleteMany({ user: userId }),
             studyToolsModel.deleteOne({ user: id }),
             communityNoteModel.deleteMany({ contributor: id }),
             communityVoteModel.deleteMany({ user: id }),
             communityVoteModel.deleteMany({ note: { $in: contributedNoteIds } }),
-            communityBountyModel.deleteMany({ creator: id }),
-            communityWalletModel.deleteOne({ user: id })
+            communityBountyModel.deleteMany({ $or: [{ creator: userId }, { fulfilledBy: { $in: contributedNoteIds } }] }),
+            linkReportModel.deleteMany({ reporter: userId }),
+            linkReportModel.updateMany({ resolvedBy: userId }, { $set: { resolvedBy: null } }),
+            communityWalletModel.deleteOne({ user: userId })
         ]);
 
         return res.status(200).json({
