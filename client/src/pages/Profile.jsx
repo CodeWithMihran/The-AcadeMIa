@@ -1,5 +1,5 @@
 import { TRACKS, TARGET_EXAMS } from "../constants";
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { authService, tenantService } from "../services/api";
 import ActivityHeatmap from "../components/ActivityHeatmap";
@@ -12,6 +12,9 @@ import {
   GraduationCap,
   Sparkles,
 } from "lucide-react";
+
+const CURRENT_YEAR = new Date().getFullYear();
+const DEFAULT_TARGET_YEAR = CURRENT_YEAR + 1;
 
 export const Profile = () => {
   const { user, refreshUser } = useAuth();
@@ -35,13 +38,24 @@ export const Profile = () => {
     year: 1,
     semester: 1,
     targetExam: TARGET_EXAMS.JEE_MAINS,
-    targetYear: 2027,
+    targetYear: DEFAULT_TARGET_YEAR,
     leaderboardOptIn: false,
   });
+  const formDirtyRef = useRef(false);
+  const initializedUserIdRef = useRef(null);
 
-  // Sync user data to form state when component mounts or user updates
+  const updateFormData = (update) => {
+    formDirtyRef.current = true;
+    setFormData((previous) => typeof update === "function" ? update(previous) : update);
+  };
+
+  // Keep server refreshes from overwriting fields while the student is editing.
   useEffect(() => {
     if (user) {
+      const userId = user._id || user.id || user.email;
+      if (initializedUserIdRef.current === userId && formDirtyRef.current) return;
+      initializedUserIdRef.current = userId;
+      formDirtyRef.current = false;
       setFormData({
         name: user.name || "",
         track: user.track || TRACKS.UNIVERSITY,
@@ -51,9 +65,10 @@ export const Profile = () => {
         year: user.year || 1,
         semester: user.semester || 1,
         targetExam: user.targetExam || TARGET_EXAMS.JEE_MAINS,
-        targetYear: user.targetYear || 2027,
+        targetYear: user.targetYear || DEFAULT_TARGET_YEAR,
         leaderboardOptIn: user.leaderboardOptIn === true,
       });
+      setOtherCollege("");
     }
   }, [user]);
 
@@ -69,7 +84,7 @@ export const Profile = () => {
   // Dynamic Semester Logic
   const handleYearChange = (e) => {
     const newYear = parseInt(e.target.value);
-    setFormData((prev) => ({
+    updateFormData((prev) => ({
       ...prev,
       year: newYear,
       semester: newYear * 2 - 1, // Auto-select the first semester of the newly selected year
@@ -78,7 +93,7 @@ export const Profile = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    updateFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -94,6 +109,7 @@ export const Profile = () => {
         college: formData.college === "Other" ? otherCollege : formData.college,
       };
       await authService.updateProfile(profile);
+      formDirtyRef.current = false;
       await refreshUser(); // Update global context
       setSuccess("Academic profile updated successfully!");
 
@@ -110,6 +126,10 @@ export const Profile = () => {
 
   const isUniversity = formData.track === TRACKS.UNIVERSITY;
   const selectedUniversity = universities.find((tenant) => tenant._id === formData.tenantId);
+  const targetYearOptions = [...new Set([
+    ...Array.from({ length: 5 }, (_, index) => CURRENT_YEAR + index),
+    Number(formData.targetYear),
+  ])].filter(Number.isInteger).sort((left, right) => left - right);
 
   return (
     <main className="min-h-screen overflow-x-clip bg-app px-4 pb-16 pt-28 sm:px-6 lg:px-8">
@@ -266,7 +286,7 @@ export const Profile = () => {
                 <div className="space-y-6 rounded-2xl border border-blue-100 bg-blue-50/40 p-5">
                   <div>
                     <label className="text-[11px] font-black text-content-muted uppercase tracking-wider">Learning Track</label>
-                    <select name="track" value={formData.track} onChange={(e) => setFormData((prev) => ({ ...prev, track: e.target.value, tenantId: e.target.value === TRACKS.UNIVERSITY && !universities.some((tenant) => tenant._id === prev.tenantId) ? universities[0]?._id || "" : prev.tenantId, college: e.target.value === TRACKS.UNIVERSITY ? prev.college : "" }))} className="mt-2 w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-sm font-semibold text-content-strong focus:border-blue-500 focus:outline-none">
+                    <select name="track" value={formData.track} onChange={(e) => updateFormData((prev) => ({ ...prev, track: e.target.value, tenantId: e.target.value === TRACKS.UNIVERSITY && !universities.some((tenant) => tenant._id === prev.tenantId) ? universities[0]?._id || "" : prev.tenantId, college: e.target.value === TRACKS.UNIVERSITY ? prev.college : "" }))} className="mt-2 w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-sm font-semibold text-content-strong focus:border-blue-500 focus:outline-none">
                       <option value={TRACKS.UNIVERSITY}>University / College</option>
                       <option value={TRACKS.JEE}>Competitive exams</option>
                     </select>
@@ -275,7 +295,7 @@ export const Profile = () => {
                   {isUniversity ? <div className="grid gap-5 md:grid-cols-2">
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-content-muted uppercase tracking-wider">University</label>
-                      <select name="tenantId" value={formData.tenantId} onChange={(e) => setFormData((prev) => ({ ...prev, tenantId: e.target.value, college: "" }))} required disabled={tenantLoading || universities.length === 0} className="w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-sm font-semibold text-content-strong focus:border-blue-500 focus:outline-none">
+                      <select name="tenantId" value={formData.tenantId} onChange={(e) => updateFormData((prev) => ({ ...prev, tenantId: e.target.value, college: "" }))} required disabled={tenantLoading || universities.length === 0} className="w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-sm font-semibold text-content-strong focus:border-blue-500 focus:outline-none">
                         <option value="">{tenantLoading ? "Loading universities…" : "Select university"}</option>
                         {universities.map((tenant) => <option key={tenant._id} value={tenant._id}>{tenant.name} ({tenant.shortCode})</option>)}
                       </select>
@@ -288,16 +308,16 @@ export const Profile = () => {
                         {selectedUniversity.affiliatedColleges.map((campus, index) => <option key={campus._id || index} value={campus.name}>{campus.name}</option>)}
                         <option value="Other">Other / Main campus</option>
                       </select> : <input name="college" value={formData.college} onChange={handleInputChange} required placeholder="College or campus name" className="w-full rounded-xl border border-line px-4 py-3.5 text-sm font-semibold focus:border-blue-500 focus:outline-none" />}
-                      {formData.college === "Other" && <input value={otherCollege} onChange={(e) => setOtherCollege(e.target.value)} required placeholder="Enter campus name" className="w-full rounded-xl border border-line px-4 py-3 text-sm" />}
+                      {formData.college === "Other" && <input value={otherCollege} onChange={(e) => { formDirtyRef.current = true; setOtherCollege(e.target.value); }} required placeholder="Enter campus name" className="w-full rounded-xl border border-line px-4 py-3 text-sm" />}
                     </div>
                   </div> : <div className="grid gap-5 md:grid-cols-2">
                     <div className="space-y-2"><label className="text-[11px] font-black text-content-muted uppercase tracking-wider">Target Exam</label><select name="targetExam" value={formData.targetExam} onChange={handleInputChange} className="w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-sm font-semibold"><option value={TARGET_EXAMS.JEE_MAINS}>JEE Mains</option><option value={TARGET_EXAMS.JEE_ADVANCED}>JEE Advanced</option><option value={TARGET_EXAMS.NEET}>NEET (UG)</option></select></div>
-                    <div className="space-y-2"><label className="text-[11px] font-black text-content-muted uppercase tracking-wider">Target Year</label><select name="targetYear" value={formData.targetYear} onChange={handleInputChange} className="w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-sm font-semibold">{[2026, 2027, 2028, 2029, 2030].map((year) => <option key={year} value={year}>{year}</option>)}</select></div>
+                    <div className="space-y-2"><label className="text-[11px] font-black text-content-muted uppercase tracking-wider">Target Year</label><select name="targetYear" value={formData.targetYear} onChange={handleInputChange} className="w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-sm font-semibold">{targetYearOptions.map((year) => <option key={year} value={year}>{year}</option>)}</select></div>
                   </div>}
                 </div>
 
                 <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5">
-                  <input type="checkbox" checked={formData.leaderboardOptIn} onChange={(event) => setFormData((prev) => ({ ...prev, leaderboardOptIn: event.target.checked }))} className="mt-0.5 h-4 w-4 accent-indigo-600" />
+                  <input type="checkbox" checked={formData.leaderboardOptIn} onChange={(event) => updateFormData((prev) => ({ ...prev, leaderboardOptIn: event.target.checked }))} className="mt-0.5 h-4 w-4 accent-indigo-600" />
                   <span><span className="block text-sm font-black text-content">Join anonymous campus rankings</span><span className="mt-1 block text-xs leading-relaxed text-content-secondary">Your readiness score can appear as an anonymous peer in your university, college, branch, and semester. Your name, email, and profile are never shown. You can opt out here at any time.</span></span>
                 </label>
 

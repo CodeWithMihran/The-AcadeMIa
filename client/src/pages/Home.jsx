@@ -30,6 +30,8 @@ import {
   Users,
 } from "lucide-react";
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 const tracks = [
   {
     icon: GraduationCap,
@@ -442,7 +444,7 @@ function VaultPreview() {
 }
 
 function ExamNightPreview() {
-  const years = ["2021", "2022", "2023", "2024", "2025"];
+    const years = Array.from({ length: 5 }, (_, index) => String(CURRENT_YEAR - 4 + index));
   return <div className="rounded-3xl border border-line bg-app p-4 shadow-xl sm:p-6">
     <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-800"><Flame className="h-5 w-5"/></span><div><p className="text-[9px] font-black uppercase tracking-widest text-content-faint">Exam Night · Unit 3</p><p className="mt-0.5 text-sm font-black text-content">Data structures</p></div></div><span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-bold text-amber-900">Past-paper view</span></div>
     <div className="mt-5 rounded-2xl border border-line bg-surface p-4"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[10px] font-bold text-content-muted">Topic recurrence</p><p className="mt-1 text-sm font-black text-content">Tree traversals</p></div><span className="rounded-full bg-amber-100 px-3 py-1.5 text-[10px] font-black text-amber-900">Seen in 3 recorded years</span></div><div className="mt-4 grid grid-cols-5 gap-2">{years.map((year, index) => <div key={year} className={`rounded-lg border p-2 text-center ${[0, 2, 3].includes(index) ? "border-amber-200 bg-amber-50" : "border-line bg-surface-muted"}`}><p className="text-[9px] font-bold text-content-faint">{year}</p><span className={`mx-auto mt-2 block h-2 w-2 rounded-sm ${[0, 2, 3].includes(index) ? "bg-amber-500" : "bg-surface-hover"}`} /></div>)}</div></div>

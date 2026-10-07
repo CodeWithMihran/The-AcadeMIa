@@ -39,8 +39,8 @@ export function AssessmentEntryRow({ assessment, onChange, onRemove, categories 
     <select className="min-w-0 rounded-lg border border-line bg-surface px-2 py-2 text-xs" value={assessment.category} onChange={(event) => onChange("category", event.target.value)} aria-label="Assessment type">
       {categories.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
     </select>
-    <input type="number" min="0" max={assessment.maxMarks} step="0.1" className="min-w-0 rounded-lg border border-line px-2 py-2 text-xs" value={assessment.marks} onChange={(event) => onChange("marks", event.target.value)} aria-label="Marks scored" />
-    <input type="number" min="0.1" step="0.1" className="min-w-0 rounded-lg border border-line px-2 py-2 text-xs" value={assessment.maxMarks} onChange={(event) => onChange("maxMarks", event.target.value)} aria-label="Maximum marks" />
+    <input type="number" min="0" max={assessment.maxMarks} step="0.1" className="min-w-0 rounded-lg border border-line px-2 py-2 text-xs" value={assessment.marks} onChange={(event) => onChange("marks", event.target.value)} aria-label="Marks scored" aria-invalid={Number(assessment.marks) > Number(assessment.maxMarks) || Number(assessment.marks) < 0} />
+    <input type="number" min="0.1" max="10000" step="0.1" className="min-w-0 rounded-lg border border-line px-2 py-2 text-xs" value={assessment.maxMarks} onChange={(event) => onChange("maxMarks", event.target.value)} aria-label="Maximum marks" aria-invalid={!Number.isFinite(Number(assessment.maxMarks)) || Number(assessment.maxMarks) <= 0 || Number(assessment.maxMarks) > 10000} />
     <button type="button" aria-label="Remove assessment" onClick={onRemove} className="rounded-lg p-2 text-content-faint hover:bg-red-50 hover:text-red-500"><Trash2 className="h-4 w-4" /></button>
   </div>;
 }

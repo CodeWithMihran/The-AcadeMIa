@@ -43,7 +43,12 @@ export function CommunityNotes({ subject }) {
   }, [subject._id]);
 
   useEffect(() => { refresh(); }, [refresh]);
-  useEffect(() => () => { if (preview?.url) URL.revokeObjectURL(preview.url); }, [preview]);
+  useEffect(() => {
+    const previewUrl = preview?.url;
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [preview?.url]);
 
   const submitNote = async (event) => {
     event.preventDefault();
@@ -79,7 +84,6 @@ export function CommunityNotes({ subject }) {
   const openNote = async (note) => {
     try {
       const response = await communityService.noteFile(note._id);
-      if (preview?.url) URL.revokeObjectURL(preview.url);
       setPreview({ title: note.title, url: URL.createObjectURL(response.data) });
     } catch (requestError) { setError(requestError.response?.data?.message || "Could not open that note."); }
   };
@@ -147,7 +151,7 @@ export function CommunityNotes({ subject }) {
 
       <section className="space-y-3"><h3 className="text-lg font-black text-content">Your submissions for this subject</h3>{!hasLoaded ? <p role="status" className="text-sm text-content-muted">Loading your contribution history…</p> : loadErrors.history ? <p className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-800">{loadErrors.history}</p> : myNotes.filter((note) => note.subject?._id === subject._id || note.subject === subject._id).length ? myNotes.filter((note) => note.subject?._id === subject._id || note.subject === subject._id).map((note) => <article key={note._id} className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-line bg-surface p-4"><div><h4 className="font-bold text-content">{note.title}</h4><p className="mt-1 text-xs text-content-muted">{note.unitTitle} · submitted {new Date(note.createdAt).toLocaleDateString()}</p>{note.reviewNote && <p className="mt-2 text-sm text-content-secondary">Moderator feedback: {note.reviewNote}</p>}</div><span className={`rounded-full px-2.5 py-1 text-[10px] font-black ${note.status === "APPROVED" ? "bg-emerald-100 text-emerald-800" : note.status === "REJECTED" ? "bg-red-100 text-red-800" : "bg-amber-100 text-amber-800"}`}>{note.status}</span></article>) : <p className="rounded-2xl border border-dashed border-line p-5 text-sm text-content-muted">You have not submitted notes for this subject yet. Use the form above to share original study materials.</p>}</section>
 
-      {preview && <div role="dialog" aria-modal="true" aria-label={preview.title} className="fixed inset-0 z-[130] flex items-center justify-center bg-black/80 p-4" onClick={(event) => { if (event.target === event.currentTarget) { URL.revokeObjectURL(preview.url); setPreview(null); } }}><div className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-surface"><header className="flex items-center justify-between border-b p-4"><h3 className="font-black">{preview.title}</h3><button type="button" onClick={() => { URL.revokeObjectURL(preview.url); setPreview(null); }} className="text-sm font-bold">Close</button></header>{preview.url && <iframe title={preview.title} src={preview.url} className="h-full w-full"/>}</div></div>}
+      {preview && <div role="dialog" aria-modal="true" aria-label={preview.title} className="fixed inset-0 z-[130] flex items-center justify-center bg-black/80 p-4" onClick={(event) => { if (event.target === event.currentTarget) setPreview(null); }}><div className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-surface"><header className="flex items-center justify-between border-b p-4"><h3 className="font-black">{preview.title}</h3><button type="button" onClick={() => setPreview(null)} className="text-sm font-bold">Close</button></header>{preview.url && <iframe title={preview.title} src={preview.url} className="h-full w-full"/>}</div></div>}
     </section>
   );
 }

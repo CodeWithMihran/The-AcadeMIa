@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, FormProvider, useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -29,13 +29,20 @@ export const EditSubject = () => {
   const [success, setSuccess] = useState("");
   const [activeTab, setActiveTab] = useState("syllabus");
   const methods = useForm({ resolver: zodResolver(subjectEditorSchema), defaultValues: { ...subjectToEditorValues({ units: [] }, true), examCategory: TARGET_EXAMS.JEE_MAINS }, mode: "onBlur" });
-  const { control, register, handleSubmit, reset, formState: { errors, isSubmitting } } = methods;
+  const { control, register, handleSubmit, reset, formState: { errors, isSubmitting, isDirty } } = methods;
   const { fields, append, remove } = useFieldArray({ control, name: "units" });
   const updateMutation = useMutation({ mutationFn: ({ subjectId, data }) => adminService.updateSubject(subjectId, data) });
+  const initializedSubjectRef = useRef(null);
 
   useEffect(() => {
-    if (subject) reset(subjectToEditorValues(subject, true));
-  }, [subject, reset]);
+    if (!subject) return;
+    const subjectKey = `${id}:${subject._id || subject.id || ""}`;
+    const isDifferentSubject = initializedSubjectRef.current !== subjectKey;
+    if (isDifferentSubject || !isDirty) {
+      reset(subjectToEditorValues(subject, true));
+      initializedSubjectRef.current = subjectKey;
+    }
+  }, [id, subject, isDirty, reset]);
 
   useEffect(() => {
     if (subjectError) setError(subjectError.response?.data?.message || "Failed to load subject for editing.");

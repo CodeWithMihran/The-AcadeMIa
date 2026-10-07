@@ -151,17 +151,45 @@ function requiredExternal(item) {
   };
 }
 
-// ✅ FIXED: Projected Grade now safely rounds the decimal values (e.g., 89.9% -> 90% (A+))
+function sessionalValidationErrors(item) {
+  const errors = [];
+  const internalMaximum = Number(item.internalMaximum);
+  const externalMaximum = Number(item.externalMaximum);
+  const targetPercent = Number(item.targetPercent);
+
+  if (!Number.isFinite(internalMaximum) || internalMaximum <= 0 || internalMaximum > 10000) {
+    errors.push("Internal maximum must be greater than 0 and no more than 10,000.");
+  }
+  if (!Number.isFinite(externalMaximum) || externalMaximum <= 0 || externalMaximum > 10000) {
+    errors.push("External maximum must be greater than 0 and no more than 10,000.");
+  }
+  if (!Number.isFinite(targetPercent) || targetPercent < 1 || targetPercent > 100) {
+    errors.push("Target aggregate must be between 1% and 100%.");
+  }
+
+  (item.assessments || []).forEach((assessment, index) => {
+    const maxMarks = Number(assessment.maxMarks);
+    const marks = Number(assessment.marks);
+    if (!Number.isFinite(maxMarks) || maxMarks <= 0 || maxMarks > 10000) {
+      errors.push(`Assessment ${index + 1}: maximum marks must be greater than 0 and no more than 10,000.`);
+    }
+    if (!Number.isFinite(marks) || marks < 0 || marks > maxMarks) {
+      errors.push(`Assessment ${index + 1}: scored marks must be between 0 and its maximum marks.`);
+    }
+  });
+
+  return errors;
+}
+
 function projectedGrade(percent, scale) {
   if (percent === "" || percent === null || percent === undefined) return null;
   const value = Number(percent);
   if (!Number.isFinite(value)) return null;
-  const roundedValue = Math.round(value);
   const bands = [...scale].sort(
     (a, b) => Number(b.minimumPercent) - Number(a.minimumPercent),
   );
   return (
-    bands.find((band) => roundedValue >= Number(band.minimumPercent)) || null
+    bands.find((band) => value >= Number(band.minimumPercent)) || null
   );
 }
 
@@ -291,6 +319,16 @@ export const StudyTools = () => {
 
   const saveData = useCallback(
     async (kind) => {
+      if (kind === "sessionals") {
+        const invalidRows = sessionals
+          .map((item, index) => ({ index, errors: sessionalValidationErrors(item) }))
+          .filter((row) => row.errors.length > 0);
+        if (invalidRows.length) {
+          setError(`Check the marks tracker: ${invalidRows.map(({ index, errors }) => `Subject ${index + 1}: ${errors.join(" ")}`).join(" ")}`);
+          setNotice("");
+          return;
+        }
+      }
       setSaving(true);
       setError("");
       setNotice("");
@@ -391,11 +429,12 @@ export const StudyTools = () => {
       creditBearingSubjects.every(
         (subject) => projectedMarks[subject._id.toString()] !== "",
       );
-    const cgpa =
-      sgpa === null || !hasCompleteProjection
-        ? null
-        : (priorCgpa * priorCredits + sgpa * totalCredits) /
-          (priorCredits + totalCredits || 1);
+    const cumulativeCredits = priorCredits + totalCredits;
+    const cgpa = !hasCompleteProjection
+      ? null
+      : cumulativeCredits > 0
+        ? (priorCgpa * priorCredits + (sgpa || 0) * totalCredits) / cumulativeCredits
+        : null;
     const needed = semesterCredits
       ? (Number(planner.targetCgpa) * (priorCredits + semesterCredits) -
           priorCgpa * priorCredits) /
@@ -579,7 +618,9 @@ export const StudyTools = () => {
                     label="Projected CGPA · all courses"
                     value={
                       semesterSummary.cgpa === null
-                        ? "Complete marks"
+                        ? semesterSummary.semesterCredits === 0 && Number(planner.completedCredits) === 0
+                          ? "No credits"
+                          : "Complete marks"
                         : semesterSummary.cgpa.toFixed(2)
                     }
                   />
@@ -902,6 +943,7 @@ export const StudyTools = () => {
             <div className="space-y-4">
               {sessionals.map((item, index) => {
                 const outcome = requiredExternal(item);
+                const validationErrors = sessionalValidationErrors(item);
                 return (
                   <article
                     key={recordKey(item)}
@@ -945,6 +987,8 @@ export const StudyTools = () => {
                         <input
                           type="number"
                           min="0.01"
+                          max="10000"
+                          step="0.1"
                           className={inputClass}
                           value={item.internalMaximum}
                           onChange={(e) =>
@@ -962,6 +1006,8 @@ export const StudyTools = () => {
                         <input
                           type="number"
                           min="0.01"
+                          max="10000"
+                          step="0.1"
                           className={inputClass}
                           value={item.externalMaximum}
                           onChange={(e) =>
@@ -994,6 +1040,11 @@ export const StudyTools = () => {
                         />
                       </Field>
                     </div>
+                    {validationErrors.length > 0 && (
+                      <ul role="alert" className="space-y-1 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-medium text-red-800">
+                        {validationErrors.map((validationError) => <li key={validationError}>{validationError}</li>)}
+                      </ul>
+                    )}
                     <div>
                       <div className="mb-3 flex items-center justify-between">
                         <h3 className="text-xs font-black uppercase tracking-widest text-content-muted">
@@ -1049,7 +1100,7 @@ export const StudyTools = () => {
                         </p>
                       )}
                     </div>
-                    <div
+                    {validationErrors.length === 0 && <div
                       className={`rounded-2xl p-4 ${outcome.achievable ? "bg-emerald-50 text-emerald-900" : "bg-red-50 text-red-800"}`}
                     >
                       <p className="text-[9px] font-black uppercase tracking-widest opacity-60">
@@ -1067,7 +1118,7 @@ export const StudyTools = () => {
                         {outcome.internalEquivalent.toFixed(1)} of{" "}
                         {outcome.maxInternal} internal marks.
                       </p>
-                    </div>
+                    </div>}
                   </article>
                 );
               })}

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Flame, LoaderCircle } from "lucide-react";
+import { Flame } from "lucide-react";
 import { progressService } from "../services/api";
 
 const dateKey = date => date.toISOString().slice(0, 10);
@@ -39,7 +39,20 @@ export default function ActivityHeatmap() {
   }, [activity]);
 
   if (error) return <section role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-line bg-surface p-6 text-sm text-content-muted"><span>{error}</span><button type="button" onClick={refresh} disabled={loading} className="min-h-11 rounded-xl border border-line px-4 py-2 text-xs font-bold text-content disabled:opacity-60">{loading ? "Retrying…" : "Retry"}</button></section>;
-  if (!activity) return <section role="status" className="flex items-center gap-2 rounded-3xl border border-line bg-surface p-6 text-sm text-content-muted"><LoaderCircle className="h-4 w-4 animate-spin"/>Loading your practice activity…</section>;
+  if (!activity) return <section role="status" aria-label="Loading your practice activity" className="min-w-0 max-w-full space-y-4 overflow-hidden rounded-3xl border border-line bg-surface p-5 shadow-sm md:p-6">
+    <span className="sr-only">Loading your practice activity…</span>
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="space-y-2"><div className="h-3 w-40 animate-pulse rounded bg-surface-subtle"/><div className="h-6 w-52 max-w-full animate-pulse rounded bg-surface-subtle"/></div>
+      <div className="flex gap-5">{[0, 1, 2].map((item) => <div key={item} className="space-y-2"><div className="h-4 w-8 animate-pulse rounded bg-surface-subtle"/><div className="h-3 w-16 animate-pulse rounded bg-surface-subtle"/></div>)}</div>
+    </div>
+    <div aria-hidden="true" className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain pb-2">
+      <div className="flex min-w-max gap-1.5">
+        <div className="grid grid-rows-7 gap-1 pr-1">{Array.from({ length: 7 }, (_, index) => <span key={index} className="h-3 w-6"/>)}</div>
+        {Array.from({ length: 53 }, (_, week) => <div key={week} className="grid grid-rows-7 gap-1">{Array.from({ length: 7 }, (_, day) => <span key={day} className="h-3 w-3 animate-pulse rounded-[3px] bg-surface-subtle"/>)}</div>)}
+      </div>
+    </div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><div className="h-3 w-72 max-w-full animate-pulse rounded bg-surface-subtle"/><div className="h-3 w-28 animate-pulse rounded bg-surface-subtle"/></div>
+  </section>;
 
   return <section className="min-w-0 max-w-full space-y-4 overflow-hidden rounded-3xl border border-line bg-surface p-5 shadow-sm md:p-6" aria-labelledby="activity-heatmap-title">
     <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-700"><Flame className="h-4 w-4"/>Career practice activity</p><h2 id="activity-heatmap-title" className="mt-1 text-xl font-black text-content">Your learning streak</h2></div><div className="flex flex-wrap gap-5 text-xs"><p><strong className="text-content">{activity.currentStreak}</strong><span className="ml-1 text-content-muted">day streak</span></p><p><strong className="text-content">{activity.longestStreak}</strong><span className="ml-1 text-content-muted">best streak</span></p><p><strong className="text-content">{activity.activeDays}</strong><span className="ml-1 text-content-muted">active days</span></p></div></div>

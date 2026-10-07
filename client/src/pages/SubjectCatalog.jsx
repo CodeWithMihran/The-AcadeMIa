@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { TRACKS } from "../constants";
 import { useAuth } from "../context/AuthContext";
 import { useStudentSubjects } from "../hooks/useAcademiaQueries";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import {
   ArrowRight,
   BookOpen,
@@ -18,15 +19,16 @@ export const SubjectCatalog = () => {
   const { user } = useAuth();
   const { data: subjects = [], isLoading, isFetching, error: queryError, refetch } = useStudentSubjects(user);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
   const error = queryError?.response?.data?.message || (queryError ? "Could not load your subject catalog." : "");
 
   const isUniversity = user?.track === TRACKS.UNIVERSITY;
   const filteredSubjects = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase();
+    const query = debouncedSearch.trim().toLocaleLowerCase();
     if (!query) return subjects;
     return subjects.filter((subject) => [subject.name, subject.courseCode, subject.branch, subject.examCategory, subject.tenant?.shortCode]
       .some((value) => String(value || "").toLocaleLowerCase().includes(query)));
-  }, [subjects, search]);
+  }, [subjects, debouncedSearch]);
 
   const totalUnits = subjects.reduce((total, subject) => total + (subject.units?.length || 0), 0);
   const totalTopics = subjects.reduce((total, subject) => total + (subject.units || []).reduce((unitTotal, unit) => unitTotal + (unit.topics?.length || 0), 0), 0);
@@ -92,7 +94,7 @@ export const SubjectCatalog = () => {
           ) : filteredSubjects.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-line-strong bg-surface p-8 text-center sm:p-10">
               <Search className="mx-auto h-8 w-8 text-content-faint" />
-              <h3 className="mt-3 font-bold text-content">No subjects match “{search}”</h3>
+              <h3 className="mt-3 font-bold text-content">No subjects match “{debouncedSearch}”</h3>
               <p className="mt-1 text-sm text-content-muted">Try another name or course code.</p>
               <button type="button" onClick={() => setSearch("")} className="mt-4 min-h-10 rounded-xl border border-line px-4 py-2 text-xs font-bold text-content-secondary hover:bg-surface-muted">Clear search</button>
             </div>

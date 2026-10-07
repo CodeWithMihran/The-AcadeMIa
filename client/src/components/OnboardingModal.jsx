@@ -2,7 +2,7 @@ import { TRACKS, TARGET_EXAMS } from "../constants";
 import React, { useState, useEffect } from 'react';
 import { tenantService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { GraduationCap, Target, Sparkles, ArrowRight } from 'lucide-react';
+import { GraduationCap, Target, Sparkles, ArrowRight, X } from 'lucide-react';
 
 export const OnboardingModal = ({ isOpen, onClose }) => {
   const { user, refreshUser } = useAuth();
@@ -21,6 +21,15 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
   const [tenantsLoading, setTenantsLoading] = useState(false);
   const [tenantsError, setTenantsError] = useState('');
   const [tenantReload, setTenantReload] = useState(0);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !loading) onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, loading, onClose]);
 
   useEffect(() => {
     const fetchTenants = async () => {
@@ -111,15 +120,19 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-surface w-full max-w-xl rounded-3xl p-8 md:p-10 shadow-2xl border border-line modal-animate max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/80 backdrop-blur-sm animate-in fade-in duration-200" onMouseDown={(event) => { if (event.target === event.currentTarget && !loading) onClose(); }}>
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-4">
+      <div role="dialog" aria-modal="true" aria-labelledby="onboarding-title" className="relative w-full max-w-xl rounded-3xl border border-line bg-surface p-5 shadow-2xl modal-animate sm:p-7 md:p-8">
+        <button type="button" onClick={onClose} disabled={loading} aria-label="Close study track form" className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-xl text-content-muted transition hover:bg-surface-muted hover:text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 sm:right-5 sm:top-5">
+          <X className="h-5 w-5" />
+        </button>
         
-        <div className="text-center mb-8">
+        <div className="mb-6 px-5 text-center sm:mb-7">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold uppercase tracking-wider mb-3">
             <Sparkles className="w-3.5 h-3.5" />
             Set Up Your Academic Profile
           </div>
-          <h2 className="text-2xl md:text-3xl font-black text-content tracking-tight">
+          <h2 id="onboarding-title" className="text-2xl font-black tracking-tight text-content md:text-3xl">
             Configure Your Vault
           </h2>
           <p className="text-content-muted text-sm mt-1">
@@ -134,7 +147,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
         )}
 
         {/* Track Selector Tabs */}
-        <div className="grid grid-cols-2 gap-3 mb-8">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:mb-7">
           <button
             type="button"
             onClick={() => setTrack(TRACKS.UNIVERSITY)}
@@ -164,7 +177,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
           {track === TRACKS.UNIVERSITY ? (
             <>
               {/* University Picker */}
@@ -349,6 +362,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
           </button>
         </form>
 
+      </div>
       </div>
     </div>
   );

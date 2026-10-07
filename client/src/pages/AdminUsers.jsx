@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { adminService } from '../services/api';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import {
   Users, 
   ShieldCheck, 
@@ -18,6 +19,7 @@ export const AdminUsers = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -57,11 +59,12 @@ export const AdminUsers = () => {
   };
 
   // Filter users based on search input
-  const filteredUsers = users.filter(u => 
-    u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    u.branch?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = useMemo(() => {
+    const query = debouncedSearchTerm.trim().toLocaleLowerCase();
+    if (!query) return users;
+    return users.filter((user) => [user.name, user.email, user.branch]
+      .some((value) => String(value || '').toLocaleLowerCase().includes(query)));
+  }, [users, debouncedSearchTerm]);
 
   return (
     <main className="min-h-screen bg-app px-4 pb-16 pt-28 sm:px-6 lg:px-8">
@@ -126,7 +129,7 @@ export const AdminUsers = () => {
           ) : filteredUsers.length === 0 ? (
             <div className="p-24 text-center">
               <Users className="w-12 h-12 text-content-faint mx-auto mb-3" />
-              <p className="text-content-muted font-bold text-sm">{error ? "User records could not be confirmed." : searchTerm ? "No users match this search." : "No user accounts are available yet."}</p>
+              <p className="text-content-muted font-bold text-sm">{error ? "User records could not be confirmed." : debouncedSearchTerm ? "No users match this search." : "No user accounts are available yet."}</p>
               {error && <button type="button" onClick={fetchUsers} className="mt-4 min-h-10 rounded-xl border border-line px-4 py-2 text-xs font-bold text-content-secondary hover:bg-surface-muted">Retry loading users</button>}
             </div>
           ) : (

@@ -1,163 +1,162 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowUpRight, BookOpen, BriefcaseBusiness, Code2, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Code2, BriefcaseBusiness } from 'lucide-react';
+
+const CURRENT_YEAR = new Date().getFullYear();
+const DEVELOPER_URL = 'https://github.com/CodeWithMihran';
+const CONTACT_EMAIL = 'sohail.mihran@gmail.com';
+
+const SocialLinks = () => (
+  <div className="flex items-center gap-2.5">
+    <a
+      href={DEVELOPER_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Visit the developer on GitHub (opens in a new tab)"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-content-muted transition duration-200 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+    >
+      <Code2 aria-hidden="true" className="h-4 w-4" />
+    </a>
+    <a
+      href="https://www.linkedin.com/in/md-mihran-sohail-321b12384/"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Visit the developer on LinkedIn (opens in a new tab)"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-content-muted transition duration-200 hover:-translate-y-0.5 hover:border-sky-400/40 hover:bg-sky-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+    >
+      <BriefcaseBusiness aria-hidden="true" className="h-4 w-4" />
+    </a>
+  </div>
+);
+
+const Brand = ({ compact = false, to = '/' }) => (
+  <Link to={to} className="group inline-flex w-fit items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
+    <span className={`inline-flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/15 transition-transform duration-200 group-hover:scale-105 ${compact ? 'h-9 w-9' : 'h-11 w-11'}`}>
+      <BookOpen aria-hidden="true" className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
+    </span>
+    <span className="flex flex-col">
+      <span className={`whitespace-nowrap font-black uppercase italic tracking-tight text-white ${compact ? 'text-base' : 'text-lg'}`}>
+        The <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-white bg-clip-text text-transparent">AcadeMIa</span>
+      </span>
+      {!compact && <span className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-content-faint">Academic OS</span>}
+    </span>
+  </Link>
+);
+
+const ExternalLink = ({ href, children }) => (
+  <a href={href} className="inline-flex items-center gap-1.5 rounded-sm transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
+    {children}
+  </a>
+);
 
 export const Footer = () => {
   const { user, isAuthenticated } = useAuth();
-  
   const isAdmin = user?.role === 'admin';
-  const currentYear = new Date().getFullYear();
-  const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
-  // --------------------------------------------------------
-  // SUB-COMPONENTS FOR DIFFERENT STATES
-  // --------------------------------------------------------
-
-  // 1. PUBLIC HOME FOOTER (Massive, informative, dark)
   if (!isAuthenticated) {
     return (
-      <footer className="bg-surface-inverse text-white pt-20 pb-10 border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-12 gap-12 lg:gap-16">
-            
-            <div className="md:col-span-5 lg:col-span-4">
-              <div className="flex items-center gap-4 mb-6 group">
-                <img src="/images/logo1.png" alt="RIT" className="h-10 w-auto" />
-                <div className="flex items-baseline">
-                  <span className="text-xl font-black text-white tracking-tighter uppercase italic">RIT</span>
-                  <span className="text-xl font-extralight tracking-tight ml-1.5 text-content-faint">Acade<span className="font-bold text-white">MI</span>a</span>
-                </div>
-              </div>
-              <p className="text-content-muted text-sm leading-relaxed mb-6 max-w-sm">
-                A centralized academic ecosystem for RIT students. We transform scattered resources into a structured learning path, helping you master your syllabus one unit at a time.
+      <footer className="relative mt-16 overflow-hidden border-t border-white/10 bg-surface-inverse pb-6 pt-12 text-white sm:pt-16">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/60 to-transparent" />
+        <div className="mx-auto max-w-7xl px-5 sm:px-6">
+          <div className="grid gap-10 pb-10 sm:grid-cols-2 sm:gap-12 lg:grid-cols-12 lg:gap-8">
+            <div className="sm:col-span-2 lg:col-span-5">
+              <Brand />
+              <p className="mt-5 max-w-md text-sm leading-7 text-content-muted">
+                A focused academic workspace for discovering course materials, organizing progress, and preparing for what comes next.
               </p>
-              <div className="flex gap-4">
-                <a href="https://github.com/CodeWithMihran" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-surface hover:text-content transition-all duration-300">
-                  <Code2 className="w-5 h-5" />
-                </a>
-                <a href="https://www.linkedin.com/in/md-mihran-sohail-321b12384/" target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-[#0077b5] hover:text-white transition-all duration-300">
-                  <BriefcaseBusiness className="w-5 h-5" />
+              <div className="mt-5 flex flex-wrap items-center gap-4">
+                <SocialLinks />
+                <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-xs font-medium text-content-muted transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
+                  <Mail aria-hidden="true" className="h-4 w-4" />
+                  Contact the team
                 </a>
               </div>
             </div>
 
-            <div className="md:col-span-2 lg:col-span-2">
-              <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-6">Platform</h3>
-              <ul className="space-y-4 text-content-muted text-sm">
-                <li><a href="#home" className="hover:text-white transition-colors duration-200">Home</a></li>
-                <li><a href="#features" className="hover:text-white transition-colors duration-200">Features</a></li>
-                <li><a href="#workflow" className="hover:text-white transition-colors duration-200">Workflow</a></li>
-                <li><a href="#auth" className="text-white/80 hover:text-white font-medium underline underline-offset-8 decoration-blue-500">Get Started</a></li>
+            <div className="lg:col-span-2">
+              <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-white">Explore</h2>
+              <ul className="space-y-3 text-sm text-content-muted">
+                <li><ExternalLink href="#home">Home</ExternalLink></li>
+                <li><ExternalLink href="#features">Features</ExternalLink></li>
+                <li><ExternalLink href="#workflow">How it works</ExternalLink></li>
+                <li><ExternalLink href="#auth">Get started</ExternalLink></li>
               </ul>
             </div>
 
-            <div className="md:col-span-2 lg:col-span-3">
-              <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-6">Academic</h3>
-              <ul className="space-y-4 text-content-muted text-sm">
-                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-blue-500"></span><span>Unit-wise Notes</span></li>
-                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-blue-500"></span><span>Video Repository</span></li>
-                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-blue-500"></span><span>PYQ Database</span></li>
-                <li className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-blue-500"></span><span>Syllabus Tracker</span></li>
+            <div className="lg:col-span-2">
+              <h2 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-white">Study workspace</h2>
+              <ul className="space-y-3 text-sm text-content-muted">
+                <li>Unit-wise resources</li>
+                <li>Past question papers</li>
+                <li>Progress tracking</li>
+                <li>Study planning tools</li>
               </ul>
             </div>
 
-            <div className="md:col-span-3 lg:col-span-3">
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                <h3 className="text-white font-bold text-sm uppercase tracking-widest mb-4">Developed By</h3>
-                <p className="text-white font-semibold text-base mb-1">Md Mihran Sohail</p>
-                <p className="text-content-muted text-xs mb-4">Roorkee Institute of Technology</p>
-                <a href="mailto:sohail.mihran@gmail.com" className="text-blue-400 text-xs font-medium hover:text-blue-300 transition-colors break-all">
-                  sohail.mihran@gmail.com
+            <div className="sm:col-span-2 lg:col-span-3">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 sm:p-6">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-300">Built for students</p>
+                <p className="mt-2 text-base font-semibold text-white">Make your next study session count.</p>
+                <p className="mt-2 text-sm leading-6 text-content-muted">Keep your syllabus, resources, and progress together in one calm workspace.</p>
+                <a href="#auth" className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-white px-4 text-xs font-bold text-gray-900 transition duration-200 hover:-translate-y-0.5 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
+                  Explore the platform <ArrowUpRight aria-hidden="true" className="h-4 w-4" />
                 </a>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-white/10 mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-content-secondary text-[13px]">
-              &copy; {currentYear} <span className="text-content-faint font-medium">RIT AcadeMIA</span>. All rights reserved.
-            </p>
-            <div className="flex gap-6 text-content-secondary text-[13px]">
-              <span className="hover:text-content-faint cursor-default">Student-Led Initiative</span>
-              <span className="hover:text-content-faint cursor-default">Privacy Policy</span>
-            </div>
+          <div className="flex flex-col gap-3 border-t border-white/10 pt-5 text-xs text-content-muted sm:flex-row sm:items-center sm:justify-between">
+            <p>© {CURRENT_YEAR} The AcadeMIa. All rights reserved.</p>
+            <p>Designed for focused learning.</p>
           </div>
         </div>
       </footer>
     );
   }
 
-  // 2. ADMIN FOOTER (Minimalist, light theme)
   if (isAdmin) {
     return (
-      <footer className="bg-app border-t border-line py-10 mt-auto">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            
-            <div className="flex items-center gap-4">
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm font-black text-content tracking-tighter italic">RIT AcadeMIa</span>
-                <span className="text-sm font-light tracking-tight text-content-faint uppercase">Console</span>
-              </div>
-              <div className="h-4 w-[1px] bg-surface-hover"></div>
-              <div className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
-                <span className="text-[10px] font-bold text-content-faint uppercase tracking-widest">v2.0.1 Stable</span>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <p className="text-[10px] font-bold text-content-faint uppercase tracking-[0.3em]">
-                Infrastructure by <a href="https://github.com/CodeWithMihran" target="_blank" rel="noopener noreferrer" className="text-content-muted hover:text-content transition-colors">Md Mihran Sohail</a>
-              </p>
-            </div>
-
-            <div className="flex items-center gap-4 text-[10px] font-black text-content-faint uppercase tracking-widest">
-              <span>{currentDate}</span>
-              <a href="mailto:sohail.mihran@gmail.com" className="bg-surface-subtle px-3 py-1 rounded-md hover:bg-surface-inverse hover:text-white transition-all">Report Bug</a>
-            </div>
+      <footer className="mt-auto border-t border-line bg-app py-6 sm:py-7">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 text-center sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:text-left">
+          <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
+            <Link to="/admin" className="rounded-sm text-sm font-bold tracking-tight text-content transition-colors hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">The AcadeMIa <span className="font-medium text-content-muted">Admin Console</span></Link>
+            <span className="hidden h-4 w-px bg-line-strong sm:block" aria-hidden="true" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-content-faint">Management workspace</span>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-content-muted sm:justify-end">
+            <span>© {CURRENT_YEAR} The AcadeMIa</span>
+            <a href={`mailto:${CONTACT_EMAIL}`} className="rounded-sm font-medium transition-colors hover:text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">Report a problem</a>
           </div>
         </div>
       </footer>
     );
   }
 
-  // 3. STUDENT FOOTER (Compact, dark theme)
   return (
-    <footer className="bg-surface-inverse text-white pt-12 pb-8 border-t border-white/10 mt-auto">
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-          
-          <div className="flex items-center gap-3 group opacity-80 hover:opacity-100 transition-opacity">
-            <img src="/images/logo1.png" alt="RIT" className="h-8 w-auto" />
-            <div className="flex items-baseline">
-              <span className="text-lg font-black text-white tracking-tighter uppercase italic">RIT</span>
-              <span className="text-lg font-extralight tracking-tight ml-1 text-content-faint">Acade<span className="font-bold text-white">MI</span>a</span>
-            </div>
+    <footer className="mt-16 border-t border-white/10 bg-surface-inverse pb-6 pt-9 text-white sm:pt-10">
+      <div className="mx-auto max-w-7xl px-5 sm:px-6">
+        <div className="grid gap-8 sm:grid-cols-2 sm:items-center lg:grid-cols-3">
+          <div>
+            <Brand compact to="/dashboard" />
+            <p className="mt-3 max-w-sm text-xs leading-6 text-content-muted">Your courses, resources, and study progress in one place.</p>
           </div>
-
-          <div className="flex gap-6 text-[11px] font-black uppercase tracking-widest text-content-muted">
-            <Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
-            <Link to="/profile" className="hover:text-white transition-colors">Settings</Link>
-            <a href="mailto:sohail.mihran@gmail.com" className="hover:text-white transition-colors">Support</a>
-          </div>
-
-          <div className="text-right">
-            <p className="text-[10px] text-content-secondary font-bold uppercase tracking-[0.2em]">
-              Developed by <a href="https://github.com/CodeWithMihran" target="_blank" rel="noopener noreferrer" className="text-content-faint hover:text-white transition-all underline underline-offset-4 decoration-gray-800">Mihran Sohail</a>
-            </p>
+          <nav aria-label="Footer navigation" className="grid grid-cols-2 gap-x-5 gap-y-2 text-xs font-semibold text-content-muted sm:justify-self-center">
+            <Link to="/dashboard" className="rounded-sm py-1 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">Dashboard</Link>
+            <Link to="/subjects" className="rounded-sm py-1 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">Subjects</Link>
+            <Link to="/study-tools" className="rounded-sm py-1 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">Study tools</Link>
+            <Link to="/profile" className="rounded-sm py-1 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">Profile</Link>
+          </nav>
+          <div className="flex items-center justify-between gap-4 lg:justify-self-end">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-xs font-medium text-content-muted transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
+              <Mail aria-hidden="true" className="h-4 w-4" /> Support
+            </a>
+            <SocialLinks />
           </div>
         </div>
-
-        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-[10px] text-content-secondary font-medium">
-            &copy; {currentYear} RIT AcadeMIA. All rights reserved.
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></span>
-            <span className="text-[10px] text-content-secondary font-bold uppercase tracking-tighter">Academic Portal v2.0</span>
-          </div>
+        <div className="mt-7 flex flex-col gap-2 border-t border-white/10 pt-5 text-[10px] text-content-muted sm:flex-row sm:items-center sm:justify-between">
+          <p>© {CURRENT_YEAR} The AcadeMIa. All rights reserved.</p>
+          <p>Developed by <a href={DEVELOPER_URL} target="_blank" rel="noopener noreferrer" className="rounded-sm font-semibold text-content-faint underline decoration-white/20 underline-offset-4 transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">Mihran Sohail</a></p>
         </div>
       </div>
     </footer>
