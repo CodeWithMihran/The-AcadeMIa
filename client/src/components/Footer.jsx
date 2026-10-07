@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, BookOpen, BriefcaseBusiness, Code2, Mail } from 'lucide-react';
+import { ArrowUpRight, BriefcaseBusiness, Code2, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { AcademiaLogo } from './AcademiaLogo';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const DEVELOPER_URL = 'https://github.com/CodeWithMihran';
@@ -32,11 +33,11 @@ const SocialLinks = () => (
 
 const Brand = ({ compact = false, to = '/' }) => (
   <Link to={to} className="group inline-flex w-fit items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
-    <span className={`inline-flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/15 transition-transform duration-200 group-hover:scale-105 ${compact ? 'h-9 w-9' : 'h-11 w-11'}`}>
-      <BookOpen aria-hidden="true" className={compact ? 'h-4 w-4' : 'h-5 w-5'} />
+    <span className={`inline-flex shrink-0 items-center justify-center rounded-xl border border-white/70 bg-gradient-to-br from-white to-slate-100 shadow-lg shadow-black/15 transition-transform duration-200 ${compact ? 'h-9 w-9' : 'h-11 w-11'}`}>
+      <AcademiaLogo className={compact ? 'h-8 w-8' : 'h-10 w-10'} />
     </span>
     <span className="flex flex-col">
-      <span className={`whitespace-nowrap font-black uppercase italic tracking-tight text-white ${compact ? 'text-base' : 'text-lg'}`}>
+      <span className={`whitespace-nowrap font-extrabold tracking-tight text-white ${compact ? 'text-base' : 'text-lg'}`}>
         The <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-white bg-clip-text text-transparent">AcadeMIa</span>
       </span>
       {!compact && <span className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-content-faint">Academic OS</span>}
@@ -120,9 +121,9 @@ export const Footer = () => {
       <footer className="mt-auto border-t border-line bg-app py-6 sm:py-7">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 text-center sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:text-left">
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
-            <Link to="/admin" className="rounded-sm text-sm font-bold tracking-tight text-content transition-colors hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">The AcadeMIa <span className="font-medium text-content-muted">Admin Console</span></Link>
+            <Brand compact to="/admin" />
             <span className="hidden h-4 w-px bg-line-strong sm:block" aria-hidden="true" />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-content-faint">Management workspace</span>
+            <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-content-faint">Admin management workspace</span>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-content-muted sm:justify-end">
             <span>© {CURRENT_YEAR} The AcadeMIa</span>

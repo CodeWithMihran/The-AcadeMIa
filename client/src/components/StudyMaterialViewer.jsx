@@ -57,7 +57,7 @@ function ActiveStudyMaterialViewer({ material, onClose }) {
       else if (viewerRef.current.requestFullscreen) await viewerRef.current.requestFullscreen();
       else setIsFullscreen(true);
     } catch {
-      setIsFullscreen(true);
+      setIsFullscreen(Boolean(document.fullscreenElement && viewerRef.current?.contains(document.fullscreenElement)));
     }
   };
 

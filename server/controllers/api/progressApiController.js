@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const studentSubjectFilter = require("../../utils/studentSubjectFilter");
 const userModel = require("../../models/user-model");
 const careerProgressModel = require("../../models/career-progress-model");
+const { normalizeBranch, branchQueryValues } = require("../../utils/branch");
 const userActivityModel = require("../../models/user-activity-tracker-model");
 const { hasActivePremium } = require("../../utils/premiumAccess");
 
@@ -253,7 +254,8 @@ module.exports.getLeaderboard = async (req, res) => {
     try {
         const user = req.user;
         const tenantId = user.tenant?._id || user.tenant;
-        const branch = typeof user.branch === "string" ? user.branch.trim().toUpperCase() : "";
+        const branch = normalizeBranch(user.branch);
+        const matchingBranches = branchQueryValues(branch);
         const college = typeof user.college === "string" ? user.college.trim() : "";
         const semester = Number(user.semester);
         if (user.track !== "UNIVERSITY" || !tenantId || !branch || branch === "NOT SET" || !college || college === "Not Set" || !Number.isInteger(semester) || semester < 1 || semester > 8) {
@@ -266,16 +268,16 @@ module.exports.getLeaderboard = async (req, res) => {
             { $match: {
                 role: "student", onboardingCompleted: true, leaderboardOptIn: true,
                 track: "UNIVERSITY", tenant: new mongoose.Types.ObjectId(tenantId),
-                college, branch, semester
+                college, branch: { $in: matchingBranches }, semester
             } },
             { $lookup: {
                 from: subjectModel.collection.name,
-                let: { tenantId: "$tenant", branch: "$branch", semester: "$semester" },
+                let: { tenantId: "$tenant", branchValues: matchingBranches, semester: "$semester" },
                 pipeline: [
                     { $match: { $expr: { $and: [
                         { $eq: ["$track", "UNIVERSITY"] },
                         { $eq: ["$tenant", "$$tenantId"] },
-                        { $eq: ["$branch", "$$branch"] },
+                        { $in: ["$branch", "$$branchValues"] },
                         { $eq: ["$semester", "$$semester"] }
                     ] } } },
                     { $project: { units: 1 } }

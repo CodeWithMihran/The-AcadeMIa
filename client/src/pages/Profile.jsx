@@ -1,8 +1,10 @@
-import { TRACKS, TARGET_EXAMS } from "../constants";
+import { TRACKS, TARGET_EXAMS, UNIVERSITY_BRANCHES } from "../constants";
 import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { authService, tenantService } from "../services/api";
 import ActivityHeatmap from "../components/ActivityHeatmap";
+import { useTenantBranches } from "../hooks/useTenantBranches";
+import { normalizeBranch } from "../utils/branch";
 import {
   ShieldCheck,
   AlertTriangle,
@@ -41,6 +43,7 @@ export const Profile = () => {
     targetYear: DEFAULT_TARGET_YEAR,
     leaderboardOptIn: false,
   });
+  const { branches, loading: branchesLoading, error: branchesError, retry: retryBranches } = useTenantBranches(formData.tenantId);
   const formDirtyRef = useRef(false);
   const initializedUserIdRef = useRef(null);
 
@@ -126,6 +129,8 @@ export const Profile = () => {
 
   const isUniversity = formData.track === TRACKS.UNIVERSITY;
   const selectedUniversity = universities.find((tenant) => tenant._id === formData.tenantId);
+  const branchOptions = branches.length ? branches : UNIVERSITY_BRANCHES;
+  const selectedBranch = branchOptions.find((branch) => normalizeBranch(branch) === normalizeBranch(formData.branch)) || "";
   const targetYearOptions = [...new Set([
     ...Array.from({ length: 5 }, (_, index) => CURRENT_YEAR + index),
     Number(formData.targetYear),
@@ -295,7 +300,7 @@ export const Profile = () => {
                   {isUniversity ? <div className="grid gap-5 md:grid-cols-2">
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-content-muted uppercase tracking-wider">University</label>
-                      <select name="tenantId" value={formData.tenantId} onChange={(e) => updateFormData((prev) => ({ ...prev, tenantId: e.target.value, college: "" }))} required disabled={tenantLoading || universities.length === 0} className="w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-sm font-semibold text-content-strong focus:border-blue-500 focus:outline-none">
+                      <select name="tenantId" value={formData.tenantId} onChange={(e) => updateFormData((prev) => ({ ...prev, tenantId: e.target.value, college: "", branch: "" }))} required disabled={tenantLoading || universities.length === 0} className="w-full rounded-xl border border-line bg-surface px-4 py-3.5 text-sm font-semibold text-content-strong focus:border-blue-500 focus:outline-none">
                         <option value="">{tenantLoading ? "Loading universities…" : "Select university"}</option>
                         {universities.map((tenant) => <option key={tenant._id} value={tenant._id}>{tenant.name} ({tenant.shortCode})</option>)}
                       </select>
@@ -324,17 +329,22 @@ export const Profile = () => {
                 {isUniversity ? (
                   <div className="grid md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[11px] font-black text-content-faint uppercase tracking-wider flex items-center gap-1.5">
+                      <label htmlFor="profile-branch" className="text-[11px] font-black text-content-faint uppercase tracking-wider flex items-center gap-1.5">
                         <GraduationCap className="w-3 h-3" /> Branch
                       </label>
-                      <input
-                        type="text"
+                      <select
+                        id="profile-branch"
                         name="branch"
-                        value={formData.branch}
+                        value={selectedBranch}
                         onChange={handleInputChange}
                         required
-                        className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold uppercase text-content-strong transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
-                      />
+                        disabled={branchesLoading || Boolean(branchesError)}
+                        className="w-full min-h-12 px-4 py-3 rounded-xl border border-line bg-surface text-sm font-semibold text-content-strong transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none disabled:cursor-wait disabled:opacity-70"
+                      >
+                        <option value="">{branchesLoading ? "Loading available branches…" : "Select your branch"}</option>
+                        {branchOptions.map((branch) => <option key={branch} value={branch}>{branch}</option>)}
+                      </select>
+                      {branchesError ? <p role="alert" className="text-xs text-red-700">{branchesError}<button type="button" onClick={retryBranches} className="ml-2 min-h-10 font-bold underline">Retry</button></p> : !branchesLoading && branches.length === 0 && <p className="text-xs text-content-muted">Showing common branches until subjects are configured for this university.</p>}
                     </div>
                     <div className="space-y-2">
                       <label className="text-[11px] font-black text-content-faint uppercase tracking-wider">
@@ -379,7 +389,7 @@ export const Profile = () => {
                 <div className="pt-6">
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || (isUniversity && (branchesLoading || Boolean(branchesError) || !selectedBranch))}
                     className="min-h-12 w-full bg-surface-inverse text-white px-5 py-3 rounded-xl text-xs uppercase tracking-widest font-black hover:bg-blue-600 transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     {loading ? "Saving Changes..." : "Save Profile Changes"}

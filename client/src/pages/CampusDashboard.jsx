@@ -63,6 +63,19 @@ export function CampusDashboard() {
     refreshAdminOptions();
   }, [refresh, refreshAdminOptions]);
 
+  useEffect(() => {
+    const previewUrl = preview?.url;
+    if (!previewUrl) return undefined;
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setPreview(null);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [preview?.url]);
+
   const review = async (note, decision, fulfillBounty = false) => {
     setBusyId(note._id); setError(""); setNotice("");
     try {
@@ -75,7 +88,6 @@ export function CampusDashboard() {
   const openSubmission = async (note) => {
     try {
       const response = await communityService.noteFile(note._id);
-      if (preview?.url) URL.revokeObjectURL(preview.url);
       setPreview({ title: note.title, url: URL.createObjectURL(response.data) });
     } catch (requestError) { setError(requestError.response?.data?.message || "Could not open this upload."); }
   };
@@ -137,7 +149,7 @@ export function CampusDashboard() {
       {(queue.bounties.length > 0 || loadErrors.queue) && <section className="space-y-3"><h2 className="text-xl font-black">Open bounties in your scope</h2>{loadErrors.queue ? <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">Bounty data is unavailable until the moderation queue loads.</p> : queue.bounties.map((item) => <article key={item._id} className="flex flex-wrap justify-between gap-3 rounded-2xl border border-amber-200 bg-surface p-4"><div><h3 className="font-black">{item.title}</h3><p className="text-xs text-content-muted">{item.subject?.name} · {item.unitTitle} · requested by {item.creator?.name}</p><p className="mt-1 text-sm text-content-secondary">{item.description}</p></div><span className="flex items-center gap-1 text-sm font-black text-amber-800"><Coins className="h-4 w-4"/>{item.reward}</span></article>)}</section>}
 
       <section className="rounded-3xl border border-line bg-surface p-5"><h2 className="mb-3 text-lg font-black">Recent credit activity</h2>{loadErrors.wallet ? <p className="text-sm text-red-700">Credit history is unavailable. Retry to check the current balance and ledger.</p> : wallet.ledger.length ? <div className="space-y-2">{wallet.ledger.map((entry) => <div key={entry._id} className="flex justify-between gap-3 border-b border-line py-2 text-xs"><span className="text-content-secondary">{entry.description}</span><span className={`font-black ${entry.delta > 0 ? "text-emerald-700" : "text-amber-800"}`}>{entry.delta > 0 ? "+" : ""}{entry.delta} · balance {entry.balanceAfter}</span></div>)}</div> : <p className="text-sm text-content-muted">No credits yet. Approved contributions earn credits.</p>}</section>
-      {preview && <div role="dialog" aria-modal="true" aria-label={preview.title} className="fixed inset-0 z-[130] flex items-center justify-center bg-black/80 p-4" onClick={(event) => { if (event.target === event.currentTarget) { URL.revokeObjectURL(preview.url); setPreview(null); } }}><div className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-surface"><header className="flex items-center justify-between border-b p-4"><h3 className="font-black">{preview.title}</h3><button type="button" onClick={() => { URL.revokeObjectURL(preview.url); setPreview(null); }} className="text-sm font-bold">Close</button></header><iframe title={preview.title} src={preview.url} className="h-full w-full"/></div></div>}
+      {preview && <div role="dialog" aria-modal="true" aria-label={preview.title} className="fixed inset-0 z-[130] flex items-center justify-center bg-black/80 p-4" onClick={(event) => { if (event.target === event.currentTarget) setPreview(null); }}><div className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-surface"><header className="flex items-center justify-between border-b p-4"><h3 className="font-black">{preview.title}</h3><button type="button" onClick={() => setPreview(null)} className="min-h-11 min-w-11 rounded-lg text-sm font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">Close</button></header><iframe title={preview.title} src={preview.url} className="h-full w-full"/></div></div>}
     </div>
   </main>;
 }

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { studyToolsService } from "../services/api";
 import { useStudentSubjects } from "../hooks/useAcademiaQueries";
@@ -13,6 +13,7 @@ import {
 import { ASSESSMENT_CATEGORIES, TRACKS } from "../constants";
 import {
   AttendanceEntryCard,
+  OverallAttendanceCard,
   AssessmentEntryRow,
   SaveStudyToolsButton,
   StudyToolField as Field,
@@ -80,9 +81,24 @@ const emptySessional = (subject) => ({
 });
 
 function attendanceAdvice(item) {
-  const held = Number(item.classesHeld) || 0;
-  const attended = Number(item.classesAttended) || 0;
-  const threshold = Number(item.threshold) || 75;
+  if (item.classesHeld === "" || item.classesHeld === null || item.classesHeld === undefined) {
+    return { current: null, error: "Enter the total number of classes held." };
+  }
+  if (item.classesAttended === "" || item.classesAttended === null || item.classesAttended === undefined) {
+    return { current: null, error: "Enter the number of classes attended." };
+  }
+  const held = Number(item.classesHeld);
+  const attended = Number(item.classesAttended);
+  const threshold = Number(item.threshold);
+  if (!Number.isInteger(held) || held < 0 || held > 100000) {
+    return { current: null, error: "Classes held must be a whole number from 0 to 100,000." };
+  }
+  if (!Number.isInteger(attended) || attended < 0 || attended > held) {
+    return { current: null, error: "Classes attended must be a whole number between 0 and classes held." };
+  }
+  if (!Number.isFinite(threshold) || threshold < 1 || threshold > 100) {
+    return { current: null, error: "Required attendance must be between 1% and 100%." };
+  }
   const current = held ? (attended / held) * 100 : null;
   if (!held)
     return {
@@ -151,6 +167,12 @@ function requiredExternal(item) {
   };
 }
 
+function overallAttendanceAdvice(item) {
+  return attendanceAdvice(item);
+}
+
+const emptyOverallAttendance = () => ({ classesHeld: 0, classesAttended: 0, threshold: 75 });
+
 function sessionalValidationErrors(item) {
   const errors = [];
   const internalMaximum = Number(item.internalMaximum);
@@ -196,9 +218,18 @@ function projectedGrade(percent, scale) {
 export const StudyTools = () => {
   const { user } = useAuth();
   const subjectsQuery = useStudentSubjects(user);
+  const currentScopeKey = JSON.stringify([
+    user?._id || user?.id || "",
+    user?.tenant?._id || user?.tenant || "",
+    user?.track || "",
+    user?.branch || "",
+    user?.semester || "",
+    user?.targetExam || "",
+  ]);
   const [activeTab, setActiveTab] = useState("attendance");
   const [subjects, setSubjects] = useState([]);
   const [attendance, setAttendance] = useState([]);
+  const [overallAttendance, setOverallAttendance] = useState(emptyOverallAttendance);
   const [sessionals, setSessionals] = useState([]);
   const [planner, setPlanner] = useState({
     previousCgpa: 0,
@@ -215,11 +246,44 @@ export const StudyTools = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const initializedScopeRef = useRef(null);
 
   useEffect(() => {
     if (subjectsQuery.isLoading) return undefined;
     let alive = true;
     const loadedSubjects = subjectsQuery.data || [];
+    const scopeKey = currentScopeKey;
+
+    // Subject queries refresh in the background when the window regains focus.
+    // Refresh catalog entries without replacing unsaved tool form values.
+    if (initializedScopeRef.current === scopeKey) {
+      setSubjects(loadedSubjects);
+      setAttendance((current) => {
+        const existing = new Set(current.map((row) => row.subject?.toString()).filter(Boolean));
+        return [...current, ...loadedSubjects.filter((subject) => !existing.has(subject._id?.toString())).map((subject) => emptyAttendance(subject))];
+      });
+      setSessionals((current) => {
+        const existing = new Set(current.map((row) => row.subject?.toString()).filter(Boolean));
+        return [...current, ...loadedSubjects.filter((subject) => !existing.has(subject._id?.toString())).map((subject) => emptySessional(subject))];
+      });
+      setProjectedMarks((current) => {
+        const next = { ...current };
+        loadedSubjects.forEach((subject) => {
+          const subjectId = subject._id?.toString();
+          if (subjectId && !(subjectId in next)) next[subjectId] = "";
+        });
+        return next;
+      });
+      if (subjectsQuery.error) {
+        const message = subjectsQuery.error.response?.data?.message || "Could not refresh your semester subjects.";
+        setError(message);
+        setLoadError(message);
+      } else {
+        setLoadError("");
+      }
+      return undefined;
+    }
+
     setLoading(true);
     setDataReady(false);
     setLoadError("");
@@ -235,6 +299,7 @@ export const StudyTools = () => {
         if (toolsResult.status === "fulfilled") {
           const data = toolsResult.value.data;
           const savedAttendance = data.attendance || [];
+          setOverallAttendance({ ...emptyOverallAttendance(), ...(data.overallAttendance || {}) });
           const savedSessionals = data.sessionals || [];
           const keyForSubject = (subject) => subject._id?.toString();
           const haveAttendance = new Set(
@@ -283,6 +348,7 @@ export const StudyTools = () => {
             ),
           );
           setDataReady(!subjectsQuery.error);
+          if (!subjectsQuery.error) initializedScopeRef.current = scopeKey;
         } else {
           const message = toolsResult.reason.response?.data?.message || "Could not load saved study tool data.";
           setError((current) => current || message);
@@ -290,6 +356,7 @@ export const StudyTools = () => {
           setAttendance(
             loadedSubjects.map((subject) => emptyAttendance(subject)),
           );
+          setOverallAttendance(emptyOverallAttendance());
           setSessionals(
             loadedSubjects.map((subject) => emptySessional(subject)),
           );
@@ -306,7 +373,7 @@ export const StudyTools = () => {
     return () => {
       alive = false;
     };
-  }, [subjectsQuery.data, subjectsQuery.error, subjectsQuery.isLoading, retryLoad]);
+  }, [subjectsQuery.data, subjectsQuery.error, subjectsQuery.isLoading, retryLoad, currentScopeKey]);
 
   const retryDataLoad = async () => {
     if (subjectsQuery.error) {
@@ -329,6 +396,17 @@ export const StudyTools = () => {
           return;
         }
       }
+      if (kind === "attendance") {
+        const advice = overallAttendanceAdvice(overallAttendance);
+        const invalidRows = attendance
+          .map((item, index) => ({ index, error: attendanceAdvice(item).error }))
+          .filter((row) => row.error);
+        if (advice.error || invalidRows.length) {
+          setError(advice.error || `Check subject attendance: ${invalidRows.map(({ index, error: rowError }) => `Subject ${index + 1}: ${rowError}`).join(" ")}`);
+          setNotice("");
+          return;
+        }
+      }
       setSaving(true);
       setError("");
       setNotice("");
@@ -341,6 +419,11 @@ export const StudyTools = () => {
               classesAttended: Number(row.classesAttended),
               threshold: Number(row.threshold),
             })),
+            {
+              classesHeld: Number(overallAttendance.classesHeld),
+              classesAttended: Number(overallAttendance.classesAttended),
+              threshold: Number(overallAttendance.threshold),
+            },
           );
         if (kind === "sessionals")
           await studyToolsService.saveSessionals(
@@ -389,7 +472,7 @@ export const StudyTools = () => {
         setSaving(false);
       }
     },
-    [attendance, sessionals, planner, subjects, projectedMarks],
+    [attendance, overallAttendance, sessionals, planner, subjects, projectedMarks],
   );
 
   const semesterSummary = useMemo(() => {
@@ -567,6 +650,11 @@ export const StudyTools = () => {
                 <Plus className="h-4 w-4" /> Add subject
               </button>
             </div>
+            <OverallAttendanceCard
+              item={overallAttendance}
+              advice={overallAttendanceAdvice(overallAttendance)}
+              onChange={(field, value) => setOverallAttendance((current) => ({ ...current, [field]: value }))}
+            />
             {attendance.length === 0 && (
               <div className={cardClass + " text-sm text-content-muted"}>
                 No subjects are listed for this semester yet. Add a subject

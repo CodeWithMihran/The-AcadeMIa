@@ -35,6 +35,7 @@ module.exports.getTools = async (req, res) => {
         return res.json({
             success: true,
             attendance: profile?.attendance || [],
+            overallAttendance: profile?.overallAttendance || { classesHeld: 0, classesAttended: 0, threshold: 75 },
             sessionals: profile?.sessionals || [],
             planner: settings || { tenant: tenantId || null, previousCgpa: 0, completedCredits: 0, targetCgpa: 8.5, gradeScale: defaultGradeScale, projections: [] }
         });
@@ -50,6 +51,20 @@ module.exports.saveAttendance = async (req, res) => {
         if (!Array.isArray(attendanceData) || attendanceData.length > 300) {
             return res.status(400).json({ success: false, message: "Attendance data must be a list of up to 300 subjects." });
         }
+        const overallData = req.body?.overallAttendance;
+        let overallAttendance;
+        if (overallData !== undefined) {
+            if (!overallData || typeof overallData !== "object" || Array.isArray(overallData)) {
+                return res.status(400).json({ success: false, message: "Check the overall class totals and required attendance percentage." });
+            }
+            const classesHeld = validNumber(overallData.classesHeld, 0, 100000);
+            const classesAttended = validNumber(overallData.classesAttended, 0, 100000);
+            const threshold = validNumber(overallData.threshold, 1, 100);
+            if (classesHeld === null || !Number.isInteger(classesHeld) || classesAttended === null || !Number.isInteger(classesAttended) || threshold === null || classesAttended > classesHeld) {
+                return res.status(400).json({ success: false, message: "Overall class totals must be whole numbers, and classes attended cannot exceed classes held." });
+            }
+            overallAttendance = { classesHeld, classesAttended, threshold };
+        }
         const entries = [];
         for (const entry of attendanceData) {
             if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
@@ -58,14 +73,16 @@ module.exports.saveAttendance = async (req, res) => {
             const classesHeld = validNumber(entry.classesHeld, 0, 100000);
             const classesAttended = validNumber(entry.classesAttended, 0, 100000);
             const threshold = validNumber(entry.threshold, 1, 100);
-            if (!entry || !validText(entry.subjectName, 120) || classesHeld === null || classesAttended === null || threshold === null || classesAttended > classesHeld) {
+            if (!entry || !validText(entry.subjectName, 120) || classesHeld === null || !Number.isInteger(classesHeld) || classesAttended === null || !Number.isInteger(classesAttended) || threshold === null || classesAttended > classesHeld) {
                 return res.status(400).json({ success: false, message: "Check subject names, class totals, attendance counts, and threshold values." });
             }
             if (entry.subject && !mongoose.isValidObjectId(entry.subject)) return res.status(400).json({ success: false, message: "An attendance subject reference is invalid." });
             entries.push({ subject: entry.subject || null, subjectName: entry.subjectName.trim(), classesHeld, classesAttended, threshold });
         }
-        const profile = await StudyTools.findOneAndUpdate({ user: req.user._id }, { $set: { attendance: entries }, $setOnInsert: { user: req.user._id } }, { upsert: true, new: true, runValidators: true });
-        return res.json({ success: true, attendance: profile.attendance });
+        const update = { attendance: entries };
+        if (overallAttendance) update.overallAttendance = overallAttendance;
+        const profile = await StudyTools.findOneAndUpdate({ user: req.user._id }, { $set: update, $setOnInsert: { user: req.user._id } }, { upsert: true, new: true, runValidators: true });
+        return res.json({ success: true, attendance: profile.attendance, overallAttendance: profile.overallAttendance });
     } catch (err) {
         console.error("Save Attendance Error:", err);
         return res.status(500).json({ success: false, message: "Could not save attendance records." });

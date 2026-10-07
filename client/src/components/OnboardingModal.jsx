@@ -1,7 +1,9 @@
-import { TRACKS, TARGET_EXAMS } from "../constants";
+import { TRACKS, TARGET_EXAMS, UNIVERSITY_BRANCHES } from "../constants";
 import React, { useState, useEffect } from 'react';
 import { tenantService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTenantBranches } from '../hooks/useTenantBranches';
+import { normalizeBranch } from '../utils/branch';
 import { GraduationCap, Target, Sparkles, ArrowRight, X } from 'lucide-react';
 
 export const OnboardingModal = ({ isOpen, onClose }) => {
@@ -21,6 +23,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
   const [tenantsLoading, setTenantsLoading] = useState(false);
   const [tenantsError, setTenantsError] = useState('');
   const [tenantReload, setTenantReload] = useState(0);
+  const { branches, loading: branchesLoading, error: branchesError, retry: retryBranches } = useTenantBranches(selectedTenantId);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -57,6 +60,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
           if (user?.college && user.college !== "Not Set") {
             setCollege(user.college);
           }
+          if (user?.branch && user.branch !== "Not Set") setBranch(normalizeBranch(user.branch));
         }
       } catch (err) {
         console.error("Failed to load institutions:", err);
@@ -73,6 +77,8 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
 
   // Dynamic affiliated colleges for chosen university
   const selectedTenant = tenants.find(t => t._id === selectedTenantId);
+  const branchOptions = branches.length ? branches : UNIVERSITY_BRANCHES;
+  const selectedBranch = branchOptions.find(option => normalizeBranch(option) === normalizeBranch(branch)) || '';
   const affiliatedColleges = selectedTenant?.affiliatedColleges || [];
   const selectedCollegeIsListed = affiliatedColleges.some(item => item.name === college);
   const collegeSelectValue = isCustomCollege || (college && !selectedCollegeIsListed) ? 'Other' : college;
@@ -192,6 +198,7 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
                     setSelectedTenantId(e.target.value);
                     setCollege('');
                     setIsCustomCollege(false);
+                    setBranch('');
                   }}
                   required
                   className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold text-content-strong bg-surface focus:outline-none focus:border-blue-500"
@@ -270,17 +277,21 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
               {/* Branch, Year, Semester */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-[11px] font-black uppercase tracking-wider text-content-faint mb-2">
+                  <label htmlFor="onboarding-branch" className="block text-[11px] font-black uppercase tracking-wider text-content-faint mb-2">
                     Branch
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. CSE / AIML"
-                    value={branch}
+                  <select
+                    id="onboarding-branch"
+                    value={selectedBranch}
                     onChange={(e) => setBranch(e.target.value)}
                     required
-                    className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold uppercase focus:outline-none focus:border-blue-500"
-                  />
+                    disabled={!selectedTenantId || branchesLoading || Boolean(branchesError)}
+                    className="w-full px-4 py-3.5 rounded-xl border border-line text-sm font-semibold bg-surface focus:outline-none focus:border-blue-500 disabled:cursor-wait disabled:opacity-70"
+                  >
+                    <option value="">{branchesLoading ? 'Loading available branches...' : 'Select your branch'}</option>
+                    {branchOptions.map(option => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                  {branchesError ? <p role="alert" className="mt-2 text-xs text-red-700">{branchesError}<button type="button" onClick={retryBranches} className="ml-2 min-h-10 font-bold underline">Retry</button></p> : !branchesLoading && branches.length === 0 && selectedTenantId ? <p className="mt-2 text-xs text-content-muted">Showing common branches until subjects are configured for this university.</p> : null}
                 </div>
 
                 <div>
@@ -354,8 +365,8 @@ export const OnboardingModal = ({ isOpen, onClose }) => {
 
           <button
             type="submit"
-            disabled={loading || (track === TRACKS.UNIVERSITY && (tenantsLoading || tenants.length === 0))}
-            className="w-full mt-4 bg-surface-inverse text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2"
+            disabled={loading || (track === TRACKS.UNIVERSITY && (tenantsLoading || branchesLoading || Boolean(branchesError) || tenants.length === 0 || !selectedBranch))}
+            className="w-full mt-4 bg-surface-inverse text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-600 transition-all shadow-xl active:scale-[0.98] flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Saving Profile..." : "Activate My Vault"}
             <ArrowRight className="w-4 h-4" />

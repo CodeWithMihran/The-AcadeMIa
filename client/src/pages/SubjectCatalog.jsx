@@ -7,9 +7,12 @@ import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import {
   ArrowRight,
   BookOpen,
+  ClipboardList,
   ChevronRight,
+  FileText,
   GraduationCap,
   Layers3,
+  PlayCircle,
   RefreshCw,
   Search,
   X,
@@ -53,6 +56,19 @@ export const SubjectCatalog = () => {
             <GraduationCap className="h-4 w-4" />Study profile <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </header>
+
+        <section aria-labelledby="vault-material-guide" className="rounded-3xl border border-blue-100 bg-blue-50/50 p-4 sm:p-5">
+          <div className="mb-4">
+            <h2 id="vault-material-guide" className="text-sm font-black text-content sm:text-base">What you’ll find inside a subject vault</h2>
+            <p className="mt-1 text-xs leading-5 text-content-muted">Materials are grouped by unit. PDFs and video lectures open in the vault, so your study flow stays in one place.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4">
+            <ResourceGuideItem icon={FileText} label="Notes" detail="Study notes · PDF" tone="blue" />
+            <ResourceGuideItem icon={ClipboardList} label="PYQs" detail="Past papers · PDF" tone="amber" />
+            <ResourceGuideItem icon={BookOpen} label="Book PDFs" detail="Reference books" tone="indigo" />
+            <ResourceGuideItem icon={PlayCircle} label="Video lectures" detail="Embedded player" tone="red" />
+          </div>
+        </section>
 
         <section className="grid gap-3 sm:grid-cols-3" aria-label="Catalog overview">
           <CatalogStat label="Subjects available" value={isLoading ? "—" : subjects.length} icon={BookOpen} />
@@ -121,20 +137,44 @@ function CatalogStat({ label, value, icon: Icon }) {
   </div>;
 }
 
+function ResourceGuideItem({ icon: Icon, label, detail, tone }) {
+  const tones = {
+    blue: "bg-blue-100 text-blue-800",
+    amber: "bg-amber-100 text-amber-900",
+    indigo: "bg-indigo-100 text-indigo-800",
+    red: "bg-red-100 text-red-800",
+  };
+  return <div className="flex min-w-0 items-center gap-2.5 rounded-2xl border border-white/80 bg-surface px-3 py-3 shadow-sm sm:gap-3 sm:px-3.5">
+    <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${tones[tone]}`}><Icon aria-hidden="true" className="h-4.5 w-4.5" /></span>
+    <span className="min-w-0"><span className="block truncate text-xs font-black text-content">{label}</span><span className="mt-0.5 block truncate text-[10px] text-content-muted">{detail}</span></span>
+  </div>;
+}
+
 function CatalogSubjectCard({ subject, isUniversity }) {
   const units = subject.units || [];
   const topicCount = units.reduce((total, unit) => total + (unit.topics?.length || 0), 0);
+  const materialTypes = [
+    { key: "notes", label: "Notes", icon: FileText, activeClass: "bg-blue-50 text-blue-800" },
+    { key: "pyqs", label: "PYQs", icon: ClipboardList, activeClass: "bg-amber-50 text-amber-900" },
+    { key: "books", label: "Book PDFs", icon: BookOpen, activeClass: "bg-indigo-50 text-indigo-800" },
+    { key: "youtubeLinks", label: "Lectures", icon: PlayCircle, activeClass: "bg-red-50 text-red-800" },
+  ].map((type) => ({ ...type, count: units.reduce((total, unit) => total + (unit[type.key]?.length || 0), 0) }));
   return <article className="group flex min-h-64 flex-col rounded-2xl border border-line bg-surface p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-md sm:p-6">
     <div className="flex items-start justify-between gap-3">
       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><BookOpen className="h-5 w-5" /></span>
       {subject.courseCode && <span className="max-w-[60%] truncate rounded-lg bg-surface-muted px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wide text-content-muted">{subject.courseCode}</span>}
     </div>
     <div className="mt-4 flex-1">
-      <h3 className="text-lg font-black leading-snug text-content transition-colors group-hover:text-blue-700">{subject.name}</h3>
-      <p className="mt-1.5 text-xs text-content-muted">{subject.tenant?.shortCode || (isUniversity ? subject.branch : subject.examCategory) || "Core subject"}</p>
+      <h3 className="break-words text-lg font-black leading-snug text-content transition-colors group-hover:text-blue-700">{subject.name}</h3>
+      <p className="mt-1.5 break-words text-xs leading-5 text-content-muted">{subject.tenant?.shortCode || (isUniversity ? subject.branch : subject.examCategory) || "Core subject"}</p>
       <div className="mt-4 flex flex-wrap gap-2 text-xs">
         <span className="rounded-lg bg-surface-muted px-2.5 py-1.5 font-semibold text-content-secondary">{units.length} {units.length === 1 ? "unit" : "units"}</span>
         <span className="rounded-lg bg-surface-muted px-2.5 py-1.5 font-semibold text-content-secondary">{topicCount} {topicCount === 1 ? "topic" : "topics"}</span>
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2" aria-label="Study material availability">
+        {materialTypes.map(({ key, label, icon: Icon, activeClass, count }) => <span key={key} className={`inline-flex min-w-0 items-center gap-2 rounded-xl px-2.5 py-2 text-[10px] font-bold ${count ? activeClass : "bg-surface-muted text-content-faint"}`}>
+          <Icon aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 flex-1 truncate">{label}</span><span className="shrink-0 tabular-nums">{count}</span>
+        </span>)}
       </div>
     </div>
     <div className="mt-5 grid gap-2 sm:grid-cols-[1fr_auto]">

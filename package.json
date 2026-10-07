@@ -1,15 +1,7 @@
 {
-  "name": "rit-acedemia",
+  "name": "the-academia",
   "version": "1.0.0",
-  "description": "RIT AcedeMia is a centralized academic resource platform designed to help students access syllabus, study materials, book references, curated YouTube resources, and track their course progress efficiently.",
-  "homepage": "https://github.com/CodeWithMihran/RIT-AcedeMIa#readme",
-  "bugs": {
-    "url": "https://github.com/CodeWithMihran/RIT-AcedeMIa/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/CodeWithMihran/RIT-AcedeMIa.git"
-  },
+  "description": "The AcadeMIa is an academic workspace for students to access syllabus, study materials, exam preparation, and learning progress tools.",
   "license": "ISC",
   "author": "Md Mihran Sohail",
   "type": "commonjs",

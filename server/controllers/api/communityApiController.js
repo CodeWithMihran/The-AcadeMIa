@@ -7,6 +7,7 @@ const CommunityVote = require("../../models/community-vote-model");
 const CommunityBounty = require("../../models/community-bounty-model");
 const CommunityWallet = require("../../models/community-wallet-model");
 const studentSubjectFilter = require("../../utils/studentSubjectFilter");
+const { normalizeBranch, branchQueryValues } = require("../../utils/branch");
 
 const NOTE_REWARD = 5;
 const BOUNTY_MIN = 10;
@@ -17,7 +18,7 @@ const idOf = (value) => (value?._id || value)?.toString?.() || "";
 const campusOf = (user) => ({
     tenant: user.tenant?._id || user.tenant || null,
     college: user.college && user.college !== "Not Set" ? user.college.trim() : "",
-    branch: user.branch && user.branch !== "Not Set" ? user.branch.trim().toUpperCase() : "",
+    branch: user.branch && user.branch !== "Not Set" ? normalizeBranch(user.branch) : "",
     semester: Number.isInteger(Number(user.semester)) ? Number(user.semester) : null
 });
 
@@ -36,7 +37,7 @@ function moderatorCanAccess(user, record) {
     if (user.role !== "moderator" || !assignment?.active) return false;
     const campus = idOf(assignment.tenant) === idOf(record.tenant)
         && (!assignment.college || assignment.college === record.college);
-    const branch = !assignment.branches?.length || assignment.branches.includes(record.branch);
+    const branch = !assignment.branches?.length || assignment.branches.some(value => normalizeBranch(value) === normalizeBranch(record.branch));
     const semester = !assignment.semesters?.length || assignment.semesters.includes(record.semester);
     return campus && branch && semester;
 }
@@ -44,7 +45,7 @@ function moderatorCanAccess(user, record) {
 function studentCanAccessNote(user, note) {
     if (idOf(note.tenant) !== idOf(user.tenant)) return false;
     if (note.college && note.college !== (user.college && user.college !== "Not Set" ? user.college : "")) return false;
-    if (user.branch && user.branch !== "Not Set" && note.branch && note.branch !== user.branch.toUpperCase()) return false;
+    if (user.branch && user.branch !== "Not Set" && note.branch && normalizeBranch(note.branch) !== normalizeBranch(user.branch)) return false;
     if (user.semester && note.semester && Number(note.semester) !== Number(user.semester)) return false;
     return true;
 }
@@ -360,12 +361,12 @@ module.exports.getModerationQueue = async (req, res) => {
             if (req.user.role !== "moderator" || !assignment.active || !assignment.tenant) return res.status(403).json({ success: false, message: "Campus ambassador access is required." });
             filter.tenant = assignment.tenant._id || assignment.tenant;
             if (assignment.college) filter.college = assignment.college;
-            if (assignment.branches?.length) filter.branch = { $in: assignment.branches };
+            if (assignment.branches?.length) filter.branch = { $in: [...new Set(assignment.branches.flatMap(branchQueryValues))] };
             if (assignment.semesters?.length) filter.semester = { $in: assignment.semesters };
         }
         const [notes, openBounties] = await Promise.all([
             CommunityNote.find(filter).select("-fileData").populate("subject", "name courseCode").populate("contributor", "name email college branch year").populate("bounty", "title reward status").sort({ createdAt: 1 }).limit(100).lean(),
-            CommunityBounty.find(req.user.role === "admin" ? { status: "OPEN" } : { status: "OPEN", tenant: assignment.tenant?._id || assignment.tenant, ...(assignment.college ? { college: assignment.college } : {}), ...(assignment.branches?.length ? { branch: { $in: assignment.branches } } : {}), ...(assignment.semesters?.length ? { semester: { $in: assignment.semesters } } : {}) }).populate("subject", "name courseCode").populate("creator", "name email").sort({ createdAt: -1 }).limit(100).lean()
+            CommunityBounty.find(req.user.role === "admin" ? { status: "OPEN" } : { status: "OPEN", tenant: assignment.tenant?._id || assignment.tenant, ...(assignment.college ? { college: assignment.college } : {}), ...(assignment.branches?.length ? { branch: { $in: [...new Set(assignment.branches.flatMap(branchQueryValues))] } } : {}), ...(assignment.semesters?.length ? { semester: { $in: assignment.semesters } } : {}) }).populate("subject", "name courseCode").populate("creator", "name email").sort({ createdAt: -1 }).limit(100).lean()
         ]);
         return res.json({ success: true, notes, bounties: openBounties });
     } catch (error) {
@@ -474,7 +475,7 @@ module.exports.grantAmbassador = async (req, res) => {
                 active: true,
                 tenant: tenant._id,
                 college: college.trim(),
-                branches: [...new Set(branches.map((branch) => branch.trim().toUpperCase()).filter(Boolean))],
+                branches: [...new Set(branches.map(normalizeBranch).filter(Boolean))],
                 semesters: [...new Set(semesters.map(Number))],
                 grantedBy: req.user._id,
                 grantedAt: new Date()

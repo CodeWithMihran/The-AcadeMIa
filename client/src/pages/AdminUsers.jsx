@@ -41,14 +41,14 @@ export const AdminUsers = () => {
   }, []);
 
   const handleDeleteUser = async (userId, userName) => {
-    if (!window.confirm(`Are you sure you want to permanently archive records for ${userName}?`)) {
+    if (!window.confirm(`Permanently delete ${userName}'s account and associated records? This action cannot be undone.`)) {
       return;
     }
 
     try {
       const res = await adminService.deleteUser(userId);
       if (res.data.success) {
-        setSuccess(`User ${userName} successfully archived.`);
+        setSuccess(`User ${userName} and associated records were permanently deleted.`);
         setUsers(currentUsers => currentUsers.filter(user => user._id !== userId));
         setTimeout(() => setSuccess(''), 3000);
       }

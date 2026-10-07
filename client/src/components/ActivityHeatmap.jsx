@@ -37,6 +37,12 @@ export default function ActivityHeatmap() {
     });
     return Array.from({ length: 53 }, (_, index) => days.slice(index * 7, index * 7 + 7));
   }, [activity]);
+  const monthLabels = useMemo(() => weeks.map((week) => {
+    const firstOfMonth = week.find((day) => utcDate(day.key).getUTCDate() === 1);
+    return firstOfMonth
+      ? new Intl.DateTimeFormat("en", { month: "short", timeZone: "UTC" }).format(utcDate(firstOfMonth.key))
+      : "";
+  }), [weeks]);
 
   if (error) return <section role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-line bg-surface p-6 text-sm text-content-muted"><span>{error}</span><button type="button" onClick={refresh} disabled={loading} className="min-h-11 rounded-xl border border-line px-4 py-2 text-xs font-bold text-content disabled:opacity-60">{loading ? "Retrying…" : "Retry"}</button></section>;
   if (!activity) return <section role="status" aria-label="Loading your practice activity" className="min-w-0 max-w-full space-y-4 overflow-hidden rounded-3xl border border-line bg-surface p-5 shadow-sm md:p-6">
@@ -60,8 +66,10 @@ export default function ActivityHeatmap() {
     {activity.activeDays === 0 && <p className="rounded-xl border border-dashed border-line-strong bg-surface-muted p-4 text-sm text-content-secondary">No practice activity yet. Mark a career question as understood or a coding problem as solved to start your activity history.</p>}
     <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain pb-2" role="img" aria-label="GitHub-style calendar showing daily interview questions understood and coding problems solved for the last year">
       <div className="flex min-w-max gap-1.5">
-        <div className="grid grid-rows-7 gap-1 pr-1 text-[9px] text-content-faint"><span></span><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span></div>
-        {weeks.map((week, weekIndex) => <div key={weekIndex} className="grid grid-rows-7 gap-1">{week.map(day => {
+        <div className="grid grid-rows-[12px_repeat(7,12px)] gap-1 pr-1 text-[9px] text-content-faint"><span></span><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span><span></span></div>
+        {weeks.map((week, weekIndex) => <div key={weekIndex} className="grid grid-rows-[12px_repeat(7,12px)] gap-1">
+          <span className="whitespace-nowrap text-[9px] leading-3 text-content-faint" aria-hidden="true">{monthLabels[weekIndex]}</span>
+          {week.map(day => {
           const level = day.value === 0 ? 0 : day.value === 1 ? 1 : day.value <= 3 ? 2 : day.value <= 6 ? 3 : 4;
           const colors = ["bg-surface-subtle", "bg-emerald-200", "bg-emerald-400", "bg-emerald-600", "bg-emerald-800"];
           const description = day.future ? "No activity recorded" : `${day.value} career practice ${day.value === 1 ? "activity" : "activities"}`;

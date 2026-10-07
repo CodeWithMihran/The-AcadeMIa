@@ -1,11 +1,12 @@
 const userModel = require("../models/user-model");
 const subjectModel = require("../models/subject-model");
+const { normalizeBranch, branchQueryValues } = require("../utils/branch");
 
 // show Dashboard
 module.exports.showDashboard = async (req, res) => {
     try {
         const subjects = await subjectModel.find({
-            branch: req.user.branch,
+            branch: { $in: branchQueryValues(req.user.branch) },
             semester: req.user.semester
         });
 
@@ -34,7 +35,7 @@ module.exports.viewProfile = async (req, res) => {
 module.exports.updateProfile = async (req, res) => {
     try {
         const { name, branch, year, semester } = req.body;
-        await userModel.findByIdAndUpdate(req.user._id, { name, branch, year, semester });
+        await userModel.findByIdAndUpdate(req.user._id, { name, branch: normalizeBranch(branch), year, semester });
         req.flash("success", "Profile updated successfully");
         res.redirect("/dashboard");
     } catch (err) {

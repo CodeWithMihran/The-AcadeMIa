@@ -45,6 +45,11 @@ const gradeSettingsSchema = new mongoose.Schema({
 const studyToolsSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true, unique: true, index: true },
     attendance: { type: [attendanceSchema], default: [] },
+    overallAttendance: {
+        classesHeld: { type: Number, min: 0, max: 100000, default: 0 },
+        classesAttended: { type: Number, min: 0, max: 100000, default: 0 },
+        threshold: { type: Number, min: 1, max: 100, default: 75 }
+    },
     sessionals: { type: [sessionalSchema], default: [] },
     gradeSettings: { type: [gradeSettingsSchema], default: [] }
 }, { timestamps: true });

@@ -62,6 +62,7 @@ export const tenantService = {
 // Subject Endpoints
 export const subjectService = {
   getSubjects: () => api.get('/subjects'),
+  getBranches: (tenantId) => api.get('/subjects/branches', { params: { tenantId } }),
   getSubjectById: (id) => api.get(`/subjects/${id}`)
 };
 
@@ -79,7 +80,7 @@ export const progressService = {
 // Persistent student utility tools
 export const studyToolsService = {
   getTools: () => api.get('/study-tools'),
-  saveAttendance: (attendance) => api.put('/study-tools/attendance', { attendance }),
+  saveAttendance: (attendance, overallAttendance) => api.put('/study-tools/attendance', { attendance, overallAttendance }),
   saveSessionals: (sessionals) => api.put('/study-tools/sessionals', { sessionals }),
   savePlanner: (planner) => api.put('/study-tools/planner', planner)
 };

@@ -21,12 +21,13 @@ export function getEmbeddedUrl(rawUrl, kind) {
     if (videoId) return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0`;
   }
 
-  if (url.hostname.toLowerCase().includes('drive.google.com')) {
+  const host = url.hostname.toLowerCase().replace(/^www\./, '').replace(/\.$/, '');
+  if (host === 'drive.google.com') {
     const fileId = url.pathname.match(/\/file\/d\/([^/]+)/)?.[1] || url.searchParams.get('id');
     if (fileId) return `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/preview`;
   }
 
-  if (url.hostname.toLowerCase() === 'docs.google.com') {
+  if (host === 'docs.google.com') {
     const docMatch = url.pathname.match(/^\/(document|spreadsheets|presentation)\/d\/([^/]+)/);
     if (docMatch) return `https://docs.google.com/${docMatch[1]}/d/${encodeURIComponent(docMatch[2])}/preview`;
   }

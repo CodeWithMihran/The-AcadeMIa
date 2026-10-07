@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const userModel = require("../../models/user-model");
 const tenantModel = require("../../models/tenant-model");
+const { normalizeBranch } = require("../../utils/branch");
+const { isBranchAvailableForTenant } = require("../../utils/tenantBranches");
 const { generateToken } = require("../../utils/generateToken");
 
 function ambassadorScopeUpdates(user, { track, tenant, college }) {
@@ -243,12 +245,14 @@ module.exports.updateProfile = async (req, res) => {
             updates.track = "UNIVERSITY";
             updates.tenant = tenant._id;
             updates.college = college.trim();
-            if (branch !== undefined) {
-                if (typeof branch !== "string" || !branch.trim()) {
-                    return res.status(400).json({ success: false, message: "Branch is required." });
-                }
-                updates.branch = branch.trim().toUpperCase();
+            const selectedBranch = branch ?? req.user.branch;
+            if (typeof selectedBranch !== "string" || !selectedBranch.trim()) {
+                return res.status(400).json({ success: false, message: "Choose your branch." });
             }
+            if (!await isBranchAvailableForTenant(tenant._id, selectedBranch)) {
+                return res.status(400).json({ success: false, message: "Choose a branch listed for your selected university." });
+            }
+            updates.branch = normalizeBranch(selectedBranch);
             if (year !== undefined) {
                 const value = Number(year);
                 if (!Number.isInteger(value) || value < 1 || value > 4) {

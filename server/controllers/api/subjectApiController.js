@@ -3,8 +3,27 @@ const mongoose = require("mongoose");
 const studentSubjectFilter = require("../../utils/studentSubjectFilter");
 const { hasActivePremium, filterSubjectForStudent } = require("../../utils/premiumAccess");
 const linkReportModel = require("../../models/link-report-model");
+const tenantModel = require("../../models/tenant-model");
+const { getAvailableBranches } = require("../../utils/tenantBranches");
 
 const canViewPremiumCareerBridge = (user) => hasActivePremium(user);
+
+module.exports.getAvailableBranches = async (req, res) => {
+    try {
+        const { tenantId } = req.query;
+        if (typeof tenantId !== "string" || !mongoose.isValidObjectId(tenantId)) {
+            return res.status(400).json({ success: false, message: "Choose a valid university." });
+        }
+        const tenant = await tenantModel.findOne({ _id: tenantId, type: "UNIVERSITY", active: true }).select("_id");
+        if (!tenant) return res.status(404).json({ success: false, message: "The selected university is unavailable." });
+
+        const branches = await getAvailableBranches(tenant._id);
+        return res.status(200).json({ success: true, branches });
+    } catch (err) {
+        console.error("Get Available Branches Error:", err);
+        return res.status(500).json({ success: false, message: "Could not load branches for this university." });
+    }
+};
 
 // 1. Get Subjects for Logged In Student
 module.exports.getSubjects = async (req, res) => {

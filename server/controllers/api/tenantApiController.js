@@ -1,6 +1,8 @@
 const tenantModel = require("../../models/tenant-model");
 const userModel = require("../../models/user-model");
 const mongoose = require("mongoose");
+const { normalizeBranch } = require("../../utils/branch");
+const { isBranchAvailableForTenant } = require("../../utils/tenantBranches");
 
 // 1. Get All Active Tenants (Universities & Competitive Tracks)
 module.exports.getTenants = async (req, res) => {
@@ -153,12 +155,15 @@ module.exports.completeOnboarding = async (req, res) => {
             if (typeof branch !== "string" || !branch.trim()) {
                 return res.status(400).json({ success: false, message: "Enter your branch." });
             }
+            if (!await isBranchAvailableForTenant(tenant._id, branch)) {
+                return res.status(400).json({ success: false, message: "Choose a branch listed for your selected university." });
+            }
             if (!Number.isInteger(yearValue) || yearValue < 1 || yearValue > 4 || !Number.isInteger(semesterValue) || semesterValue < 1 || semesterValue > 8 || ![yearValue * 2 - 1, yearValue * 2].includes(semesterValue)) {
                 return res.status(400).json({ success: false, message: "Choose a semester within your selected year." });
             }
             updatePayload.tenant = tenant._id;
             updatePayload.college = college.trim();
-            updatePayload.branch = branch.trim().toUpperCase();
+            updatePayload.branch = normalizeBranch(branch);
             updatePayload.year = yearValue;
             updatePayload.semester = semesterValue;
         }

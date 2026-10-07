@@ -1,4 +1,5 @@
 const subjectModel = require("../../models/subject-model");
+const { normalizeBranch } = require("../../utils/branch");
 const userModel = require("../../models/user-model");
 const tenantModel = require("../../models/tenant-model");
 const progressModel = require("../../models/progress-model");
@@ -184,7 +185,7 @@ module.exports.createSubject = async (req, res) => {
             credits: subjectTrack === "UNIVERSITY" ? Number(credits) : 0,
             track: subjectTrack,
             tenant: tenant?._id || null,
-            branch: subjectTrack === "UNIVERSITY" ? branch.toUpperCase().trim() : undefined,
+            branch: subjectTrack === "UNIVERSITY" ? normalizeBranch(branch) : undefined,
             semester: subjectTrack === "UNIVERSITY" ? Number(semester) : undefined,
             examCategory,
             units: units || [],
@@ -247,7 +248,7 @@ module.exports.updateSubject = async (req, res) => {
                 return res.status(400).json({ success: false, message: "Enter the official course credits (greater than 0 and at most 100)." });
             }
             updateData.credits = credits;
-            if (updateData.branch !== undefined) updateData.branch = branch.toUpperCase().trim();
+            if (updateData.branch !== undefined) updateData.branch = normalizeBranch(branch);
             if (updateData.semester !== undefined) updateData.semester = Number(semester);
             updateData.track = "UNIVERSITY";
         } else if (["JEE", "NEET"].includes(nextTrack)) {
