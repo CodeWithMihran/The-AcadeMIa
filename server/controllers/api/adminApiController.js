@@ -340,7 +340,8 @@ module.exports.getAdminUsers = async (req, res) => {
             filter.$or = [
                 { name: { $regex: safeSearch, $options: "i" } },
                 { email: { $regex: safeSearch, $options: "i" } },
-                { college: { $regex: safeSearch, $options: "i" } }
+                { college: { $regex: safeSearch, $options: "i" } },
+                { branch: { $regex: safeSearch, $options: "i" } }
             ];
         }
 
