@@ -1,23 +1,25 @@
+import {useAppTheme} from '../context/ThemeContext';
 import React, {useCallback, useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import {StudyMaterial, StudyMaterialViewer} from '../components/StudyMaterialViewer';
 import {getApiErrorMessage, progressApi, subjectApi} from '../services/api';
 import {
   AppCard,
   BadgePill,
+  EmptyState,
   ErrorState,
   LoadingState,
   SectionHeading,
 } from '../components';
-import {colors, radii, spacing, typography} from '../theme';
+import {colors, radii, spacing, typography, createAdaptiveStyles} from '../theme';
 
 interface Resource {
   _id?: string;
@@ -102,6 +104,7 @@ export function SubjectVaultScreen({
   onBack,
   onOpenProgress,
 }: Props): React.JSX.Element {
+  useAppTheme();
   const [subject, setSubject] = useState<VaultSubject | null>(null);
   const [completedCareer, setCompletedCareer] = useState<Set<string>>(new Set());
   const [pendingCareer, setPendingCareer] = useState<Set<string>>(new Set());
@@ -111,6 +114,7 @@ export function SubjectVaultScreen({
   const [mode, setMode] = useState<'academic' | 'career'>('academic');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [openMaterial, setOpenMaterial] = useState<StudyMaterial | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -216,7 +220,7 @@ export function SubjectVaultScreen({
     );
   };
 
-  const openResource = async (url?: string) => {
+  const openResource = async (url?: string, title = 'Study material', kind?: 'pdf' | 'web') => {
     if (!url || !/^https?:\/\//i.test(url)) {
       Alert.alert(
         'Resource unavailable',
@@ -224,21 +228,10 @@ export function SubjectVaultScreen({
       );
       return;
     }
-    try {
-      await Linking.openURL(url);
-    } catch {
-      Alert.alert(
-        'Could not open resource',
-        'Check that a browser or compatible viewer is available on this device.',
-      );
-    }
+    setOpenMaterial({url, title, kind});
   };
 
   const units = subject?.units || [];
-  const topicTotal = units.reduce(
-    (sum, unit) => sum + (unit.topics?.length || 0),
-    0,
-  );
   const career = subject?.careerBridge;
   const gate = career?.gate;
 
@@ -283,6 +276,8 @@ export function SubjectVaultScreen({
         <View style={styles.topBarRight} />
       </View>
 
+      <StudyMaterialViewer material={openMaterial} onClose={() => setOpenMaterial(null)} />
+
       {loading ? (
         <View style={styles.stateContainer}>
           <LoadingState message="Opening subject vault…" minHeight={240} />
@@ -321,8 +316,7 @@ export function SubjectVaultScreen({
 
             <Text style={styles.heroTitle}>{subject.name}</Text>
             <Text style={styles.heroMeta}>
-              {units.length} {units.length === 1 ? 'unit' : 'units'} · {topicTotal}{' '}
-              {topicTotal === 1 ? 'topic' : 'topics'} ·{' '}
+              {units.length} {units.length === 1 ? 'unit' : 'units'} ·{' '}
               {(career?.interviewQuestions?.length || 0) +
                 (career?.codingLinks?.length || 0)}{' '}
               career practice items
@@ -368,16 +362,16 @@ export function SubjectVaultScreen({
           {/* Quick Progress Navigation Link */}
           <AppCard
             onPress={onOpenProgress}
-            accessibilityLabel="Track subject syllabus and topic progress"
+            accessibilityLabel="Open subject topic progress"
             style={styles.progressCard}>
             <View style={styles.progressRow}>
               <View style={styles.progressIconCircle}>
                 <Text style={styles.progressIcon}>✓</Text>
               </View>
               <View style={styles.progressCopy}>
-                <Text style={styles.progressTitle}>Track Subject Progress</Text>
+                <Text style={styles.progressTitle}>Subject topic progress</Text>
                 <Text style={styles.progressSub}>
-                  Update unit checklist and topic readiness
+                  Mark topics complete and review your readiness
                 </Text>
               </View>
               <Text style={styles.chevron}>›</Text>
@@ -422,72 +416,44 @@ export function SubjectVaultScreen({
                         label={`UNIT ${unit.unitNumber || index + 1}`}
                         variant="muted"
                       />
-                      <Text style={styles.unitTopicCounter}>
-                        {unit.topics?.length || 0} topics
-                      </Text>
                     </View>
 
                     <Text style={styles.unitTitle}>{unit.unitTitle}</Text>
-
-                    {/* Topics List */}
-                    {unit.topics?.length ? (
-                      <View style={styles.topicContainer}>
-                        {unit.topics.map(topic => (
-                          <View key={topic._id} style={styles.topicRow}>
-                            <View
-                              style={[
-                                styles.topicBullet,
-                                topic.importance === 'HIGH' &&
-                                  styles.topicBulletHigh,
-                              ]}
-                            />
-                            <View style={styles.topicCopy}>
-                              <Text style={styles.topicTitle}>
-                                {topic.title}
-                              </Text>
-                              <Text
-                                style={[
-                                  styles.topicImportance,
-                                  topic.importance === 'HIGH' &&
-                                    styles.topicImportanceHigh,
-                                ]}>
-                                {topic.importance || 'STANDARD'} YIELD
-                              </Text>
-                            </View>
-                          </View>
-                        ))}
-                      </View>
-                    ) : (
-                      <Text style={styles.mutedText}>
-                        No topics listed for this unit yet.
-                      </Text>
-                    )}
 
                     {/* Study Material Groups */}
                     <ResourceList
                       title="Study Notes"
                       icon="📝"
                       resources={unit.notes}
-                      onOpen={openResource}
+                      onOpen={(url, title) => openResource(url, title, 'pdf')}
                     />
                     <ResourceList
                       title="Reference Books & PDFs"
                       icon="📖"
                       resources={unit.books}
-                      onOpen={openResource}
+                      onOpen={(url, title) => openResource(url, title, 'pdf')}
                     />
                     <ResourceList
                       title="Previous Year Question Papers (PYQs)"
                       icon="📜"
                       resources={unit.pyqs}
-                      onOpen={openResource}
+                      onOpen={(url, title) => openResource(url, title, 'pdf')}
                     />
                     <ResourceList
                       title="Video Lectures"
                       icon="▶️"
                       resources={unit.youtubeLinks}
-                      onOpen={openResource}
+                      onOpen={(url, title) => openResource(url, title, 'web')}
                     />
+
+                    {!unit.notes?.length && !unit.books?.length && !unit.pyqs?.length && !unit.youtubeLinks?.length && !unit.examQuestions?.length && !Object.values(unit.rapidRevision || {}).some(Boolean) && !Object.values(unit.quickSummary || {}).some(Boolean) ? (
+                      <EmptyState
+                        icon="📂"
+                        title="Study materials are not available yet"
+                        description="This unit is in your syllabus, but notes, PDFs, PYQs, and lectures have not been added. Check back later or explore another unit."
+                        style={styles.unitEmptyState}
+                      />
+                    ) : null}
 
                     {/* Exam Night Questions & Recurrence */}
                     {Boolean(unit.examQuestions?.length) && (
@@ -560,18 +526,16 @@ export function SubjectVaultScreen({
                   </AppCard>
                 ))
               ) : (
-                <AppCard style={styles.emptyCard}>
-                  <Text style={styles.emptyTitle}>
-                    {highYieldOnly
-                      ? 'No high-yield units tagged'
-                      : 'No units available yet'}
-                  </Text>
-                  <Text style={styles.emptyMuted}>
-                    {highYieldOnly
-                      ? 'Turn off the high-yield filter above to see all syllabus units.'
-                      : 'Syllabus content for this subject is being added by administrators.'}
-                  </Text>
-                </AppCard>
+                <EmptyState
+                  icon={highYieldOnly ? '⚡' : '📚'}
+                  title={highYieldOnly ? 'No high-yield units identified' : 'No syllabus units available'}
+                  description={highYieldOnly
+                    ? 'There is not enough recurrence or importance data to identify high-yield units yet. Turn off the filter to browse all units.'
+                    : 'Syllabus units and their study materials have not been added yet.'}
+                  actionLabel={highYieldOnly ? 'Show all units' : undefined}
+                  onAction={highYieldOnly ? () => setHighYieldOnly(false) : undefined}
+                  style={styles.emptyUnits}
+                />
               )}
             </>
           ) : (
@@ -712,7 +676,7 @@ export function SubjectVaultScreen({
                                 isComplete && styles.checkButtonDone,
                               ]}>
                               {isPending ? (
-                                <ActivityIndicator size="small" color="#315cf5" />
+                                <ActivityIndicator size="small" color="#16794b" />
                               ) : (
                                 <Text
                                   style={[
@@ -757,7 +721,7 @@ export function SubjectVaultScreen({
                         <View key={item._id || idx} style={styles.careerRow}>
                           <Pressable
                             accessibilityRole="link"
-                            onPress={() => openResource(item.url)}
+                            onPress={() => openResource(item.url, `${item.platform || 'Code'} · ${item.title}`, 'web')}
                             style={styles.resourcePressable}>
                             <Text numberOfLines={2} style={styles.linkTitle}>
                               {item.platform || 'Code'} · {item.title}
@@ -784,7 +748,7 @@ export function SubjectVaultScreen({
                                 {isPending ? (
                                   <ActivityIndicator
                                     size="small"
-                                    color="#315cf5"
+                                    color="#16794b"
                                   />
                                 ) : (
                                   <Text
@@ -823,7 +787,7 @@ export function SubjectVaultScreen({
                     <View key={item._id || idx} style={styles.careerRow}>
                       <Pressable
                         accessibilityRole="link"
-                        onPress={() => openResource(item.url)}
+                        onPress={() => openResource(item.url, `${item.year || 'GATE'} · ${item.topic || item.title}`, 'pdf')}
                         style={styles.resourcePressable}>
                         <Text numberOfLines={2} style={styles.linkTitle}>
                           {item.year || 'GATE'} · {item.topic || item.title}
@@ -863,7 +827,7 @@ function ResourceList({
   title: string;
   icon: string;
   resources?: Resource[];
-  onOpen: (url?: string) => void;
+  onOpen: (url?: string, title?: string) => void;
 }): React.JSX.Element | null {
   if (!resources?.length) return null;
   return (
@@ -876,7 +840,7 @@ function ResourceList({
           key={res._id || index}
           accessibilityRole="link"
           accessibilityLabel={`Open ${res.title}`}
-          onPress={() => onOpen(res.link || res.url)}
+          onPress={() => onOpen(res.link || res.url, res.title)}
           style={({pressed}) => [
             styles.resourceItem,
             pressed && styles.resourceItemPressed,
@@ -891,7 +855,7 @@ function ResourceList({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
@@ -1076,10 +1040,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  unitTopicCounter: {
-    ...typography.caption,
-    color: colors.textFaint,
-  },
   unitTitle: {
     ...typography.titleSm,
     fontSize: 18,
@@ -1087,51 +1047,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
     marginBottom: spacing.xs,
   },
-  topicContainer: {
-    marginTop: spacing.xxs,
+  unitEmptyState: {
+    marginTop: spacing.md,
+    padding: spacing.md,
   },
-  topicRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    minHeight: 46,
-    paddingVertical: spacing.xxs,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lineLight,
-  },
-  topicBullet: {
-    width: 6,
-    height: 6,
-    borderRadius: radii.full,
-    backgroundColor: colors.textFaint,
-  },
-  topicBulletHigh: {
-    backgroundColor: colors.warning.indicator,
-    width: 8,
-    height: 8,
-  },
-  topicCopy: {
-    flex: 1,
-  },
-  topicTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  topicImportance: {
-    fontSize: 9,
-    fontWeight: '800',
-    color: colors.textFaint,
-    marginTop: 2,
-    letterSpacing: 0.4,
-  },
-  topicImportanceHigh: {
-    color: colors.warning.text,
-  },
-  mutedText: {
-    ...typography.bodySm,
-    color: colors.textMuted,
-    marginVertical: spacing.xs,
+  emptyUnits: {
+    marginTop: spacing.md,
   },
   resourceBlock: {
     marginTop: spacing.md,
@@ -1373,18 +1294,4 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: spacing.xxs,
   },
-  emptyCard: {
-    padding: spacing.lg,
-    alignItems: 'center',
-  },
-  emptyTitle: {
-    ...typography.titleSm,
-    textAlign: 'center',
-  },
-  emptyMuted: {
-    ...typography.bodySm,
-    textAlign: 'center',
-    color: colors.textMuted,
-    marginTop: spacing.xxs,
-  },
-});
+}));

@@ -1,5 +1,8 @@
+import {useAppTheme} from '../context/ThemeContext';
 import React, {useCallback, useRef, useState} from 'react';
 import {
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -26,7 +29,7 @@ import {
   PrimaryButton,
   SectionHeading,
 } from '../components';
-import {colors, radii, spacing, typography} from '../theme';
+import {colors, radii, spacing, typography, createAdaptiveStyles} from '../theme';
 
 type Assessment = {
   name: string;
@@ -57,8 +60,8 @@ type Subject = {
 };
 type GradeBand = {
   label: string;
-  minimumPercent: number;
-  gradePoint: number;
+  minimumPercent: number | string;
+  gradePoint: number | string;
 };
 
 const DEFAULT_SCALE: GradeBand[] = [
@@ -80,7 +83,23 @@ const EMPTY_OVERALL: {
 const CATEGORIES = ['MIDTERM', 'CLASS_TEST', 'LAB_VIVA', 'OTHER'];
 type Tab = 'attendance' | 'sessionals' | 'planner';
 
+function insertGradeBand(scale: GradeBand[]): GradeBand[] {
+  const sorted = [...scale].sort((a, b) => Number(a.minimumPercent) - Number(b.minimumPercent));
+  let best: {gap: number; minimumPercent: number; gradePoint: number} | null = null;
+  for (let index = 0; index < sorted.length - 1; index += 1) {
+    const low = Number(sorted[index].minimumPercent);
+    const high = Number(sorted[index + 1].minimumPercent);
+    const gap = high - low;
+    if (gap > 1 && (!best || gap > best.gap)) {
+      best = {gap, minimumPercent: Math.floor((low + high) / 2), gradePoint: (Number(sorted[index].gradePoint) + Number(sorted[index + 1].gradePoint)) / 2};
+    }
+  }
+  if (!best) return scale;
+  return [...scale, {label: `G${scale.length}`, minimumPercent: best.minimumPercent, gradePoint: Number(best.gradePoint.toFixed(2))}];
+}
+
 export function StudyToolsScreen(): React.JSX.Element {
+  useAppTheme();
   const {user} = useAuth();
   const [tab, setTab] = useState<Tab>('attendance');
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -313,6 +332,7 @@ export function StudyToolsScreen(): React.JSX.Element {
         const previousCgpa = Number(planner.previousCgpa);
         const completedCredits = Number(planner.completedCredits);
         const targetCgpa = Number(planner.targetCgpa);
+        const scale = planner.gradeScale;
         if (
           [planner.previousCgpa, planner.completedCredits, planner.targetCgpa].some(
             val => String(val).trim() === '',
@@ -327,6 +347,9 @@ export function StudyToolsScreen(): React.JSX.Element {
           throw new Error(
             'Enter a valid CGPA, completed credit count, and target (CGPA 0–10).',
           );
+        }
+        if (scale.length < 2 || scale.some(band => !band.label.trim() || !Number.isFinite(Number(band.minimumPercent)) || Number(band.minimumPercent) < 0 || Number(band.minimumPercent) > 100 || !Number.isFinite(Number(band.gradePoint)) || Number(band.gradePoint) < 0 || Number(band.gradePoint) > 10) || !scale.some(band => Number(band.minimumPercent) === 0) || new Set(scale.map(band => Number(band.minimumPercent))).size !== scale.length) {
+          throw new Error('Grade bands need unique minimum percentages from 0–100, grade points from 0–10, labels, and a 0% fallback band.');
         }
         const projectedRows = subjects.filter(subject => marks[subject._id] !== '');
         if (
@@ -343,7 +366,7 @@ export function StudyToolsScreen(): React.JSX.Element {
           previousCgpa,
           completedCredits,
           targetCgpa,
-          gradeScale: planner.gradeScale,
+          gradeScale: planner.gradeScale.map(band => ({...band, minimumPercent: Number(band.minimumPercent), gradePoint: Number(band.gradePoint)})),
           projections: projectedRows.map(subject => ({
             subject: subject._id,
             percent: Number(marks[subject._id]),
@@ -387,10 +410,12 @@ export function StudyToolsScreen(): React.JSX.Element {
     : null;
 
   return (
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <ScrollView
-      style={styles.screen}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
+      keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+      automaticallyAdjustKeyboardInsets
       showsVerticalScrollIndicator={false}>
       <AppHeader
         eyebrow="PLAN YOUR SEMESTER"
@@ -803,18 +828,17 @@ export function StudyToolsScreen(): React.JSX.Element {
                     }
                   />
 
-                  <Text style={styles.scaleHeader}>
-                    Saved University Grade Bands
-                  </Text>
-                  <View style={styles.scaleRow}>
-                    {planner.gradeScale.map(band => (
-                      <BadgePill
-                        key={`${band.label}-${band.minimumPercent}`}
-                        label={`${band.label} ≥ ${band.minimumPercent}%`}
-                        variant="muted"
-                      />
-                    ))}
-                  </View>
+                  <Text style={styles.scaleHeader}>University grading scale</Text>
+                  <Text style={styles.cardMuted}>Set these bands to the official policy published by your university. They are saved to your account and sync with the website.</Text>
+                  {planner.gradeScale.map((band, index) => (
+                    <View key={`${index}-${band.label}`} style={styles.gradeBandRow}>
+                      <TextInput accessibilityLabel={`Grade band ${index + 1} label`} value={String(band.label)} onChangeText={value => setPlanner(current => ({...current, gradeScale: current.gradeScale.map((row, rowIndex) => rowIndex === index ? {...row, label: value} : row)}))} placeholder="Grade" placeholderTextColor={colors.textFaint} style={[styles.gradeInput, styles.gradeLabelInput]} />
+                      <TextInput accessibilityLabel={`Grade band ${index + 1} minimum percentage`} value={String(band.minimumPercent)} onChangeText={value => setPlanner(current => ({...current, gradeScale: current.gradeScale.map((row, rowIndex) => rowIndex === index ? {...row, minimumPercent: value} : row)}))} keyboardType="decimal-pad" editable={Number(band.minimumPercent) !== 0} placeholder="Min %" placeholderTextColor={colors.textFaint} style={styles.gradeInput} />
+                      <TextInput accessibilityLabel={`Grade band ${index + 1} grade points`} value={String(band.gradePoint)} onChangeText={value => setPlanner(current => ({...current, gradeScale: current.gradeScale.map((row, rowIndex) => rowIndex === index ? {...row, gradePoint: value} : row)}))} keyboardType="decimal-pad" placeholder="Points" placeholderTextColor={colors.textFaint} style={styles.gradeInput} />
+                      <Pressable accessibilityRole="button" accessibilityLabel={`Remove ${band.label || 'grade'} band`} disabled={Number(band.minimumPercent) === 0 || planner.gradeScale.length <= 2} onPress={() => setPlanner(current => ({...current, gradeScale: current.gradeScale.filter((_, rowIndex) => rowIndex !== index)}))} style={styles.removeGrade}><Text style={styles.removeGradeText}>×</Text></Pressable>
+                    </View>
+                  ))}
+                  <Pressable accessibilityRole="button" disabled={insertGradeBand(planner.gradeScale).length === planner.gradeScale.length} onPress={() => setPlanner(current => ({...current, gradeScale: insertGradeBand(current.gradeScale)}))} style={styles.addGrade}><Text style={styles.addGradeText}>＋ Add grade band</Text></Pressable>
                 </AppCard>
 
                 <AppCard style={styles.card}>
@@ -910,6 +934,7 @@ export function StudyToolsScreen(): React.JSX.Element {
         </>
       )}
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -938,7 +963,7 @@ function NumberInputField({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
@@ -1127,6 +1152,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     marginBottom: spacing.xxs,
   },
+  gradeBandRow: {flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8},
+  gradeInput: {flex: 1, minWidth: 0, height: 42, paddingHorizontal: 8, borderWidth: 1, borderColor: colors.lineSubtle, borderRadius: radii.sm, color: colors.textPrimary, backgroundColor: colors.surface, fontSize: 11, fontWeight: '700'},
+  gradeLabelInput: {flex: 1.1},
+  removeGrade: {width: 34, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: radii.sm, backgroundColor: colors.danger.bg},
+  removeGradeText: {color: colors.danger.text, fontSize: 21, fontWeight: '800'},
+  addGrade: {alignSelf: 'flex-start', minHeight: 38, justifyContent: 'center', marginTop: 5, paddingHorizontal: 9},
+  addGradeText: {color: colors.primary, fontSize: 11, fontWeight: '900'},
   scaleRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1206,4 +1238,4 @@ const styles = StyleSheet.create({
     minHeight: 48,
     marginTop: spacing.md,
   },
-});
+}));

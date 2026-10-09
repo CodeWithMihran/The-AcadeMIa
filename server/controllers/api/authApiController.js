@@ -1,10 +1,12 @@
 const bcrypt = require("bcrypt");
+const { createHash, timingSafeEqual } = require("crypto");
 const mongoose = require("mongoose");
 const userModel = require("../../models/user-model");
 const tenantModel = require("../../models/tenant-model");
 const { normalizeBranch } = require("../../utils/branch");
 const { isBranchAvailableForTenant } = require("../../utils/tenantBranches");
 const { generateToken } = require("../../utils/generateToken");
+const MobileAuthCode = require("../../models/mobile-auth-code-model");
 
 function ambassadorScopeUpdates(user, { track, tenant, college }) {
     const assignment = user?.campusAmbassador;
@@ -190,6 +192,37 @@ module.exports.login = async (req, res) => {
             success: false,
             message: "Internal server error during login."
         });
+    }
+};
+
+// Mobile OAuth uses a short-lived, single-use code in the app deep link.
+// The long-lived JWT is returned only from this HTTPS API exchange, never in a URL.
+module.exports.exchangeMobileGoogleCode = async (req, res) => {
+    try {
+        const { code, verifier } = req.body || {};
+        if (typeof code !== "string" || !/^[a-f0-9]{64}$/i.test(code) || typeof verifier !== "string" || !/^[A-Za-z0-9_-]{43,128}$/.test(verifier)) {
+            return res.status(400).json({ success: false, message: "The Google sign-in code is invalid or expired. Please try again." });
+        }
+
+        const codeHash = createHash("sha256").update(code).digest("hex");
+        const actualChallenge = createHash("sha256").update(verifier).digest("base64url");
+        const challengeBuffer = Buffer.from(actualChallenge);
+        const record = await MobileAuthCode.findOne({ codeHash, expiresAt: { $gt: new Date() } }).lean();
+        if (!record) return res.status(401).json({ success: false, message: "The Google sign-in code has expired or was already used. Please try again." });
+        const expectedChallenge = Buffer.from(record.codeChallenge);
+        if (challengeBuffer.length !== expectedChallenge.length || !timingSafeEqual(challengeBuffer, expectedChallenge)) {
+            return res.status(401).json({ success: false, message: "Google sign-in could not be verified by this app. Please try again." });
+        }
+
+        const consumed = await MobileAuthCode.findOneAndDelete({ _id: record._id, codeHash, expiresAt: { $gt: new Date() } });
+        if (!consumed) return res.status(401).json({ success: false, message: "The Google sign-in code has expired or was already used. Please try again." });
+
+        const user = await userModel.findById(consumed.user).populate("tenant", "name shortCode type state");
+        if (!user) return res.status(401).json({ success: false, message: "This account is no longer available." });
+        return sendTokenResponse(user, 200, res, "Google sign-in successful.");
+    } catch (err) {
+        console.error("Mobile Google code exchange error:", err);
+        return res.status(500).json({ success: false, message: "Could not complete Google sign-in." });
     }
 };
 

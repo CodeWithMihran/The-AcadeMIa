@@ -5,6 +5,9 @@ import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.util.Base64
+import java.security.MessageDigest
+import java.security.SecureRandom
 import com.facebook.react.bridge.ActivityEventListener
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
@@ -49,6 +52,23 @@ class AcademiaDocumentPickerModule(
     } catch (error: Exception) {
       pickerPromise = null
       promise.reject("PICKER_UNAVAILABLE", "Could not open the Android file picker.", error)
+    }
+  }
+
+  @ReactMethod
+  fun createPkceChallenge(promise: Promise) {
+    try {
+      val random = ByteArray(32)
+      SecureRandom().nextBytes(random)
+      val verifier = Base64.encodeToString(random, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+      val digest = MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray(Charsets.US_ASCII))
+      val challenge = Base64.encodeToString(digest, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
+      promise.resolve(Arguments.createMap().apply {
+        putString("verifier", verifier)
+        putString("challenge", challenge)
+      })
+    } catch (error: Exception) {
+      promise.reject("PKCE_ERROR", "Could not prepare secure Google sign-in.", error)
     }
   }
 

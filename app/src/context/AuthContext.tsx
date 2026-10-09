@@ -41,6 +41,8 @@ interface AuthContextValue {
     password: string;
     confirmPassword: string;
   }) => Promise<void>;
+  completeGoogleSignIn: (code: string, verifier: string) => Promise<void>;
+  failGoogleSignIn: (message: string) => void;
   completeOnboarding: (input: Record<string, unknown>) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: AcademiaUser) => void;
@@ -151,6 +153,19 @@ export function AuthProvider({children}: PropsWithChildren): React.JSX.Element {
     }
   }, [acceptAuthResponse]);
 
+  const completeGoogleSignIn = useCallback(async (code: string, verifier: string) => {
+    try {
+      const response = await authApi.exchangeMobileGoogleCode(code, verifier);
+      await acceptAuthResponse(response.data);
+    } catch (error) {
+      const message = getApiErrorMessage(error, 'Google sign-in could not be completed. Please try again.');
+      setAuthError(message);
+      throw new Error(message);
+    }
+  }, [acceptAuthResponse]);
+
+  const failGoogleSignIn = useCallback((message: string) => setAuthError(message), []);
+
   const completeOnboarding = useCallback(async (input: Record<string, unknown>) => {
     try {
       const response = await tenantApi.completeOnboarding(input);
@@ -192,11 +207,13 @@ export function AuthProvider({children}: PropsWithChildren): React.JSX.Element {
     authError,
     login,
     register,
+    completeGoogleSignIn,
+    failGoogleSignIn,
     completeOnboarding,
     logout,
     updateUser,
     clearAuthError,
-  }), [user, loading, authError, login, register, completeOnboarding, logout, updateUser, clearAuthError]);
+  }), [user, loading, authError, login, register, completeGoogleSignIn, failGoogleSignIn, completeOnboarding, logout, updateUser, clearAuthError]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

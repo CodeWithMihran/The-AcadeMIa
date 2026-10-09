@@ -1,3 +1,4 @@
+import {useAppTheme} from '../context/ThemeContext';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
@@ -19,7 +20,7 @@ import {
   ErrorState,
   LoadingState,
 } from '../components';
-import {colors, radii, spacing, typography} from '../theme';
+import {colors, radii, spacing, typography, createAdaptiveStyles} from '../theme';
 
 interface Topic {
   _id: string;
@@ -47,6 +48,7 @@ export function SubjectProgressScreen({
   route,
   navigation,
 }: Props): React.JSX.Element {
+  useAppTheme();
   const {subjectId} = route.params;
   const [subject, setSubject] = useState<Subject | null>(null);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
@@ -314,7 +316,7 @@ export function SubjectProgressScreen({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
@@ -522,4 +524,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     paddingVertical: spacing.sm,
   },
-});
+}));

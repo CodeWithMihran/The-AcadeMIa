@@ -1,3 +1,4 @@
+import {useAppTheme} from '../context/ThemeContext';
 import React, {useCallback, useRef, useState} from 'react';
 import {
   RefreshControl,
@@ -22,7 +23,7 @@ import {
   SkillRadarChart,
   SkillRadarPoint,
 } from '../components';
-import {colors, radii, spacing, typography} from '../theme';
+import {colors, radii, spacing, typography, createAdaptiveStyles} from '../theme';
 
 interface SubjectSummary {
   _id: string;
@@ -43,6 +44,7 @@ interface DashboardData {
 type Props = BottomTabScreenProps<AppTabParamList, 'Dashboard'>;
 
 export function DashboardScreen({navigation}: Props): React.JSX.Element {
+  useAppTheme();
   const {user} = useAuth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -273,7 +275,7 @@ function StatCard({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
@@ -426,4 +428,4 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxs,
     color: colors.textMuted,
   },
-});
+}));

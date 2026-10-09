@@ -1,4 +1,25 @@
+import java.net.URI
+
 apply plugin: "com.android.application"
+project.ext.envConfigFiles = [debug: ".env", release: ".env.production"]
+apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
+
+def isReleaseBuild = gradle.startParameter.taskNames.any { taskName ->
+    def task = taskName.toLowerCase()
+    task.contains("release") && (task.contains("assemble") || task.contains("bundle") || task.contains("install"))
+}
+if (isReleaseBuild) {
+    def releaseApiUrl = project.env["API_BASE_URL"]?.trim()
+    def parsedReleaseApiUrl = null
+    try {
+        if (releaseApiUrl) parsedReleaseApiUrl = new URI(releaseApiUrl)
+    } catch (Exception ignored) {
+        parsedReleaseApiUrl = null
+    }
+    if (parsedReleaseApiUrl == null || parsedReleaseApiUrl.scheme != "https" || !parsedReleaseApiUrl.host || !parsedReleaseApiUrl.path.replaceAll('/+$', '').endsWith("/api") || ["your-production-server.com", "example.com"].contains(parsedReleaseApiUrl.host)) {
+        throw new GradleException("Set API_BASE_URL in app/.env.production to your real HTTPS API URL ending in /api before creating a release build.")
+    }
+}
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
@@ -96,11 +117,13 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            manifestPlaceholders = [usesCleartextTraffic: "true"]
         }
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
+            manifestPlaceholders = [usesCleartextTraffic: "false"]
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }

@@ -1,3 +1,5 @@
+import {useAppTheme} from '../context/ThemeContext';
+import {createAdaptiveStyles} from '../theme';
 import React, {useEffect, useRef, useState} from 'react';
 import {
   ActivityIndicator,
@@ -24,6 +26,7 @@ type Props = {
 };
 
 export function AdminUsersPanel({deletingUserId, onDelete}: Props): React.JSX.Element {
+  useAppTheme();
   const [query, setQuery] = useState('');
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,12 +80,12 @@ export function AdminUsersPanel({deletingUserId, onDelete}: Props): React.JSX.El
       />
       <View style={styles.resultsHeader}>
         <Text style={styles.caption}>{users.length} {users.length === 1 ? 'user' : 'users'} shown</Text>
-        {searching && <ActivityIndicator size="small" color="#315cf5" accessibilityLabel="Searching users" />}
+        {searching && <ActivityIndicator size="small" color="#16794b" accessibilityLabel="Searching users" />}
       </View>
 
       {loading ? (
         <View style={styles.stateCard} accessibilityRole="progressbar" accessibilityLabel="Loading user directory">
-          <ActivityIndicator size="small" color="#315cf5" />
+          <ActivityIndicator size="small" color="#16794b" />
           <Text style={styles.muted}>Loading users…</Text>
         </View>
       ) : error ? (
@@ -125,7 +128,7 @@ export function AdminUsersPanel({deletingUserId, onDelete}: Props): React.JSX.El
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   section: {marginTop: 5, marginBottom: 10, color: '#101828', fontSize: 17, fontWeight: '900'},
   input: {height: 45, paddingHorizontal: 12, borderWidth: 1, borderColor: '#dfe4ed', borderRadius: 11, color: '#101828', backgroundColor: '#fff'},
   resultsHeader: {minHeight: 32, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
@@ -141,4 +144,4 @@ const styles = StyleSheet.create({
   errorTitle: {color: '#9b1c1c', fontSize: 14, fontWeight: '900'},
   retryButton: {alignSelf: 'flex-start', minHeight: 40, justifyContent: 'center', marginTop: 10, paddingHorizontal: 13, borderRadius: 9, backgroundColor: '#111318'},
   retryText: {color: '#fff', fontSize: 11, fontWeight: '900'},
-});
+}));

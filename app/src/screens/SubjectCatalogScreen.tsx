@@ -1,3 +1,4 @@
+import {useAppTheme} from '../context/ThemeContext';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
   BackHandler,
@@ -22,7 +23,7 @@ import {
   LoadingState,
   SearchInput,
 } from '../components';
-import {colors, spacing, typography} from '../theme';
+import {colors, spacing, typography, createAdaptiveStyles} from '../theme';
 
 interface SubjectRow {
   _id: string;
@@ -38,6 +39,7 @@ interface SubjectRow {
 type Props = BottomTabScreenProps<AppTabParamList, 'Subjects'>;
 
 export function SubjectCatalogScreen({navigation}: Props): React.JSX.Element {
+  useAppTheme();
   const {user} = useAuth();
   const [subjects, setSubjects] = useState<SubjectRow[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
@@ -220,7 +222,7 @@ export function SubjectCatalogScreen({navigation}: Props): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
@@ -275,4 +277,4 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxs + 2,
     color: colors.textMuted,
   },
-});
+}));

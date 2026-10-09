@@ -7,7 +7,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {colors, radii, spacing, typography} from '../theme';
+import {colors, radii, spacing, typography, createAdaptiveStyles} from '../theme';
 
 interface LoadingStateProps {
   message?: string;
@@ -31,7 +31,7 @@ export function LoadingState({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   card: {
     padding: spacing.lg,
     borderRadius: radii.lg,
@@ -47,4 +47,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontWeight: '600',
   },
-});
+}));

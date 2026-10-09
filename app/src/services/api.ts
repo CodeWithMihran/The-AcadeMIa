@@ -1,17 +1,32 @@
 import axios, {AxiosError, InternalAxiosRequestConfig} from 'axios';
+import Config from 'react-native-config';
 import {reportSessionExpiration} from './authSession';
 import {clearAuthToken, readAuthToken} from './tokenStore';
 
-declare global {
-  // Set this before app startup when using a physical device or deployed API.
-  // Metro does not automatically load .env files in a bare React Native app.
-  var __ACADEMIA_API_BASE_URL__: string | undefined;
-}
-
-const configuredBaseUrl = globalThis.__ACADEMIA_API_BASE_URL__?.trim();
+const configuredBaseUrl = Config.API_BASE_URL?.trim();
 const developmentBaseUrl = 'http://10.0.2.2:3000/api';
 
-export const API_BASE_URL = configuredBaseUrl || (__DEV__ ? developmentBaseUrl : '');
+function normalizeApiBaseUrl(value: string): string {
+  return value.replace(/\/+$/, '');
+}
+
+const selectedBaseUrl = normalizeApiBaseUrl(configuredBaseUrl || (__DEV__ ? developmentBaseUrl : ''));
+const baseUrlError = (() => {
+  if (!selectedBaseUrl) return 'API_BASE_URL is empty. Set it in app/.env for development or app/.env.production for release.';
+  let parsed: URL;
+  try {
+    parsed = new URL(selectedBaseUrl);
+  } catch {
+    return 'API_BASE_URL must be a valid absolute URL.';
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol)) return 'API_BASE_URL must use HTTP or HTTPS.';
+  if (!__DEV__ && parsed.protocol !== 'https:') return 'Production API_BASE_URL must use HTTPS.';
+  if (['your-production-server.com', 'example.com'].includes(parsed.hostname)) return 'Replace the API_BASE_URL example host with your deployed backend URL.';
+  if (!parsed.pathname.replace(/\/+$/, '').endsWith('/api')) return 'API_BASE_URL must end with /api.';
+  return '';
+})();
+
+export const API_BASE_URL = baseUrlError ? '' : selectedBaseUrl;
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
@@ -20,10 +35,8 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  if (!API_BASE_URL) {
-    throw new Error(
-      'Set globalThis.__ACADEMIA_API_BASE_URL__ to the deployed HTTPS API URL before a production build.',
-    );
+  if (baseUrlError) {
+    throw new Error(baseUrlError);
   }
 
   const token = await readAuthToken();
@@ -74,6 +87,7 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
 export const authApi = {
   login: (email: string, password: string) =>
     api.post('/auth/login', {email, password}),
+  exchangeMobileGoogleCode: (code: string, verifier: string) => api.post('/auth/google/mobile/exchange', {code, verifier}),
   register: (data: {
     name: string;
     email: string;
@@ -122,6 +136,8 @@ export const communityApi = {
   cancelBounty: (bountyId: string) => api.post(`/community/bounties/${encodeURIComponent(bountyId)}/cancel`),
   moderationQueue: () => api.get('/community/moderation/queue'),
   reviewNote: (noteId: string, data: {decision: 'APPROVE' | 'REJECT'; reviewNote?: string; fulfillBounty?: boolean}) => api.patch(`/community/moderation/notes/${encodeURIComponent(noteId)}`, data),
+  grantAmbassador: (userId: string, data: {active: boolean; tenantId?: string; college?: string; branches?: string[]; semesters?: number[]}) => api.patch(`/community/admin/users/${encodeURIComponent(userId)}/ambassador`, data),
+  adjustCredits: (userId: string, data: {delta: number; description: string; requestId: string}) => api.post(`/community/admin/users/${encodeURIComponent(userId)}/credits`, data),
 };
 
 export const adminApi = {

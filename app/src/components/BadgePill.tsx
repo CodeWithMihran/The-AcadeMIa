@@ -1,6 +1,7 @@
 import React from 'react';
-import {StyleSheet, Text, View, ViewStyle} from 'react-native';
-import {colors, radii, typography} from '../theme';
+import {StyleSheet, Text, TextStyle, View, ViewStyle} from 'react-native';
+import {colors, radii, typography, createAdaptiveStyles} from '../theme';
+import {useAppTheme} from '../context/ThemeContext';
 
 export type BadgeVariant = 'blue' | 'emerald' | 'amber' | 'danger' | 'indigo' | 'muted' | 'dark';
 
@@ -11,10 +12,11 @@ interface BadgePillProps {
 }
 
 export function BadgePill({label, variant = 'blue', style}: BadgePillProps): React.JSX.Element {
+  const {isDark} = useAppTheme();
   const variantStyles = VARIANT_MAP[variant] || VARIANT_MAP.blue;
   return (
-    <View style={[styles.pill, variantStyles.container, style]}>
-      <Text numberOfLines={1} style={[styles.text, variantStyles.text]}>
+    <View style={[styles.pill, variantStyles.container, isDark && DARK_VARIANT_OVERRIDES[variant]?.container, style]}>
+      <Text numberOfLines={1} style={[styles.text, variantStyles.text, isDark && DARK_VARIANT_OVERRIDES[variant]?.text]}>
         {label}
       </Text>
     </View>
@@ -52,7 +54,16 @@ const VARIANT_MAP: Record<BadgeVariant, {container: ViewStyle; text: {color: str
   },
 };
 
-const styles = StyleSheet.create({
+const DARK_VARIANT_OVERRIDES: Partial<Record<BadgeVariant, {container: ViewStyle; text: TextStyle}>> = {
+  blue: {container: {backgroundColor: '#153425', borderColor: '#245d40'}, text: {color: '#62d49b'}},
+  emerald: {container: {backgroundColor: '#10291e', borderColor: '#245d40'}, text: {color: '#6ee7a8'}},
+  amber: {container: {backgroundColor: '#332715', borderColor: '#68501d'}, text: {color: '#ffca80'}},
+  danger: {container: {backgroundColor: '#351d20', borderColor: '#623237'}, text: {color: '#ff9898'}},
+  indigo: {container: {backgroundColor: '#153425', borderColor: '#245d40'}, text: {color: '#62d49b'}},
+  muted: {container: {backgroundColor: '#242832', borderColor: '#30343e'}, text: {color: '#aeb8c9'}},
+};
+
+const styles = createAdaptiveStyles(StyleSheet.create({
   pill: {
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -65,4 +76,4 @@ const styles = StyleSheet.create({
   text: {
     ...typography.pill,
   },
-});
+}));

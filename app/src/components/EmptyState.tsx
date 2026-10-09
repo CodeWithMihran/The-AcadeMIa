@@ -1,6 +1,6 @@
 import React from 'react';
 import {StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native';
-import {colors, radii, spacing, typography} from '../theme';
+import {colors, radii, spacing, typography, createAdaptiveStyles} from '../theme';
 import {PrimaryButton} from './PrimaryButton';
 
 interface EmptyStateProps {
@@ -41,7 +41,7 @@ export function EmptyState({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   card: {
     padding: spacing.lg,
     borderWidth: 1,
@@ -79,4 +79,4 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     alignSelf: 'center',
   },
-});
+}));

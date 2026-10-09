@@ -1,3 +1,4 @@
+import {useAppTheme} from '../context/ThemeContext';
 import React, {useCallback, useState} from 'react';
 import {
   RefreshControl,
@@ -20,7 +21,7 @@ import {
   LoadingState,
   SectionHeading,
 } from '../components';
-import {colors, radii, spacing, typography} from '../theme';
+import {colors, radii, spacing, typography, createAdaptiveStyles} from '../theme';
 
 type Overview = {
   averageReadiness?: number;
@@ -32,6 +33,7 @@ type Subject = {_id: string; name: string; courseCode?: string};
 type Props = BottomTabScreenProps<AppTabParamList, 'Progress'>;
 
 export function ProgressScreen({navigation}: Props): React.JSX.Element {
+  useAppTheme();
   const [overview, setOverview] = useState<Overview | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
@@ -197,7 +199,7 @@ export function ProgressScreen({navigation}: Props): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
@@ -316,4 +318,4 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     marginTop: 2,
   },
-});
+}));

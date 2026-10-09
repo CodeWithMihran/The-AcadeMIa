@@ -1,4 +1,5 @@
 const path = require("path");
+const { randomBytes, createHash } = require("crypto");
 require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
 const requiredEnvironment = ["MONGO_URI", "JWT_KEY", "EXPRESS_SESSION_SECRET"];
@@ -19,6 +20,7 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const userModel = require("./models/user-model");
 const tenantModel = require("./models/tenant-model");
 const { generateToken } = require("./utils/generateToken");
+const MobileAuthCode = require("./models/mobile-auth-code-model");
 
 const app = express();
 
@@ -72,6 +74,9 @@ passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    // Persist and verify a random OAuth state in the Express session for both
+    // website and mobile browser flows (prevents login CSRF).
+    state: true,
     proxy: true
 }, async (accessToken, refreshToken, profile, done) => {
     try {
@@ -182,12 +187,59 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.
         res.redirect(`${clientUrl}/auth/callback`);
         }
     );
+
+    // The app authenticates in the system browser. The deep link only carries
+    // a random, one-time code; the app exchanges it for its JWT over the API.
+    app.get("/auth/google/mobile/callback",
+        passport.authenticate("google", { failureRedirect: "theacademia://auth/callback?error=google_sign_in_failed", callbackURL: process.env.GOOGLE_MOBILE_CALLBACK_URL, state: true }),
+        async (req, res) => {
+            if (!process.env.GOOGLE_MOBILE_CALLBACK_URL || !req.session?.mobileGoogleAuth) {
+                return res.redirect("theacademia://auth/callback?error=google_sign_in_state_invalid");
+            }
+            delete req.session.mobileGoogleAuth;
+            try {
+                const rawCode = randomBytes(32).toString("hex");
+                const codeHash = createHash("sha256").update(rawCode).digest("hex");
+                const codeChallenge = req.session.mobileGoogleCodeChallenge;
+                if (typeof codeChallenge !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(codeChallenge)) {
+                    return res.redirect("theacademia://auth/callback?error=google_sign_in_state_invalid");
+                }
+                delete req.session.mobileGoogleCodeChallenge;
+                await MobileAuthCode.create({ codeHash, codeChallenge, user: req.user._id, expiresAt: new Date(Date.now() + 90_000) });
+                return res.redirect(`theacademia://auth/callback?code=${rawCode}`);
+            } catch (error) {
+                console.error("Mobile Google callback error:", error);
+                return res.redirect("theacademia://auth/callback?error=google_sign_in_unavailable");
+            }
+        }
+    );
+
+    app.get("/api/auth/google/mobile/start", (req, res, next) => {
+        if (!process.env.GOOGLE_MOBILE_CALLBACK_URL) {
+            return res.status(503).send("Mobile Google sign-in is not configured on this server.");
+        }
+        const codeChallenge = req.query.code_challenge;
+        if (typeof codeChallenge !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(codeChallenge)) {
+            return res.status(400).send("Secure Google sign-in could not be started. Update the app and try again.");
+        }
+        req.session.mobileGoogleAuth = true;
+        req.session.mobileGoogleCodeChallenge = codeChallenge;
+        req.session.save((error) => {
+            if (error) return next(error);
+            passport.authenticate("google", {
+                scope: ["profile", "email"],
+                callbackURL: process.env.GOOGLE_MOBILE_CALLBACK_URL,
+                state: true
+            })(req, res, next);
+        });
+    });
 } else {
     app.get("/auth/google", (req, res) => res.status(503).json({
         success: false,
         message: "Google sign-in is not configured on this server."
     }));
     app.get("/auth/google/callback", (req, res) => res.redirect(`${clientUrl}/?error=not_configured`));
+    app.get("/api/auth/google/mobile/start", (req, res) => res.status(503).send("Google sign-in is not configured on this server."));
 }
 
 // ------------------

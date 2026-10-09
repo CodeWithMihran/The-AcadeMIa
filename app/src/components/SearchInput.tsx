@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Pressable,
   StyleProp,
@@ -8,7 +8,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {colors, radii, spacing} from '../theme';
+import {colors, radii, spacing, createAdaptiveStyles} from '../theme';
 
 interface SearchInputProps {
   value: string;
@@ -25,8 +25,9 @@ export function SearchInput({
   style,
   accessibilityLabel = 'Search',
 }: SearchInputProps): React.JSX.Element {
+  const [focused, setFocused] = useState(false);
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, focused && styles.focused, style]}>
       <Text style={styles.searchIcon} aria-hidden>
         🔍
       </Text>
@@ -39,6 +40,8 @@ export function SearchInput({
         returnKeyType="search"
         autoCapitalize="none"
         autoCorrect={false}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         style={styles.input}
       />
       {Boolean(value.length > 0) && (
@@ -55,7 +58,7 @@ export function SearchInput({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   container: {
     height: 48,
     flexDirection: 'row',
@@ -66,6 +69,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     backgroundColor: colors.surface,
   },
+  focused: {borderWidth: 2, borderColor: colors.primary},
   searchIcon: {
     fontSize: 14,
     marginRight: spacing.xs,
@@ -93,4 +97,4 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
   },
-});
+}));

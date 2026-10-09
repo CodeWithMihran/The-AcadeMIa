@@ -1,3 +1,4 @@
+import {createAdaptiveStyles} from '../theme';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -5,12 +6,12 @@ import {
   Text,
   View,
 } from 'react-native';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {BottomTabBarProps, createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAuth} from '../context/AuthContext';
-import {TabGlyph} from '../components/TabGlyph';
+import {useAppTheme} from '../context/ThemeContext';
+import {TopNavigationBar} from '../components/TopNavigationBar';
 import {AuthScreen} from '../screens/AuthScreen';
 import {OnboardingScreen} from '../screens/OnboardingScreen';
 import {DashboardScreen} from '../screens/DashboardScreen';
@@ -22,23 +23,18 @@ import {RankingsScreen} from '../screens/RankingsScreen';
 import {ProfileScreen} from '../screens/ProfileScreen';
 import {CommunityScreen} from '../screens/CommunityScreen';
 import {AdminConsoleScreen} from '../screens/AdminConsoleScreen';
-import {MoreScreen} from '../screens/MoreScreen';
+import {SettingsScreen} from '../screens/SettingsScreen';
 import {AppTabParamList, AuthStackParamList, RootStackParamList} from './types';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tabs = createBottomTabNavigator<AppTabParamList>();
-
-type TabIconProps = {focused: boolean; color: string; size: number};
-const DashboardTabIcon = ({color, focused}: TabIconProps) => <TabGlyph name="Dashboard" color={color} focused={focused} />;
-const SubjectsTabIcon = ({color, focused}: TabIconProps) => <TabGlyph name="Subjects" color={color} focused={focused} />;
-const StudyToolsTabIcon = ({color, focused}: TabIconProps) => <TabGlyph name="StudyTools" color={color} focused={focused} />;
-const MenuTabIcon = ({color, focused}: TabIconProps) => <TabGlyph name="Menu" color={color} focused={focused} />;
-const ProfileTabIcon = ({color, focused}: TabIconProps) => <TabGlyph name="Profile" color={color} focused={focused} />;
+const renderTopNavigationBar = (props: BottomTabBarProps) => <TopNavigationBar {...props} />;
 
 function AuthFlow(): React.JSX.Element {
+  const {reduceMotion} = useAppTheme();
   return (
-    <AuthStack.Navigator screenOptions={{headerShown: false, animation: 'slide_from_right'}}>
+    <AuthStack.Navigator screenOptions={{headerShown: false, animation: reduceMotion ? 'none' : 'slide_from_right'}}>
       <AuthStack.Screen name="SignIn" component={AuthScreen} />
       <AuthStack.Screen name="Register" component={AuthScreen} />
     </AuthStack.Navigator>
@@ -47,30 +43,19 @@ function AuthFlow(): React.JSX.Element {
 
 function MainTabs(): React.JSX.Element {
   const {user} = useAuth();
-  const insets = useSafeAreaInsets();
+  const {reduceMotion} = useAppTheme();
   return (
     <Tabs.Navigator
+      tabBar={renderTopNavigationBar}
       screenOptions={{
         headerShown: false,
-        tabBarPosition: 'top',
-        tabBarActiveTintColor: '#ffffff',
-        tabBarInactiveTintColor: '#8a93a6',
-        tabBarLabelStyle: {fontSize: 9, fontWeight: '800', letterSpacing: 0.2},
-        tabBarStyle: {
-          height: 64 + insets.top,
-          paddingTop: insets.top ? 2 : 6,
-          paddingBottom: 4,
-          borderBottomColor: '#242730',
-          borderTopWidth: 0,
-          backgroundColor: '#111318',
-        },
-        tabBarItemStyle: {minWidth: 58, paddingHorizontal: 1},
+        animation: reduceMotion ? 'none' : 'fade',
       }}>
-      <Tabs.Screen name="Dashboard" component={DashboardScreen} options={{tabBarIcon: DashboardTabIcon}} />
-      <Tabs.Screen name="Subjects" component={SubjectCatalogScreen} options={{tabBarIcon: SubjectsTabIcon}} />
-      <Tabs.Screen name="StudyTools" component={StudyToolsPage} options={{title: 'Study tools', tabBarIcon: StudyToolsTabIcon}} />
-      <Tabs.Screen name="More" component={MoreScreen} options={{title: 'Menu', tabBarIcon: MenuTabIcon}} />
-      <Tabs.Screen name="Profile" component={ProfileScreen} options={{tabBarIcon: ProfileTabIcon}} />
+      <Tabs.Screen name="Dashboard" component={DashboardScreen} options={{title: 'Dashboard'}} />
+      <Tabs.Screen name="Subjects" component={SubjectCatalogScreen} options={{title: 'Subjects'}} />
+      <Tabs.Screen name="StudyTools" component={StudyToolsPage} options={{title: 'Study tools'}} />
+      <Tabs.Screen name="Profile" component={ProfileScreen} options={{tabBarButton: () => null}} />
+      <Tabs.Screen name="Settings" component={SettingsScreen} options={{tabBarButton: () => null}} />
       <Tabs.Screen name="Progress" component={ProgressScreen} options={{tabBarButton: () => null}} />
       <Tabs.Screen name="SubjectProgress" component={SubjectProgressScreen} options={{tabBarButton: () => null}} />
       <Tabs.Screen name="Rankings" component={RankingsScreen} options={{tabBarButton: () => null}} />
@@ -82,13 +67,14 @@ function MainTabs(): React.JSX.Element {
 function SessionLoading(): React.JSX.Element {
   return (
     <View style={styles.loading} accessibilityRole="progressbar" accessibilityLabel="Restoring your session">
-      <ActivityIndicator size="large" color="#315cf5" />
+      <ActivityIndicator size="large" color="#16794b" />
       <Text style={styles.loadingText}>Preparing your workspace…</Text>
     </View>
   );
 }
 
 export function RootNavigator(): React.JSX.Element {
+  const {reduceMotion} = useAppTheme();
   const {user, loading} = useAuth();
   if (loading) return <SessionLoading />;
 
@@ -98,7 +84,7 @@ export function RootNavigator(): React.JSX.Element {
   if (user?.role === 'admin') return <AdminConsoleScreen />;
 
   return (
-    <RootStack.Navigator screenOptions={{headerShown: false, animation: 'slide_from_right'}}>
+    <RootStack.Navigator screenOptions={{headerShown: false, animation: reduceMotion ? 'none' : 'slide_from_right'}}>
       {user ? (
         <RootStack.Screen name="Main" component={MainTabs} />
       ) : (
@@ -108,10 +94,10 @@ export function RootNavigator(): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   loading: {flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f7f8fc'},
   loadingText: {marginTop: 14, color: '#687187', fontSize: 14, fontWeight: '600'},
-});
+}));
 
 export type SignInScreenProps = NativeStackScreenProps<AuthStackParamList, 'SignIn'>;
 export type RegisterScreenProps = NativeStackScreenProps<AuthStackParamList, 'Register'>;

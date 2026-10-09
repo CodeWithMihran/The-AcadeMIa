@@ -43,15 +43,16 @@ export function attendanceForecast(input: AttendanceInput): {
   return {percent, message: `Attend the next ${mustAttend} ${mustAttend === 1 ? 'class' : 'classes'} in a row to recover to ${threshold}%.`};
 }
 
-export function gradePointForPercent(percent: number, gradeScale: Array<{minimumPercent: number; gradePoint: number}>): number | null {
+export function gradePointForPercent(percent: number, gradeScale: Array<{minimumPercent: number | string; gradePoint: number | string}>): number | null {
   if (!Number.isFinite(percent) || percent < 0 || percent > 100) return null;
-  const sorted = [...gradeScale].sort((a, b) => b.minimumPercent - a.minimumPercent);
-  return sorted.find(band => percent >= Number(band.minimumPercent))?.gradePoint ?? null;
+  const sorted = [...gradeScale].sort((a, b) => Number(b.minimumPercent) - Number(a.minimumPercent));
+  const matchingBand = sorted.find(band => percent >= Number(band.minimumPercent));
+  return matchingBand ? Number(matchingBand.gradePoint) : null;
 }
 
 export function calculateSgpa(
   projections: Array<{credits: number; percent: number | string}>,
-  gradeScale: Array<{minimumPercent: number; gradePoint: number}>,
+  gradeScale: Array<{minimumPercent: number | string; gradePoint: number | string}>,
 ): number | null {
   let weightedGradePoints = 0;
   let totalCredits = 0;

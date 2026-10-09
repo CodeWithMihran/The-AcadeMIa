@@ -1,3 +1,4 @@
+import {createAdaptiveStyles} from '../theme';
 import React, {useMemo} from 'react';
 import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
 
@@ -13,7 +14,7 @@ interface Props {
   data: SkillRadarPoint[];
 }
 
-const COLORS = ['#315cf5', '#e08a24', '#298a67', '#8a5be0', '#d04f76', '#18899c'];
+const COLORS = ['#16794b', '#e08a24', '#298a67', '#8a5be0', '#d04f76', '#18899c'];
 
 /** A dependency-free, accessible radar plot sized for narrow phone screens. */
 export function SkillRadarChart({data}: Props): React.JSX.Element {
@@ -109,7 +110,7 @@ export function SkillRadarChart({data}: Props): React.JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   plot: {alignSelf: 'center'},
   ring: {position: 'absolute', borderWidth: 1, borderColor: '#e3e8f2', borderRadius: 999},
   axis: {position: 'absolute', height: 1, backgroundColor: '#e1e6ef', transformOrigin: 'left center'},
@@ -126,4 +127,4 @@ const styles = StyleSheet.create({
   emptyTitle: {color: '#182033', fontSize: 13, fontWeight: '900'},
   emptyCopy: {marginTop: 5, color: '#687187', fontSize: 11, lineHeight: 17},
   note: {marginTop: 8, color: '#737b8c', fontSize: 10, lineHeight: 15},
-});
+}));

@@ -1,7 +1,11 @@
+import {useAppTheme} from '../context/ThemeContext';
+import {createAdaptiveStyles} from '../theme';
 import React, {useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Pressable,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -24,6 +28,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 const FALLBACK_BRANCHES = ['CSE', 'AIML', 'AIDS', 'IT', 'ECE', 'EEE', 'EE', 'ME', 'CE', 'CHE', 'BT'];
 
 export function OnboardingScreen(): React.JSX.Element {
+  useAppTheme();
   const {user, completeOnboarding, logout} = useAuth();
   const [track, setTrack] = useState<Track>('UNIVERSITY');
   const [tenants, setTenants] = useState<Tenant[]>([]);
@@ -127,7 +132,8 @@ export function OnboardingScreen(): React.JSX.Element {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+    <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'} automaticallyAdjustKeyboardInsets>
       <View style={styles.header}>
         <View style={styles.brandMark}><Text style={styles.brandLetter}>A</Text></View>
         <Text style={styles.brand}>The Acade<Text style={styles.accent}>MI</Text>a</Text>
@@ -145,7 +151,7 @@ export function OnboardingScreen(): React.JSX.Element {
         </View>
 
         {track === 'UNIVERSITY' ? (
-          loading ? <ActivityIndicator style={styles.loader} color="#315cf5" /> : (
+          loading ? <ActivityIndicator style={styles.loader} color="#16794b" /> : (
             <>
               <Text style={styles.label}>UNIVERSITY</Text>
               {tenants.length ? (
@@ -218,6 +224,7 @@ export function OnboardingScreen(): React.JSX.Element {
         </Pressable>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -233,15 +240,16 @@ function Choice({label, selected, onPress}: {label: string; selected: boolean; o
   );
 }
 
-const styles = StyleSheet.create({
-  page: {flexGrow: 1, paddingHorizontal: 20, paddingTop: 36, paddingBottom: 40, backgroundColor: '#f7f8fc'},
-  header: {alignItems: 'center', marginBottom: 22},
-  brandMark: {width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 15, backgroundColor: '#315cf5'},
+const styles = createAdaptiveStyles(StyleSheet.create({
+  root: {flex: 1, backgroundColor: '#ffffff'},
+  page: {flexGrow: 1, paddingHorizontal: 24, paddingTop: 28, paddingBottom: 34, backgroundColor: '#ffffff'},
+  header: {alignItems: 'center', marginBottom: 20},
+  brandMark: {width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 15, backgroundColor: '#16794b'},
   brandLetter: {color: '#fff', fontSize: 28, fontWeight: '900', fontStyle: 'italic'},
   brand: {marginTop: 9, color: '#101828', fontSize: 20, fontWeight: '900'},
-  accent: {color: '#315cf5'},
-  card: {width: '100%', maxWidth: 520, alignSelf: 'center', padding: 23, borderWidth: 1, borderColor: '#e7eaf1', borderRadius: 23, backgroundColor: '#fff', elevation: 3},
-  eyebrow: {color: '#315cf5', fontSize: 10, fontWeight: '900', letterSpacing: 1.2},
+  accent: {color: '#16794b'},
+  card: {width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 2, paddingVertical: 4},
+  eyebrow: {color: '#16794b', fontSize: 10, fontWeight: '900', letterSpacing: 1.2},
   title: {marginTop: 8, color: '#111827', fontSize: 23, fontWeight: '900'},
   description: {marginTop: 7, marginBottom: 20, color: '#687187', fontSize: 14, lineHeight: 21},
   label: {marginTop: 17, marginBottom: 8, color: '#737b8c', fontSize: 10, fontWeight: '900', letterSpacing: 0.8},
@@ -249,18 +257,18 @@ const styles = StyleSheet.create({
   rowWrap: {flexDirection: 'row', flexWrap: 'wrap', gap: 8},
   optionList: {gap: 7},
   choice: {minHeight: 42, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 9, borderWidth: 1, borderColor: '#e1e5ee', borderRadius: 12, backgroundColor: '#fff'},
-  choiceSelected: {borderColor: '#315cf5', backgroundColor: '#f0f4ff'},
+  choiceSelected: {borderColor: '#16794b', backgroundColor: '#f0fdf4'},
   choicePressed: {opacity: 0.8},
   choiceText: {color: '#515b70', fontSize: 12, fontWeight: '700'},
-  choiceTextSelected: {color: '#244de0'},
+  choiceTextSelected: {color: '#145c38'},
   input: {minHeight: 48, paddingHorizontal: 13, borderWidth: 1, borderColor: '#dfe4ed', borderRadius: 12, color: '#111827', fontSize: 14},
   helper: {color: '#687187', fontSize: 13, lineHeight: 20},
   loader: {paddingVertical: 16},
   error: {marginTop: 17, padding: 11, borderRadius: 10, backgroundColor: '#fff1f1', color: '#b42318', fontSize: 13, lineHeight: 19},
-  submit: {minHeight: 52, alignItems: 'center', justifyContent: 'center', marginTop: 23, borderRadius: 13, backgroundColor: '#111318'},
+  submit: {minHeight: 52, alignItems: 'center', justifyContent: 'center', marginTop: 23, borderRadius: 13, backgroundColor: '#16794b'},
   submitLabel: {color: '#fff', fontSize: 12, fontWeight: '900', letterSpacing: 0.8},
   pressed: {opacity: 0.85},
   disabled: {opacity: 0.6},
   logout: {alignSelf: 'center', paddingHorizontal: 14, paddingVertical: 13},
   logoutText: {color: '#687187', fontSize: 13, fontWeight: '700'},
-});
+}));

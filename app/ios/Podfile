@@ -30,5 +30,17 @@ target 'app' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    env_files = {
+      'Debug' => '.env.ios',
+      'Release' => '.env.production',
+    }
+    installer.pods_project.targets.each do |target|
+      next unless target.name == 'react-native-config'
+
+      target.build_configurations.each do |configuration|
+        configuration.build_settings['ENVFILE'] = env_files[configuration.name] || '.env'
+      end
+    end
   end
 end

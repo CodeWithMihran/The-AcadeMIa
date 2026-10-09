@@ -11,7 +11,7 @@ export type AppTabParamList = {
   SubjectProgress: {subjectId: string};
   Rankings: undefined;
   Campus: undefined;
-  More: undefined;
+  Settings: undefined;
   Profile: undefined;
 };
 

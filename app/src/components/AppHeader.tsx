@@ -1,6 +1,6 @@
 import React from 'react';
 import {StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native';
-import {colors, spacing, typography} from '../theme';
+import {colors, spacing, typography, createAdaptiveStyles} from '../theme';
 
 interface AppHeaderProps {
   eyebrow?: string;
@@ -29,7 +29,7 @@ export function AppHeader({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   header: {
     marginBottom: spacing.lg,
     flexDirection: 'row',
@@ -55,4 +55,4 @@ const styles = StyleSheet.create({
     marginLeft: spacing.md,
     alignSelf: 'center',
   },
-});
+}));

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Pressable,
   StyleProp,
@@ -6,7 +6,8 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {colors, radii, spacing} from '../theme';
+import {colors, radii, spacing, createAdaptiveStyles} from '../theme';
+import {useAppTheme} from '../context/ThemeContext';
 
 interface AppCardProps {
   children: React.ReactNode;
@@ -25,7 +26,9 @@ export function AppCard({
   accessibilityRole = onPress ? 'button' : 'none',
   variant = 'default',
 }: AppCardProps): React.JSX.Element {
-  const variantStyle = VARIANT_STYLES[variant];
+  const {isDark} = useAppTheme();
+  const [focused, setFocused] = useState(false);
+  const variantStyle = isDark ? DARK_VARIANT_STYLES[variant] : VARIANT_STYLES[variant];
 
   if (onPress) {
     return (
@@ -33,10 +36,14 @@ export function AppCard({
         accessibilityRole={accessibilityRole}
         accessibilityLabel={accessibilityLabel}
         onPress={onPress}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        focusable
         style={({pressed}) => [
           styles.card,
           variantStyle,
           style,
+          focused && styles.focused,
           pressed && styles.pressed,
         ]}>
         {children}
@@ -70,7 +77,14 @@ const VARIANT_STYLES: Record<'default' | 'muted' | 'inverse' | 'accent', ViewSty
   },
 };
 
-const styles = StyleSheet.create({
+const DARK_VARIANT_STYLES: Record<'default' | 'muted' | 'inverse' | 'accent', ViewStyle> = {
+  default: {backgroundColor: '#1c1f26', borderColor: '#30343e'},
+  muted: {backgroundColor: '#242832', borderColor: '#30343e'},
+  inverse: {backgroundColor: '#111318', borderColor: '#282b32'},
+  accent: {backgroundColor: '#153425', borderColor: '#245d40'},
+};
+
+const styles = createAdaptiveStyles(StyleSheet.create({
   card: {
     padding: spacing.md,
     borderRadius: radii.lg,
@@ -81,4 +95,5 @@ const styles = StyleSheet.create({
     opacity: 0.85,
     transform: [{scale: 0.995}],
   },
-});
+  focused: {borderWidth: 2, borderColor: colors.primary},
+}));

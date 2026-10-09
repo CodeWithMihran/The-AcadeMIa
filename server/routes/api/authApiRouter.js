@@ -12,6 +12,7 @@ const loginIdentity = (req) => {
 
 router.post("/register", authActionLimit({ action: "register-ip", limit: 100, windowMs: 60 * 60 * 1000, identityForRequest: ipIdentity }), authController.register);
 router.post("/login", authActionLimit({ action: "login-ip", limit: 200, windowMs: 15 * 60 * 1000, identityForRequest: ipIdentity }), authActionLimit({ action: "login-identity", limit: 10, windowMs: 15 * 60 * 1000, identityForRequest: loginIdentity }), authController.login);
+router.post("/google/mobile/exchange", authActionLimit({ action: "google-mobile-exchange", limit: 10, windowMs: 15 * 60 * 1000, identityForRequest: ipIdentity }), authController.exchangeMobileGoogleCode);
 router.get("/me", authApi, authController.getMe);
 router.put("/profile", authApi, authController.updateProfile);
 router.post("/logout", authApi, authController.logout);

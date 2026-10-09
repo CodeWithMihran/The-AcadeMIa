@@ -1,6 +1,6 @@
 import React from 'react';
 import {StyleProp, StyleSheet, Text, View, ViewStyle} from 'react-native';
-import {colors, radii, spacing, typography} from '../theme';
+import {colors, radii, spacing, typography, createAdaptiveStyles} from '../theme';
 import {PrimaryButton} from './PrimaryButton';
 
 interface ErrorStateProps {
@@ -35,7 +35,7 @@ export function ErrorState({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   card: {
     padding: spacing.md,
     borderRadius: radii.lg,
@@ -57,4 +57,4 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     borderColor: colors.danger.border,
   },
-});
+}));

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -8,7 +8,8 @@ import {
   TextStyle,
   ViewStyle,
 } from 'react-native';
-import {colors, radii, spacing} from '../theme';
+import {colors, radii, spacing, createAdaptiveStyles} from '../theme';
+import {useAppTheme} from '../context/ThemeContext';
 
 export type ButtonVariant = 'dark' | 'primary' | 'outline' | 'ghost';
 
@@ -26,15 +27,17 @@ interface PrimaryButtonProps {
 export function PrimaryButton({
   label,
   onPress,
-  variant = 'dark',
+  variant = 'primary',
   loading = false,
   disabled = false,
   style,
   labelStyle,
   accessibilityLabel,
 }: PrimaryButtonProps): React.JSX.Element {
+  const {isDark} = useAppTheme();
+  const [focused, setFocused] = useState(false);
   const isInteractive = !loading && !disabled;
-  const config = VARIANT_STYLES[variant] || VARIANT_STYLES.dark;
+  const config = VARIANT_STYLES[variant] || VARIANT_STYLES.primary;
 
   return (
     <Pressable
@@ -43,10 +46,15 @@ export function PrimaryButton({
       accessibilityState={{disabled: !isInteractive, busy: loading}}
       disabled={!isInteractive}
       onPress={onPress}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       style={({pressed}) => [
         styles.button,
         config.button,
+        isDark && variant === 'primary' && styles.darkPrimary,
+        isDark && variant === 'outline' && styles.darkOutline,
         style,
+        focused && styles.focused,
         pressed && isInteractive && styles.pressed,
         disabled && styles.disabled,
       ]}>
@@ -56,7 +64,7 @@ export function PrimaryButton({
           color={variant === 'outline' || variant === 'ghost' ? colors.primary : colors.textInverse}
         />
       ) : (
-        <Text style={[styles.label, config.label, labelStyle]}>{label}</Text>
+        <Text style={[styles.label, config.label, isDark && variant === 'outline' && styles.darkOutlineLabel, isDark && variant === 'ghost' && styles.darkGhostLabel, labelStyle]}>{label}</Text>
       )}
     </Pressable>
   );
@@ -104,7 +112,7 @@ const VARIANT_STYLES: Record<
   },
 };
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   button: {
     minHeight: 44,
     paddingHorizontal: spacing.md,
@@ -127,4 +135,9 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.5,
   },
-});
+  focused: {borderWidth: 2, borderColor: colors.primaryDark},
+  darkPrimary: {backgroundColor: '#134f33', borderColor: '#134f33'},
+  darkOutline: {backgroundColor: '#1c1f26', borderColor: '#424957'},
+  darkOutlineLabel: {color: '#f2f4f7'},
+  darkGhostLabel: {color: '#62d49b'},
+}));

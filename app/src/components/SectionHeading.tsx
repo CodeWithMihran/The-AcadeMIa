@@ -7,7 +7,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import {colors, spacing, typography} from '../theme';
+import {colors, spacing, typography, createAdaptiveStyles} from '../theme';
 
 interface SectionHeadingProps {
   eyebrow?: string;
@@ -43,7 +43,7 @@ export function SectionHeading({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createAdaptiveStyles(StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'flex-end',
@@ -76,4 +76,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '800',
   },
-});
+}));
