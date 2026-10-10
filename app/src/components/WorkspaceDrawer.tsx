@@ -1,17 +1,20 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {Alert, Animated, Easing, Modal, Pressable, ScrollView, StatusBar, StyleSheet, Text, useWindowDimensions, View} from 'react-native';
+import {Alert, Animated, Easing, Image, Modal, Pressable, ScrollView, StatusBar, StyleSheet, Text, useWindowDimensions, View} from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAuth} from '../context/AuthContext';
 import {useAppTheme} from '../context/ThemeContext';
 import {createAdaptiveStyles} from '../theme';
 import {AppMenuItem} from './AppMenuItem';
 import {TabGlyphName} from './TabGlyph';
+import {AdminSection} from '../navigation/AdminSectionContext';
 
-export type WorkspaceRoute = 'Dashboard' | 'Subjects' | 'StudyTools' | 'Progress' | 'Rankings' | 'Campus' | 'Profile' | 'Settings';
+export type WorkspaceRoute = 'Dashboard' | 'Subjects' | 'StudyTools' | 'Progress' | 'Rankings' | 'Campus' | 'Profile' | 'Settings' | 'Admin';
 
 type WorkspaceDrawerProps = {
   visible: boolean;
   activeRoute: string;
+  activeAdminSection?: AdminSection;
+  onAdminSectionSelect?: (section: AdminSection) => void;
   onNavigate: (route: WorkspaceRoute) => void;
   onClose: () => void;
 };
@@ -27,7 +30,7 @@ const insightItems: Array<{route: WorkspaceRoute; icon: TabGlyphName; title: str
   {route: 'Rankings', icon: 'Rankings', title: 'Rankings', subtitle: 'Your opted-in campus cohort'},
 ];
 
-export function WorkspaceDrawer({visible, activeRoute, onNavigate, onClose}: WorkspaceDrawerProps): React.JSX.Element | null {
+export function WorkspaceDrawer({visible, activeRoute, activeAdminSection, onAdminSectionSelect, onNavigate, onClose}: WorkspaceDrawerProps): React.JSX.Element | null {
   const {width} = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const {isDark, reduceMotion} = useAppTheme();
@@ -96,7 +99,8 @@ export function WorkspaceDrawer({visible, activeRoute, onNavigate, onClose}: Wor
 
   if (!renderModal) return null;
 
-  const firstName = user?.name?.trim().split(/\s+/)[0] || 'Student';
+  const isAdmin = user?.role === 'admin';
+  const firstName = user?.name?.trim().split(/\s+/)[0] || (isAdmin ? 'Admin' : 'Student');
   return (
     <Modal transparent visible={renderModal} animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <View style={styles.modalRoot} accessibilityViewIsModal onAccessibilityEscape={onClose}>
@@ -106,10 +110,10 @@ export function WorkspaceDrawer({visible, activeRoute, onNavigate, onClose}: Wor
         <Animated.View style={[styles.drawer, drawerStyle]}>
           <SafeAreaView style={[styles.safePanel, safePanelStyle]} edges={['left', 'right']}>
             <View style={styles.header}>
-              <View style={styles.brandMark}><Text style={styles.brandMarkText}>A</Text></View>
+              <Image source={require('../assets/academia-logo.png')} resizeMode="contain" style={styles.brandLogo} accessibilityLabel="The AcadeMIa logo" />
               <View style={styles.headerCopy}>
                 <Text style={styles.headerTitle}>The AcadeMIa</Text>
-                <Text style={styles.headerSubtitle}>YOUR ACADEMIC WORKSPACE</Text>
+                <Text style={styles.headerSubtitle}>{isAdmin ? 'ADMIN WORKSPACE' : 'YOUR ACADEMIC WORKSPACE'}</Text>
               </View>
               <Pressable accessibilityRole="button" accessibilityLabel="Close navigation menu" hitSlop={8} onPress={onClose} style={styles.closeButton}>
                 <Text style={styles.closeText}>×</Text>
@@ -126,17 +130,35 @@ export function WorkspaceDrawer({visible, activeRoute, onNavigate, onClose}: Wor
                 </View>
               </View>
 
-              <MenuSection title="Learning">
+              {isAdmin ? <MenuSection title="Admin console">
+                {([
+                  ['Overview', 'Admin', 'Platform summary and review queue'],
+                  ['Users', 'Profile', 'Student accounts and access'],
+                  ['Subjects', 'Subjects', 'Syllabus and learning resources'],
+                  ['Review', 'Campus', 'Review contributed campus notes'],
+                  ['Reports', 'Settings', 'Triage broken resource links'],
+                  ['Campus', 'Campus', 'Ambassadors and campus controls'],
+                ] as Array<[AdminSection, TabGlyphName, string]>).map(([section, icon, subtitle]) => (
+                  <AppMenuItem
+                    key={section}
+                    icon={icon}
+                    title={section}
+                    subtitle={subtitle}
+                    active={activeRoute === 'Admin' && activeAdminSection === section}
+                    onPress={() => { onClose(); onAdminSectionSelect?.(section); }}
+                  />
+                ))}
+              </MenuSection> : <MenuSection title="Learning">
                 {learningItems.map(item => <AppMenuItem key={item.route} {...item} active={activeRoute === item.route} onPress={() => navigate(item.route)} />)}
-              </MenuSection>
-              <MenuSection title="Insights">
+              </MenuSection>}
+              {!isAdmin ? <MenuSection title="Insights">
                 {insightItems.map(item => <AppMenuItem key={item.route} {...item} active={activeRoute === item.route} onPress={() => navigate(item.route)} />)}
-              </MenuSection>
-              {user?.track === 'UNIVERSITY' ? <MenuSection title="Campus community">
+              </MenuSection> : null}
+              {!isAdmin && user?.track === 'UNIVERSITY' ? <MenuSection title="Campus community">
                 <AppMenuItem icon="Campus" title="Campus desk" subtitle="Peer notes, contributions, and bounties" active={activeRoute === 'Campus'} onPress={() => navigate('Campus')} />
               </MenuSection> : null}
               <MenuSection title="Account">
-                <AppMenuItem icon="Profile" title="Profile" subtitle="Study track, university, and account details" active={activeRoute === 'Profile'} onPress={() => navigate('Profile')} />
+                {!isAdmin ? <AppMenuItem icon="Profile" title="Profile" subtitle="Study track, university, and account details" active={activeRoute === 'Profile'} onPress={() => navigate('Profile')} /> : null}
                 <AppMenuItem icon="Settings" title="Settings" subtitle="Appearance and app preferences" active={activeRoute === 'Settings'} onPress={() => navigate('Settings')} />
               </MenuSection>
               <Pressable accessibilityRole="button" onPress={confirmSignOut} style={styles.signOut}>
@@ -161,8 +183,7 @@ const styles = createAdaptiveStyles(StyleSheet.create({
   drawer: {height: '100%', backgroundColor: '#ffffff', elevation: 24, shadowColor: '#000000', shadowOpacity: 0.25, shadowRadius: 22, shadowOffset: {width: 8, height: 0}},
   safePanel: {flex: 1, backgroundColor: '#ffffff'},
   header: {flexDirection: 'row', alignItems: 'center', gap: 11, paddingHorizontal: 17, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#e7eaf1'},
-  brandMark: {width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: '#16794b'},
-  brandMarkText: {color: '#ffffff', fontSize: 20, fontWeight: '900'},
+  brandLogo: {width: 42, height: 38, borderRadius: 6},
   headerCopy: {flex: 1},
   headerTitle: {color: '#101828', fontSize: 15, fontWeight: '900'},
   headerSubtitle: {marginTop: 3, color: '#737b8c', fontSize: 8, fontWeight: '800', letterSpacing: 1},

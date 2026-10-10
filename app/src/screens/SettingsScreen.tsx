@@ -62,7 +62,7 @@ export function SettingsScreen(): React.JSX.Element {
       <AppCard style={styles.card}>
         <Text style={styles.cardTitle}>{user?.name || 'Your account'}</Text>
         <Text style={styles.muted}>{user?.email || ''}</Text>
-        <PrimaryButton label="Open profile and study setup" variant="outline" onPress={() => navigation.navigate('Profile')} style={styles.profileButton} />
+        {user?.role !== 'admin' ? <PrimaryButton label="Open profile and study setup" variant="outline" onPress={() => navigation.navigate('Profile')} style={styles.profileButton} /> : null}
       </AppCard>
 
       <SectionHeading title="About" />

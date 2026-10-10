@@ -95,7 +95,7 @@ export const authApi = {
     confirmPassword: string;
   }) => api.post('/auth/register', data),
   currentUser: () => api.get('/auth/me'),
-  logout: () => api.post('/auth/logout'),
+  logout: (token?: string) => api.post('/auth/logout', {}, token ? {headers: {Authorization: `Bearer ${token}`}} : undefined),
   updateProfile: (data: Record<string, unknown>) => api.put('/auth/profile', data),
 };
 

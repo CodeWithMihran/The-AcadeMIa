@@ -13,6 +13,7 @@ export type AppTabParamList = {
   Campus: undefined;
   Settings: undefined;
   Profile: undefined;
+  Admin: undefined;
 };
 
 export type RootStackParamList = {

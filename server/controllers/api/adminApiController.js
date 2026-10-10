@@ -15,6 +15,17 @@ const mongoose = require("mongoose");
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+const sendSubjectWriteError = (res, error, action) => {
+    console.error(`Admin subject ${action} error:`, error);
+    if (error?.name === "ValidationError" || error?.name === "CastError") {
+        return res.status(400).json({ success: false, message: "Some subject fields are invalid. Review the form and try again." });
+    }
+    if (error?.code === 11000) {
+        return res.status(409).json({ success: false, message: "A conflicting subject record already exists." });
+    }
+    return res.status(500).json({ success: false, message: `Failed to ${action} subject. Please try again.` });
+};
+
 const careerBridgeValidationError = (bridge) => {
     if (bridge == null) return null;
     if (typeof bridge !== "object" || Array.isArray(bridge)) return "Career Bridge data must be an object.";
@@ -200,10 +211,7 @@ module.exports.createSubject = async (req, res) => {
             subject: populated
         });
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Failed to create subject: " + err.message
-        });
+        return sendSubjectWriteError(res, err, "create");
     }
 };
 
@@ -278,10 +286,7 @@ module.exports.updateSubject = async (req, res) => {
             subject: updated
         });
     } catch (err) {
-        return res.status(500).json({
-            success: false,
-            message: "Failed to update subject: " + err.message
-        });
+        return sendSubjectWriteError(res, err, "update");
     }
 };
 

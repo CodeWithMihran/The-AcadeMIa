@@ -3,6 +3,7 @@ import {createAdaptiveStyles} from '../theme';
 import React, {useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Pressable,
   Platform,
@@ -135,7 +136,7 @@ export function OnboardingScreen(): React.JSX.Element {
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'} automaticallyAdjustKeyboardInsets>
       <View style={styles.header}>
-        <View style={styles.brandMark}><Text style={styles.brandLetter}>A</Text></View>
+        <Image source={require('../assets/academia-logo.png')} resizeMode="contain" style={styles.brandLogo} accessibilityLabel="The AcadeMIa logo" />
         <Text style={styles.brand}>The Acade<Text style={styles.accent}>MI</Text>a</Text>
       </View>
       <View style={styles.card}>
@@ -244,8 +245,7 @@ const styles = createAdaptiveStyles(StyleSheet.create({
   root: {flex: 1, backgroundColor: '#ffffff'},
   page: {flexGrow: 1, paddingHorizontal: 24, paddingTop: 28, paddingBottom: 34, backgroundColor: '#ffffff'},
   header: {alignItems: 'center', marginBottom: 20},
-  brandMark: {width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 15, backgroundColor: '#16794b'},
-  brandLetter: {color: '#fff', fontSize: 28, fontWeight: '900', fontStyle: 'italic'},
+  brandLogo: {width: 60, height: 54, borderRadius: 7},
   brand: {marginTop: 9, color: '#101828', fontSize: 20, fontWeight: '900'},
   accent: {color: '#16794b'},
   card: {width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 2, paddingVertical: 4},

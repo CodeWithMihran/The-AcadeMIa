@@ -2,7 +2,7 @@ import {createAdaptiveStyles} from '../theme';
 import React, {useEffect, useRef} from 'react';
 import {Animated, Easing, StyleSheet, View} from 'react-native';
 
-export type TabGlyphName = 'Dashboard' | 'Subjects' | 'StudyTools' | 'Progress' | 'Rankings' | 'Campus' | 'Settings' | 'Profile';
+export type TabGlyphName = 'Dashboard' | 'Subjects' | 'StudyTools' | 'Progress' | 'Rankings' | 'Campus' | 'Settings' | 'Profile' | 'Admin';
 
 interface Props {
   name: TabGlyphName;
@@ -59,6 +59,8 @@ export function TabGlyph({name, color, focused, showActiveDot = true, reduceMoti
         <View style={styles.community}><View style={[styles.personHead, {borderColor: color}]} /><View style={[styles.personHeadSmall, {borderColor: color}]} /><View style={[styles.personBody, {borderColor: color}]} /></View>
       ) : name === 'Settings' ? (
         <View style={[styles.settings, {borderColor: color}]}><View style={[styles.settingsCore, {borderColor: color}]} /></View>
+      ) : name === 'Admin' ? (
+        <View style={[styles.adminShield, {borderColor: color}]}><View style={[styles.adminCheckLeft, line]} /><View style={[styles.adminCheckRight, line]} /></View>
       ) : (
         <View style={styles.profileIcon}>
           <View style={[styles.profileHead, {borderColor: color}]} />
@@ -97,6 +99,9 @@ const styles = createAdaptiveStyles(StyleSheet.create({
   personBody: {position: 'absolute', bottom: 1, left: 1, width: 15, height: 8, borderWidth: 1.6, borderBottomWidth: 0, borderTopLeftRadius: 8, borderTopRightRadius: 8},
   settings: {width: 17, height: 17, alignItems: 'center', justifyContent: 'center', borderWidth: 1.6, borderRadius: 9},
   settingsCore: {width: 6, height: 6, borderWidth: 1.4, borderRadius: 4},
+  adminShield: {width: 17, height: 19, alignItems: 'center', justifyContent: 'center', borderWidth: 1.7, borderTopLeftRadius: 7, borderTopRightRadius: 7, borderBottomLeftRadius: 10, borderBottomRightRadius: 10},
+  adminCheckLeft: {position: 'absolute', width: 4, height: 1.7, left: 3, top: 9, borderRadius: 2, transform: [{rotate: '45deg'}]},
+  adminCheckRight: {position: 'absolute', width: 7, height: 1.7, left: 6, top: 8, borderRadius: 2, transform: [{rotate: '-48deg'}]},
   profileIcon: {alignItems: 'center', justifyContent: 'center', gap: 2},
   profileHead: {width: 7, height: 7, borderWidth: 1.8, borderRadius: 4},
   profileShoulders: {width: 16, height: 8, borderWidth: 1.8, borderBottomWidth: 0, borderTopLeftRadius: 9, borderTopRightRadius: 9},

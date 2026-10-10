@@ -3,6 +3,7 @@ import {createAdaptiveStyles} from '../theme';
 import React, {useRef, useState} from 'react';
 import {
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Linking,
   NativeModules,
@@ -104,9 +105,7 @@ export function AuthScreen({navigation, route}: AuthScreenProps): React.JSX.Elem
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         automaticallyAdjustKeyboardInsets>
-        <View style={styles.brandMark} accessibilityLabel="The AcadeMIa logo">
-          <Text style={styles.brandA}>A</Text>
-        </View>
+        <Image source={require('../assets/academia-logo.png')} resizeMode="contain" style={styles.brandLogo} accessibilityLabel="The AcadeMIa logo" />
         <Text style={styles.brandName}>The Acade<Text style={styles.brandAccent}>MI</Text>a</Text>
         <Text style={styles.brandSubtitle}>YOUR ACADEMIC WORKSPACE</Text>
 
@@ -239,8 +238,7 @@ function Field(props: FieldProps): React.JSX.Element {
 const styles = createAdaptiveStyles(StyleSheet.create({
   root: {flex: 1, backgroundColor: '#ffffff'},
   scrollContent: {flexGrow: 1, justifyContent: 'center', paddingHorizontal: 26, paddingTop: 28, paddingBottom: 32},
-  brandMark: {alignSelf: 'center', width: 54, height: 54, alignItems: 'center', justifyContent: 'center', borderRadius: 17, backgroundColor: '#16794b'},
-  brandA: {color: '#fff', fontSize: 32, fontWeight: '900', fontStyle: 'italic'},
+  brandLogo: {alignSelf: 'center', width: 72, height: 64, borderRadius: 8},
   brandName: {marginTop: 12, alignSelf: 'center', color: '#101828', fontSize: 22, fontWeight: '900'},
   brandAccent: {color: '#16794b'},
   brandSubtitle: {marginTop: 4, marginBottom: 34, alignSelf: 'center', color: '#7e8799', fontSize: 9, fontWeight: '800', letterSpacing: 2},

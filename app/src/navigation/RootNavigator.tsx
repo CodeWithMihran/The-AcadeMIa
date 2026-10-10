@@ -6,12 +6,12 @@ import {
   Text,
   View,
 } from 'react-native';
-import {BottomTabBarProps, createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {BottomTabBarProps, BottomTabHeaderProps, createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {useAuth} from '../context/AuthContext';
 import {useAppTheme} from '../context/ThemeContext';
-import {TopNavigationBar} from '../components/TopNavigationBar';
+import {WorkspaceBottomBar, WorkspaceHeader} from '../components/TopNavigationBar';
 import {AuthScreen} from '../screens/AuthScreen';
 import {OnboardingScreen} from '../screens/OnboardingScreen';
 import {DashboardScreen} from '../screens/DashboardScreen';
@@ -25,11 +25,14 @@ import {CommunityScreen} from '../screens/CommunityScreen';
 import {AdminConsoleScreen} from '../screens/AdminConsoleScreen';
 import {SettingsScreen} from '../screens/SettingsScreen';
 import {AppTabParamList, AuthStackParamList, RootStackParamList} from './types';
+import {AdminSection, AdminSectionProvider} from './AdminSectionContext';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tabs = createBottomTabNavigator<AppTabParamList>();
-const renderTopNavigationBar = (props: BottomTabBarProps) => <TopNavigationBar {...props} />;
+const AdminTabs = createBottomTabNavigator<AppTabParamList>();
+const renderWorkspaceHeader = (props: BottomTabHeaderProps) => <WorkspaceHeader {...props} />;
+const renderWorkspaceBottomBar = (props: BottomTabBarProps) => <WorkspaceBottomBar {...props} />;
 
 function AuthFlow(): React.JSX.Element {
   const {reduceMotion} = useAppTheme();
@@ -46,9 +49,10 @@ function MainTabs(): React.JSX.Element {
   const {reduceMotion} = useAppTheme();
   return (
     <Tabs.Navigator
-      tabBar={renderTopNavigationBar}
+      tabBar={renderWorkspaceBottomBar}
       screenOptions={{
-        headerShown: false,
+        header: renderWorkspaceHeader,
+        headerShown: true,
         animation: reduceMotion ? 'none' : 'fade',
       }}>
       <Tabs.Screen name="Dashboard" component={DashboardScreen} options={{title: 'Dashboard'}} />
@@ -56,11 +60,24 @@ function MainTabs(): React.JSX.Element {
       <Tabs.Screen name="StudyTools" component={StudyToolsPage} options={{title: 'Study tools'}} />
       <Tabs.Screen name="Profile" component={ProfileScreen} options={{tabBarButton: () => null}} />
       <Tabs.Screen name="Settings" component={SettingsScreen} options={{tabBarButton: () => null}} />
-      <Tabs.Screen name="Progress" component={ProgressScreen} options={{tabBarButton: () => null}} />
+      <Tabs.Screen name="Progress" component={ProgressScreen} options={{title: 'Progress'}} />
       <Tabs.Screen name="SubjectProgress" component={SubjectProgressScreen} options={{tabBarButton: () => null}} />
       <Tabs.Screen name="Rankings" component={RankingsScreen} options={{tabBarButton: () => null}} />
       {user?.track === 'UNIVERSITY' && <Tabs.Screen name="Campus" component={CommunityScreen} options={{title: 'Campus', tabBarButton: () => null}} />}
     </Tabs.Navigator>
+  );
+}
+
+function AdminWorkspace(): React.JSX.Element {
+  const {reduceMotion} = useAppTheme();
+  const [section, setSection] = React.useState<AdminSection>('Overview');
+  return (
+    <AdminSectionProvider value={{section, setSection}}>
+      <AdminTabs.Navigator tabBar={() => null} screenOptions={{header: renderWorkspaceHeader, headerShown: true, animation: reduceMotion ? 'none' : 'fade'}}>
+        <AdminTabs.Screen name="Admin" component={AdminConsoleScreen} options={{title: 'Admin console'}} />
+        <AdminTabs.Screen name="Settings" component={SettingsScreen} options={{title: 'Settings'}} />
+      </AdminTabs.Navigator>
+    </AdminSectionProvider>
   );
 }
 
@@ -81,7 +98,7 @@ export function RootNavigator(): React.JSX.Element {
   if (user && user.role === 'student' && user.onboardingCompleted === false) {
     return <OnboardingScreen />;
   }
-  if (user?.role === 'admin') return <AdminConsoleScreen />;
+  if (user?.role === 'admin') return <AdminWorkspace />;
 
   return (
     <RootStack.Navigator screenOptions={{headerShown: false, animation: reduceMotion ? 'none' : 'slide_from_right'}}>

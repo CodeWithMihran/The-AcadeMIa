@@ -183,19 +183,13 @@ export function AuthProvider({children}: PropsWithChildren): React.JSX.Element {
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      await authApi.logout();
-    } catch {
-      // Always clear local credentials, even if the server cannot be reached.
-    } finally {
-      try {
-        await clearAuthToken();
-      } catch {
-        // Clear the in-memory session even if secure storage reports an error.
-      }
-      setAuthError('');
-      setUser(null);
-    }
+    // Drop access to the authenticated workspace immediately. Remote logout is
+    // best-effort so a slow or unavailable server cannot trap the user here.
+    setAuthError('');
+    setUser(null);
+    const token = await readAuthToken().catch(() => null);
+    if (token) authApi.logout(token).catch(() => undefined);
+    await clearAuthToken().catch(() => undefined);
   }, []);
 
   const updateUser = useCallback((nextUser: AcademiaUser) => setUser(nextUser), []);
