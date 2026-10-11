@@ -31,19 +31,26 @@ const SocialLinks = () => (
   </div>
 );
 
-const Brand = ({ compact = false, to = '/' }) => (
-  <Link to={to} className="group inline-flex w-fit items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
-    <span className={`inline-flex shrink-0 items-center justify-center rounded-xl border border-white/70 bg-gradient-to-br from-white to-slate-100 shadow-lg shadow-black/15 transition-transform duration-200 ${compact ? 'h-9 w-9' : 'h-11 w-11'}`}>
-      <AcademiaLogo className={compact ? 'h-8 w-8' : 'h-10 w-10'} />
-    </span>
-    <span className="flex flex-col">
-      <span className={`whitespace-nowrap font-extrabold tracking-tight text-white ${compact ? 'text-base' : 'text-lg'}`}>
-        The <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-white bg-clip-text text-transparent">AcadeMIa</span>
+const Brand = ({ compact = false, to = '/', tone = 'dark' }) => {
+  const isDark = tone === 'dark';
+  return (
+    <Link to={to} className="group inline-flex w-fit items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
+      <span className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-xl border ${isDark ? 'border-white/70 bg-gradient-to-br from-white to-slate-100 shadow-black/15' : 'border-line-strong bg-white shadow-black/5'} p-0.5 shadow-lg transition-transform duration-200 ${compact ? 'h-9 w-9' : 'h-11 w-11'}`}>
+        <AcademiaLogo className="h-full w-full object-contain" />
       </span>
-      {!compact && <span className="mt-0.5 text-[9px] font-bold uppercase tracking-[0.2em] text-content-faint">Academic OS</span>}
-    </span>
-  </Link>
-);
+      <span className="flex flex-col">
+        <span className={`whitespace-nowrap ${compact ? 'text-base' : 'text-lg'} ${isDark ? 'brand-title-dark' : 'brand-title-light'} group-hover:opacity-95`}>
+          The Acade<span className={isDark ? 'brand-mi-accent-dark' : 'brand-mi-accent-light'}>MI</span>a
+        </span>
+        {!compact && (
+          <span className={`mt-0.5 text-[9px] font-bold uppercase tracking-[0.24em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+            Academic OS
+          </span>
+        )}
+      </span>
+    </Link>
+  );
+};
 
 const ExternalLink = ({ href, children }) => (
   <a href={href} className="inline-flex items-center gap-1.5 rounded-sm transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400">
@@ -121,7 +128,7 @@ export const Footer = () => {
       <footer className="mt-auto border-t border-line bg-app py-6 sm:py-7">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 text-center sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:text-left">
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
-            <Brand compact to="/admin" />
+            <Brand compact to="/admin" tone="light" />
             <span className="hidden h-4 w-px bg-line-strong sm:block" aria-hidden="true" />
             <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-content-faint">Admin management workspace</span>
           </div>

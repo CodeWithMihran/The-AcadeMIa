@@ -136,8 +136,8 @@ const styles = createAdaptiveStyles(StyleSheet.create({
     opacity: 0.5,
   },
   focused: {borderWidth: 2, borderColor: colors.primaryDark},
-  darkPrimary: {backgroundColor: '#134f33', borderColor: '#134f33'},
-  darkOutline: {backgroundColor: '#1c1f26', borderColor: '#424957'},
-  darkOutlineLabel: {color: '#f2f4f7'},
-  darkGhostLabel: {color: '#62d49b'},
+  darkPrimary: {backgroundColor: '#2563eb', borderColor: '#2563eb'},
+  darkOutline: {backgroundColor: '#13161f', borderColor: '#3b4357'},
+  darkOutlineLabel: {color: '#f8fafc'},
+  darkGhostLabel: {color: '#60a5fa'},
 }));

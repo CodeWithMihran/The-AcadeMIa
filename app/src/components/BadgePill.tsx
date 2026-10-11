@@ -55,12 +55,12 @@ const VARIANT_MAP: Record<BadgeVariant, {container: ViewStyle; text: {color: str
 };
 
 const DARK_VARIANT_OVERRIDES: Partial<Record<BadgeVariant, {container: ViewStyle; text: TextStyle}>> = {
-  blue: {container: {backgroundColor: '#153425', borderColor: '#245d40'}, text: {color: '#62d49b'}},
-  emerald: {container: {backgroundColor: '#10291e', borderColor: '#245d40'}, text: {color: '#6ee7a8'}},
-  amber: {container: {backgroundColor: '#332715', borderColor: '#68501d'}, text: {color: '#ffca80'}},
-  danger: {container: {backgroundColor: '#351d20', borderColor: '#623237'}, text: {color: '#ff9898'}},
-  indigo: {container: {backgroundColor: '#153425', borderColor: '#245d40'}, text: {color: '#62d49b'}},
-  muted: {container: {backgroundColor: '#242832', borderColor: '#30343e'}, text: {color: '#aeb8c9'}},
+  blue: {container: {backgroundColor: '#172554', borderColor: '#1e3a8a'}, text: {color: '#60a5fa'}},
+  emerald: {container: {backgroundColor: '#0e261a', borderColor: '#225d3c'}, text: {color: '#6ee7b7'}},
+  amber: {container: {backgroundColor: '#2a2012', borderColor: '#78561d'}, text: {color: '#fbbf24'}},
+  danger: {container: {backgroundColor: '#2c1417', borderColor: '#6b272d'}, text: {color: '#f87171'}},
+  indigo: {container: {backgroundColor: '#172554', borderColor: '#1e3a8a'}, text: {color: '#60a5fa'}},
+  muted: {container: {backgroundColor: '#1a1e29', borderColor: '#252a38'}, text: {color: '#cbd5e1'}},
 };
 
 const styles = createAdaptiveStyles(StyleSheet.create({

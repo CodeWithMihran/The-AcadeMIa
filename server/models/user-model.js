@@ -98,4 +98,16 @@ const userSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+// Fast cohort lookup for anonymous rankings and filtered directories
+userSchema.index({
+    track: 1,
+    tenant: 1,
+    college: 1,
+    branch: 1,
+    semester: 1,
+    leaderboardOptIn: 1,
+    onboardingCompleted: 1
+});
+userSchema.index({ role: 1, tenant: 1, createdAt: -1 });
+
 module.exports = mongoose.model("user", userSchema);

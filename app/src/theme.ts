@@ -5,11 +5,11 @@
 
 export const colors = {
   // Brand & Accent
-  primary: '#16794b',
-  primaryDark: '#145c38',
-  primarySubtle: '#ecfdf3',
-  primaryPill: '#f0fdf4',
-  primaryBorder: '#b7e4c7',
+  primary: '#2563eb',
+  primaryDark: '#1d4ed8',
+  primarySubtle: '#eff6ff',
+  primaryPill: '#dbeafe',
+  primaryBorder: '#bfdbfe',
 
   // Dark & Inverse Surfaces (Mobile header & prominent actions)
   darkSurface: '#111318',
@@ -30,7 +30,7 @@ export const colors = {
   textMuted: '#687187',
   textFaint: '#929bad',
   textInverse: '#ffffff',
-  textInverseMuted: '#a8e2c3',
+  textInverseMuted: '#bfdbfe',
 
   // Lines & Borders
   line: '#e7eaf1',
@@ -58,9 +58,9 @@ export const colors = {
     indicator: '#f04438',
   },
   indigo: {
-    bg: '#ecfdf3',
-    border: '#b7e4c7',
-    text: '#145c38',
+    bg: '#eff6ff',
+    border: '#bfdbfe',
+    text: '#1d4ed8',
   },
 };
 
@@ -73,25 +73,86 @@ export function setAdaptiveThemeMode(mode: AppThemeMode): void {
 
 function darkenStyle(style: Record<string, unknown>): Record<string, unknown> {
   const colorMap: Record<string, string> = {
-    '#f7f8fc': '#111318', '#f8f9fc': '#111318', '#ffffff': '#1c1f26', '#fff': '#1c1f26',
-    '#f1f4f9': '#242832', '#f1f3f8': '#242832', '#f2f4f8': '#242832', '#eef2f7': '#242832',
-    '#f8f9ff': '#202432', '#f7f9ff': '#202432', '#fbfcff': '#202432', '#f5f7fc': '#202432', '#ecfdf3': '#153425', '#f0fdf4': '#183a29', '#b7e4c7': '#245d40',
-    '#16794b': '#62d49b', '#145c38': '#79e2ac', '#a8e2c3': '#a8e2c3',
-    '#edfcf2': '#10291e', '#abefc6': '#245d40', '#fef8e7': '#332715', '#fedf89': '#68501d',
-    '#fff5f5': '#351d20', '#fff7f7': '#351d20', '#fecdca': '#623237', '#fffafa': '#351d20',
-    '#e7eaf1': '#30343e', '#edf0f5': '#30343e', '#dfe4ed': '#3a404c', '#cfd6e3': '#424957',
-    '#e6eaf2': '#30343e', '#f0f1f5': '#2a2e37', '#edf1f7': '#30343e', '#edf0f6': '#30343e', '#dce2ef': '#3a404c', '#e1e5ed': '#3a404c', '#e1e5ee': '#3a404c', '#e1e6ef': '#3a404c', '#e3e8f2': '#3a404c', '#d7deeb': '#3a404c',
-    '#101828': '#f2f4f7', '#20283a': '#e4e8f1', '#303846': '#e4e8f1',
-    '#475467': '#c5cedb', '#4d586d': '#c5cedb', '#515b70': '#c5cedb', '#596478': '#c5cedb', '#687187': '#aeb8c9', '#737b8c': '#aeb8c9', '#7e8799': '#aeb8c9', '#8a93a4': '#aeb8c9', '#8a93a6': '#aeb8c9', '#4e586a': '#c5cedb',
-    '#858da0': '#aeb8c9', '#929bad': '#929bad', '#067647': '#6ee7a8', '#278458': '#6ee7a8',
-    '#b54708': '#ffca80', '#b42318': '#ff9898', '#9b1c1c': '#ff9898',
-    '#a12f36': '#ff9898',
+    // Canvas & backgrounds: Deep rich obsidian slate
+    '#f7f8fc': '#0b0d12',
+    '#f8f9fc': '#0b0d12',
+    '#ffffff': '#13161f',
+    '#fff': '#13161f',
+    // Elevated & secondary card surfaces
+    '#f1f4f9': '#1a1e29',
+    '#f1f3f8': '#1a1e29',
+    '#f2f4f8': '#1a1e29',
+    '#eef2f7': '#1a1e29',
+    '#f8f9ff': '#181c26',
+    '#f7f9ff': '#181c26',
+    '#fbfcff': '#181c26',
+    '#f5f7fc': '#181c26',
+    // Primary subtle & pill backgrounds (blue brand)
+    '#eff6ff': '#172554',
+    '#dbeafe': '#1e3a8a',
+    '#bfdbfe': '#93c5fd',
+    '#2563eb': '#60a5fa',
+    '#1d4ed8': '#93c5fd',
+    // Status badges & surfaces
+    '#edfcf2': '#0e261a',
+    '#abefc6': '#225d3c',
+    '#fef8e7': '#2a2012',
+    '#fedf89': '#78561d',
+    '#fff5f5': '#2c1417',
+    '#fff7f7': '#2c1417',
+    '#fecdca': '#6b272d',
+    '#fffafa': '#2c1417',
+    // Borders & dividers: Crisp, visible borders that separate cards cleanly
+    '#e7eaf1': '#252a38',
+    '#edf0f5': '#252a38',
+    '#dfe4ed': '#2e3546',
+    '#cfd6e3': '#3b4357',
+    '#e6eaf2': '#252a38',
+    '#f0f1f5': '#252a38',
+    '#edf1f7': '#252a38',
+    '#edf0f6': '#252a38',
+    '#dce2ef': '#2e3546',
+    '#e1e5ed': '#2e3546',
+    '#e1e5ee': '#2e3546',
+    '#e1e6ef': '#2e3546',
+    '#e3e8f2': '#2e3546',
+    '#d7deeb': '#2e3546',
+    '#f0d6d6': '#4a2529',
+    '#f1c9c9': '#572b2f',
+    // Text colors: High-contrast, crystal clear hierarchy
+    '#101828': '#f8fafc',
+    '#111827': '#f8fafc',
+    '#182033': '#f8fafc',
+    '#20283a': '#f1f5f9',
+    '#303846': '#f1f5f9',
+    '#394256': '#e2e8f0',
+    '#475467': '#cbd5e1',
+    '#4d586d': '#cbd5e1',
+    '#515b70': '#cbd5e1',
+    '#596478': '#cbd5e1',
+    '#4e586a': '#cbd5e1',
+    '#687187': '#94a3b8',
+    '#737b8c': '#94a3b8',
+    '#7e8799': '#94a3b8',
+    '#8a93a4': '#94a3b8',
+    '#8a93a6': '#94a3b8',
+    '#858da0': '#94a3b8',
+    '#929bad': '#94a3b8',
+    // Vibrant accent indicators
+    '#067647': '#34d399',
+    '#b54708': '#fbbf24',
+    '#b42318': '#f87171',
+    '#9b1c1c': '#f87171',
+    '#a12f36': '#f87171',
   };
   const result: Record<string, unknown> = {...style};
   for (const property of ['backgroundColor', 'borderColor', 'borderBottomColor', 'borderTopColor', 'borderLeftColor', 'borderRightColor', 'color', 'shadowColor']) {
     const value = result[property];
     if (typeof value !== 'string') continue;
     const normalized = value.toLowerCase();
+    // White is both a surface token and an inverse text color. Only remap it
+    // on non-text properties so white labels/icons stay visible on dark UI.
+    if ((normalized === '#ffffff' || normalized === '#fff') && property === 'color') continue;
     if (colorMap[normalized]) { result[property] = colorMap[normalized]; continue; }
     const match = normalized.match(/^#([0-9a-f]{6})$/);
     if (!match) continue;
@@ -100,10 +161,10 @@ function darkenStyle(style: Record<string, unknown>): Record<string, unknown> {
     const blue = parseInt(match[1].slice(4,6),16);
     const brightness = (red*299 + green*587 + blue*114)/1000;
     const saturation = Math.max(red,green,blue)-Math.min(red,green,blue);
-    if (property.toLowerCase().includes('border') && brightness > 165) result[property] = '#30343e';
-    else if (property === 'backgroundColor' && brightness > 230) result[property] = '#1c1f26';
-    else if (property === 'backgroundColor' && brightness > 200 && saturation < 100) result[property] = '#242832';
-    else if (property === 'color' && brightness < 165 && saturation < 75) result[property] = '#aeb8c9';
+    if (property.toLowerCase().includes('border') && brightness > 165) result[property] = '#252a38';
+    else if (property === 'backgroundColor' && brightness > 230) result[property] = '#13161f';
+    else if (property === 'backgroundColor' && brightness > 200 && saturation < 100) result[property] = '#1a1e29';
+    else if (property === 'color' && brightness < 165 && saturation < 75) result[property] = '#cbd5e1';
   }
   return result;
 }

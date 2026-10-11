@@ -29,14 +29,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 unauthorized globally
+// Handle 401 unauthorized gracefully without hard browser reload
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      if (window.location.pathname !== '/' && !window.location.pathname.startsWith('/auth')) {
-        try { localStorage.removeItem('academia_token'); } catch { /* Continue clearing the in-memory session. */ }
-        window.location.href = '/'; // ✅ Added forced redirect to login page on session expiry
+      try { localStorage.removeItem('academia_token'); } catch { /* Continue clearing the in-memory session. */ }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('academia:unauthorized', { detail: error }));
       }
     }
     return Promise.reject(error);
@@ -47,9 +47,11 @@ api.interceptors.response.use(
 export const authService = {
   register: (data) => api.post('/auth/register', data),
   login: (data) => api.post('/auth/login', data),
+  forgotPassword: (data) => api.post('/auth/forgot-password', data),
+  resetPassword: (data) => api.post('/auth/reset-password', data),
   getMe: () => api.get('/auth/me'),
   logout: () => api.post('/auth/logout'),
-  updateProfile: (data) => api.put('/auth/profile', data) // ✅ Added this line for Profile.jsx
+  updateProfile: (data) => api.put('/auth/profile', data)
 };
 
 // Tenant Endpoints

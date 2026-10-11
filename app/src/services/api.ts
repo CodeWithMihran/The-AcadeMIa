@@ -87,6 +87,8 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
 export const authApi = {
   login: (email: string, password: string) =>
     api.post('/auth/login', {email, password}),
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', {email}),
+  resetPassword: (data: {token: string; password: string; confirmPassword: string}) => api.post('/auth/reset-password', data),
   exchangeMobileGoogleCode: (code: string, verifier: string) => api.post('/auth/google/mobile/exchange', {code, verifier}),
   register: (data: {
     name: string;

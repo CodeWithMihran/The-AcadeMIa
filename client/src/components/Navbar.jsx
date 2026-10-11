@@ -185,14 +185,14 @@ export const Navbar = () => {
             aria-label={isAdmin ? 'The AcadeMIa admin console home' : 'The AcadeMIa home'}
             className="group flex min-w-0 shrink-0 items-center gap-2 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 min-[375px]:gap-2.5 sm:gap-3"
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/70 bg-gradient-to-br from-white to-slate-100 shadow-lg shadow-black/15 transition-transform duration-300 group-active:scale-95 min-[375px]:h-10 min-[375px]:w-10 sm:h-11 sm:w-11">
-              <AcademiaLogo className="h-8 w-8 min-[375px]:h-9 min-[375px]:w-9 sm:h-10 sm:w-10" />
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/70 bg-gradient-to-br from-white to-slate-100 p-0.5 shadow-lg shadow-black/15 transition-transform duration-300 group-active:scale-95 min-[375px]:h-10 min-[375px]:w-10 sm:h-11 sm:w-11">
+              <AcademiaLogo className="h-full w-full object-contain" />
             </span>
             <span className="flex min-w-0 flex-col">
-              <span className="whitespace-nowrap text-[15px] font-extrabold leading-none tracking-tight min-[375px]:text-[17px] sm:text-xl">
-                The <span className="bg-gradient-to-r from-blue-400 via-indigo-200 to-white bg-clip-text text-transparent">AcadeMIa</span>
+              <span className="brand-title-dark whitespace-nowrap text-[15px] min-[375px]:text-[17px] sm:text-xl">
+                The Acade<span className="brand-mi-accent-dark">MI</span>a
               </span>
-              <span className="mt-1.5 text-[8px] font-bold uppercase tracking-[0.22em] text-content-faint sm:text-[9px]">
+              <span className="mt-1 text-[8px] font-bold uppercase tracking-[0.24em] text-slate-400 sm:text-[9px]">
                 {isAdmin ? 'Admin Console' : 'Academic OS'}
               </span>
             </span>

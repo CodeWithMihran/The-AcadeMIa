@@ -8,6 +8,7 @@ const CommunityBounty = require("../../models/community-bounty-model");
 const CommunityWallet = require("../../models/community-wallet-model");
 const studentSubjectFilter = require("../../utils/studentSubjectFilter");
 const { normalizeBranch, branchQueryValues } = require("../../utils/branch");
+const storage = require("../../utils/storage");
 
 const NOTE_REWARD = 5;
 const BOUNTY_MIN = 10;
@@ -222,6 +223,7 @@ module.exports.submitNote = async (req, res) => {
             if (bounty.unitTitle.trim().toLocaleLowerCase() !== resolvedUnitTitle.trim().toLocaleLowerCase()) return res.status(400).json({ success: false, message: "The submitted notes must match the bounty unit or topic." });
         }
         const campus = campusOf(req.user);
+        const storedFile = await storage.saveNoteFile(req.file.buffer, req.file.originalname, req.file.mimetype);
         const note = await CommunityNote.create({
             subject: subject._id,
             tenant: subject.tenant,
@@ -235,7 +237,8 @@ module.exports.submitNote = async (req, res) => {
             originalName: req.file.originalname.replace(/[\\/\0]/g, "_").slice(0, 180),
             mimeType: req.file.mimetype,
             size: req.file.size,
-            fileData: req.file.buffer,
+            storageKey: storedFile.storageKey,
+            storageType: storedFile.storageType,
             contributor: req.user._id,
             bounty: bounty?._id || null
         });
@@ -249,7 +252,7 @@ module.exports.submitNote = async (req, res) => {
 module.exports.downloadNote = async (req, res) => {
     try {
         if (!mongoose.isValidObjectId(req.params.noteId)) return res.status(400).json({ success: false, message: "Invalid note id." });
-        const note = await CommunityNote.findById(req.params.noteId).select("+fileData status tenant college branch semester contributor mimeType originalName");
+        const note = await CommunityNote.findById(req.params.noteId).select("+fileData status tenant college branch semester contributor mimeType originalName size storageKey storageType");
         if (!note) return res.status(404).json({ success: false, message: "Note not found." });
         const moderator = moderatorCanAccess(req.user, note);
         const owner = idOf(note.contributor) === idOf(req.user._id);
@@ -265,7 +268,7 @@ module.exports.downloadNote = async (req, res) => {
             "X-Content-Type-Options": "nosniff",
             "Cache-Control": "private, no-store"
         });
-        return res.send(note.fileData);
+        return storage.streamNoteFile(note, res);
     } catch (error) {
         console.error("Download community note error:", error);
         return res.status(500).json({ success: false, message: "Could not open this note." });

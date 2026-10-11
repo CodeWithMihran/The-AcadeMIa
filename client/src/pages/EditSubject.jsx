@@ -44,9 +44,6 @@ export const EditSubject = () => {
     }
   }, [id, subject, isDirty, reset]);
 
-  useEffect(() => {
-    if (subjectError) setError(subjectError.response?.data?.message || "Failed to load subject for editing.");
-  }, [subjectError]);
 
   const onSubmit = async (values) => {
     setError(""); setSuccess("");

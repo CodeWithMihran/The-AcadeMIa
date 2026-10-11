@@ -984,10 +984,10 @@ const styles = createAdaptiveStyles(StyleSheet.create({
   },
   tabButton: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 42,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: radii.sm,
+    borderRadius: radii.sm + 2,
   },
   tabButtonActive: {
     backgroundColor: colors.primarySubtle,
@@ -999,7 +999,7 @@ const styles = createAdaptiveStyles(StyleSheet.create({
   },
   tabButtonTextActive: {
     color: colors.primary,
-    fontWeight: '800',
+    fontWeight: '900',
   },
   card: {
     marginBottom: spacing.sm,

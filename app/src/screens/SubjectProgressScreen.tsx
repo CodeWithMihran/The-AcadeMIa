@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {AppTabParamList} from '../navigation/types';
 import {api, getApiErrorMessage, subjectApi} from '../services/api';
@@ -128,10 +129,11 @@ export function SubjectProgressScreen({
     }
   };
 
+  const insets = useSafeAreaInsets();
   return (
     <View style={styles.screen}>
       {/* Classical App Bar */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, {paddingTop: insets.top, height: 52 + insets.top}]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Back to overall progress"

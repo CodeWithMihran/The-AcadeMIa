@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Animated, Easing, Image, Pressable, StatusBar, StyleSheet, Text, useWindowDimensions, View} from 'react-native';
+import {Animated, Easing, Pressable, StatusBar, StyleSheet, Text, useWindowDimensions, View} from 'react-native';
 import {BottomTabBarProps, BottomTabHeaderProps} from '@react-navigation/bottom-tabs';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {createAdaptiveStyles} from '../theme';
@@ -7,6 +7,7 @@ import {useAppTheme} from '../context/ThemeContext';
 import {useAuth} from '../context/AuthContext';
 import {useAdminSection} from '../navigation/AdminSectionContext';
 import {WorkspaceDrawer, WorkspaceRoute} from './WorkspaceDrawer';
+import {AcademiaLogo} from './AcademiaLogo';
 import {TabGlyph, TabGlyphName} from './TabGlyph';
 
 const studentTabs: Array<{route: 'Dashboard' | 'Subjects' | 'StudyTools' | 'Progress'; title: string; icon: TabGlyphName}> = [
@@ -34,7 +35,7 @@ export function WorkspaceHeader({route, navigation}: BottomTabHeaderProps): Reac
       <View style={styles.brandRow}>
         <AnimatedMenuButton expanded={drawerOpen} isDark={isDark} reduceMotion={reduceMotion} onPress={() => setDrawerOpen(open => !open)} />
         <View style={styles.brand} accessible accessibilityLabel="The AcadeMIa">
-          <Image source={require('../assets/academia-logo.png')} resizeMode="contain" style={styles.brandLogo} accessibilityLabel="The AcadeMIa logo" />
+          <AcademiaLogo height={40} />
           <Text style={styles.brandName}>The Acade<Text style={styles.brandAccent}>MI</Text>a</Text>
         </View>
       </View>
@@ -125,35 +126,35 @@ function AnimatedMenuButton({expanded, isDark, reduceMotion, onPress}: {expanded
       onPress={onPress}
       style={({pressed}) => [styles.menuButton, isDark && styles.menuButtonDark, keyboardFocused && styles.menuButtonFocus, pressed && styles.menuButtonPressed]}>
       <View style={styles.menuIcon}>
-        <Animated.View style={[styles.menuLine, topStyle]} />
-        <Animated.View style={[styles.menuLine, middleStyle]} />
-        <Animated.View style={[styles.menuLine, bottomStyle]} />
+        <Animated.View style={[styles.menuLine, topStyle, isDark && styles.menuLineDark, {backgroundColor: '#ffffff'}]} />
+        <Animated.View style={[styles.menuLine, middleStyle, isDark && styles.menuLineDark, {backgroundColor: '#ffffff'}]} />
+        <Animated.View style={[styles.menuLine, bottomStyle, isDark && styles.menuLineDark, {backgroundColor: '#ffffff'}]} />
       </View>
     </Pressable>
   );
 }
 
 const styles = createAdaptiveStyles(StyleSheet.create({
-  shell: {zIndex: 20, backgroundColor: '#111318', borderBottomWidth: 1, borderBottomColor: '#282b32', shadowColor: '#000000', shadowOpacity: 0.18, shadowRadius: 10, shadowOffset: {width: 0, height: 4}, elevation: 8},
-  brandRow: {minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 12, paddingHorizontal: 3},
-  brand: {flexDirection: 'row', alignItems: 'center', gap: 9},
-  brandLogo: {width: 40, height: 36, borderRadius: 6},
-  brandName: {color: '#ffffff', fontSize: 16, fontWeight: '900', letterSpacing: -0.25},
-  brandAccent: {color: '#a8e2c3'},
-  menuButton: {width: 46, height: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#343841', borderRadius: 13, backgroundColor: '#1c1f26'},
-  menuButtonDark: {width: 48, height: 46, borderWidth: 2, borderColor: '#62d49b', backgroundColor: '#242832'},
-  menuButtonFocus: {borderWidth: 2, borderColor: '#a8e2c3'},
+  shell: {zIndex: 20, backgroundColor: '#0b0d12', borderBottomWidth: 1, borderBottomColor: '#222736', shadowColor: '#000000', shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: {width: 0, height: 4}, elevation: 8},
+  brandRow: {minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 12, paddingHorizontal: 4},
+  brand: {flexDirection: 'row', alignItems: 'center', gap: 10},
+  brandName: {color: '#ffffff', fontSize: 17, fontWeight: '900', letterSpacing: -0.3},
+  brandAccent: {color: '#38bdf8'},
+  menuButton: {width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#2e3546', borderRadius: 12, backgroundColor: '#13161f'},
+  menuButtonDark: {width: 44, height: 44, borderWidth: 1.5, borderColor: '#38bdf8', backgroundColor: '#1a1e29'},
+  menuButtonFocus: {borderWidth: 2, borderColor: '#38bdf8'},
   menuButtonPressed: {opacity: 0.76, transform: [{scale: 0.96}]},
   menuIcon: {width: 20, height: 16, justifyContent: 'space-between'},
-  menuLine: {width: 20, height: 2, borderRadius: 2, backgroundColor: '#f2f4f7'},
-  bottomShell: {backgroundColor: '#111318', borderTopWidth: 1, borderTopColor: '#282b32'},
-  tabs: {minHeight: 56, flexDirection: 'row', alignItems: 'stretch', gap: 4, paddingHorizontal: 8, paddingTop: 3},
-  tabsCompact: {gap: 1, paddingHorizontal: 3},
-  tab: {position: 'relative', flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 4, borderRadius: 10},
-  tabFocused: {backgroundColor: '#1c1f26'},
-  tabKeyboardFocus: {borderWidth: 2, borderColor: '#a8e2c3'},
+  menuLine: {width: 20, height: 2, borderRadius: 2, backgroundColor: '#ffffff'},
+  menuLineDark: {backgroundColor: '#ffffff'},
+  bottomShell: {backgroundColor: '#0b0d12', borderTopWidth: 1, borderTopColor: '#222736'},
+  tabs: {minHeight: 58, flexDirection: 'row', alignItems: 'stretch', gap: 6, paddingHorizontal: 10, paddingTop: 4},
+  tabsCompact: {gap: 2, paddingHorizontal: 4},
+  tab: {position: 'relative', flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 4, borderRadius: 12},
+  tabFocused: {backgroundColor: '#13161f'},
+  tabKeyboardFocus: {borderWidth: 2, borderColor: '#38bdf8'},
   tabPressed: {opacity: 0.72},
-  tabLabel: {maxWidth: '75%', color: '#aeb8c9', fontSize: 10, fontWeight: '700'},
-  tabLabelFocused: {color: '#ffffff', fontWeight: '900'},
-  activeIndicator: {position: 'absolute', bottom: 0, width: 21, height: 2, borderRadius: 2, backgroundColor: '#62d49b'},
+  tabLabel: {maxWidth: '75%', color: '#94a3b8', fontSize: 11, fontWeight: '700'},
+  tabLabelFocused: {color: '#f8fafc', fontWeight: '900'},
+  activeIndicator: {position: 'absolute', bottom: 0, width: 24, height: 2.5, borderRadius: 2, backgroundColor: '#38bdf8'},
 }));

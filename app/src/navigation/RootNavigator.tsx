@@ -84,7 +84,7 @@ function AdminWorkspace(): React.JSX.Element {
 function SessionLoading(): React.JSX.Element {
   return (
     <View style={styles.loading} accessibilityRole="progressbar" accessibilityLabel="Restoring your session">
-      <ActivityIndicator size="large" color="#16794b" />
+      <ActivityIndicator size="large" color="#2563eb" />
       <Text style={styles.loadingText}>Preparing your workspace…</Text>
     </View>
   );

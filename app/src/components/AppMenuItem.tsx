@@ -26,7 +26,7 @@ export function AppMenuItem({icon, title, subtitle, onPress, active = false}: Pr
       focusable
       style={({pressed}) => [styles.row, active && styles.activeRow, focused && styles.focusedRow, pressed && styles.pressed]}>
       <View style={styles.iconBox} accessible={false}>
-        <TabGlyph name={icon} color={isDark ? '#62d49b' : '#16794b'} focused={false} />
+        <TabGlyph name={icon} color={isDark ? '#60a5fa' : '#2563eb'} focused={false} />
       </View>
       <View style={styles.copy}>
         <Text style={[styles.title, active && styles.activeTitle]}>{title}</Text>
@@ -38,15 +38,15 @@ export function AppMenuItem({icon, title, subtitle, onPress, active = false}: Pr
 }
 
 const styles = createAdaptiveStyles(StyleSheet.create({
-  row: {flexDirection: 'row', alignItems: 'center', minHeight: 70, gap: 13, paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#edf0f5', backgroundColor: '#fff'},
-  pressed: {backgroundColor: '#f5f7fc'},
-  activeRow: {backgroundColor: '#f0fdf4'},
-  focusedRow: {borderWidth: 2, borderColor: '#16794b'},
-  iconBox: {width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: '#ecfdf3'},
-  icon: {color: '#16794b', fontSize: 18, fontWeight: '900'},
+  row: {flexDirection: 'row', alignItems: 'center', minHeight: 68, gap: 14, paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#edf0f5', backgroundColor: '#fff'},
+  pressed: {backgroundColor: '#f1f4f9'},
+  activeRow: {backgroundColor: '#dbeafe'},
+  focusedRow: {borderWidth: 2, borderColor: '#2563eb'},
+  iconBox: {width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: '#eff6ff'},
+  icon: {color: '#2563eb', fontSize: 18, fontWeight: '900'},
   copy: {flex: 1},
-  title: {color: '#101828', fontSize: 14, fontWeight: '900'},
-  activeTitle: {color: '#145c38'},
-  subtitle: {marginTop: 3, color: '#737b8c', fontSize: 11, lineHeight: 16},
-  chevron: {color: '#929bad', fontSize: 23},
+  title: {color: '#101828', fontSize: 15, fontWeight: '900'},
+  activeTitle: {color: '#1d4ed8'},
+  subtitle: {marginTop: 2, color: '#687187', fontSize: 11, lineHeight: 16},
+  chevron: {color: '#929bad', fontSize: 22},
 }));

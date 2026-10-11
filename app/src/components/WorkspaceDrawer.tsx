@@ -1,10 +1,11 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {Alert, Animated, Easing, Image, Modal, Pressable, ScrollView, StatusBar, StyleSheet, Text, useWindowDimensions, View} from 'react-native';
+import {Alert, Animated, Easing, Modal, Pressable, ScrollView, StatusBar, StyleSheet, Text, useWindowDimensions, View} from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useAuth} from '../context/AuthContext';
 import {useAppTheme} from '../context/ThemeContext';
 import {createAdaptiveStyles} from '../theme';
 import {AppMenuItem} from './AppMenuItem';
+import {AcademiaLogo} from './AcademiaLogo';
 import {TabGlyphName} from './TabGlyph';
 import {AdminSection} from '../navigation/AdminSectionContext';
 
@@ -110,9 +111,9 @@ export function WorkspaceDrawer({visible, activeRoute, activeAdminSection, onAdm
         <Animated.View style={[styles.drawer, drawerStyle]}>
           <SafeAreaView style={[styles.safePanel, safePanelStyle]} edges={['left', 'right']}>
             <View style={styles.header}>
-              <Image source={require('../assets/academia-logo.png')} resizeMode="contain" style={styles.brandLogo} accessibilityLabel="The AcadeMIa logo" />
+              <AcademiaLogo height={40} />
               <View style={styles.headerCopy}>
-                <Text style={styles.headerTitle}>The AcadeMIa</Text>
+                <Text style={styles.headerTitle}>The Acade<Text style={styles.headerTitleAccent}>MI</Text>a</Text>
                 <Text style={styles.headerSubtitle}>{isAdmin ? 'ADMIN WORKSPACE' : 'YOUR ACADEMIC WORKSPACE'}</Text>
               </View>
               <Pressable accessibilityRole="button" accessibilityLabel="Close navigation menu" hitSlop={8} onPress={onClose} style={styles.closeButton}>
@@ -179,28 +180,28 @@ function MenuSection({children, title}: React.PropsWithChildren<{title: string}>
 
 const styles = createAdaptiveStyles(StyleSheet.create({
   modalRoot: {flex: 1, flexDirection: 'row'},
-  backdrop: {backgroundColor: '#080a0d'},
-  drawer: {height: '100%', backgroundColor: '#ffffff', elevation: 24, shadowColor: '#000000', shadowOpacity: 0.25, shadowRadius: 22, shadowOffset: {width: 8, height: 0}},
+  backdrop: {backgroundColor: '#040608'},
+  drawer: {height: '100%', backgroundColor: '#ffffff', elevation: 24, shadowColor: '#000000', shadowOpacity: 0.35, shadowRadius: 24, shadowOffset: {width: 8, height: 0}},
   safePanel: {flex: 1, backgroundColor: '#ffffff'},
-  header: {flexDirection: 'row', alignItems: 'center', gap: 11, paddingHorizontal: 17, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#e7eaf1'},
-  brandLogo: {width: 42, height: 38, borderRadius: 6},
+  header: {flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#e7eaf1'},
   headerCopy: {flex: 1},
-  headerTitle: {color: '#101828', fontSize: 15, fontWeight: '900'},
-  headerSubtitle: {marginTop: 3, color: '#737b8c', fontSize: 8, fontWeight: '800', letterSpacing: 1},
-  closeButton: {width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: '#f2f4f8'},
-  closeText: {marginTop: -2, color: '#4e586a', fontSize: 28, lineHeight: 31},
-  content: {paddingHorizontal: 16, paddingTop: 14, paddingBottom: 25},
-  welcome: {flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderWidth: 1, borderColor: '#e6eaf2', borderRadius: 16, backgroundColor: '#ffffff'},
-  avatar: {width: 46, height: 46, alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: '#ecfdf3'},
-  avatarText: {color: '#16794b', fontSize: 20, fontWeight: '900'},
+  headerTitle: {color: '#101828', fontSize: 16, fontWeight: '900'},
+  headerTitleAccent: {color: '#2563eb'},
+  headerSubtitle: {marginTop: 3, color: '#737b8c', fontSize: 9, fontWeight: '800', letterSpacing: 1.1},
+  closeButton: {width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: '#f1f4f9'},
+  closeText: {marginTop: -2, color: '#475467', fontSize: 26, lineHeight: 28},
+  content: {paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32},
+  welcome: {flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderWidth: 1, borderColor: '#e7eaf1', borderRadius: 16, backgroundColor: '#ffffff'},
+  avatar: {width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: '#eff6ff'},
+  avatarText: {color: '#2563eb', fontSize: 20, fontWeight: '900'},
   welcomeCopy: {flex: 1},
-  welcomeEyebrow: {color: '#16794b', fontSize: 8, fontWeight: '900', letterSpacing: 1},
-  welcomeName: {marginTop: 3, color: '#101828', fontSize: 14, fontWeight: '900'},
-  email: {marginTop: 2, color: '#737b8c', fontSize: 10},
-  section: {marginTop: 17},
-  sectionTitle: {marginBottom: 7, color: '#737b8c', fontSize: 9, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase'},
-  sectionCard: {overflow: 'hidden', borderWidth: 1, borderColor: '#e7eaf1', borderRadius: 15, backgroundColor: '#ffffff'},
-  signOut: {alignItems: 'center', justifyContent: 'center', minHeight: 48, marginTop: 18, borderWidth: 1, borderColor: '#f0d6d6', borderRadius: 13, backgroundColor: '#ffffff'},
-  signOutText: {color: '#a12f36', fontSize: 13, fontWeight: '900'},
-  footer: {marginTop: 15, color: '#929bad', fontSize: 10, textAlign: 'center'},
+  welcomeEyebrow: {color: '#2563eb', fontSize: 9, fontWeight: '900', letterSpacing: 1},
+  welcomeName: {marginTop: 2, color: '#101828', fontSize: 15, fontWeight: '900'},
+  email: {marginTop: 2, color: '#687187', fontSize: 11},
+  section: {marginTop: 18},
+  sectionTitle: {marginBottom: 8, color: '#687187', fontSize: 10, fontWeight: '900', letterSpacing: 1.1, textTransform: 'uppercase'},
+  sectionCard: {overflow: 'hidden', borderWidth: 1, borderColor: '#e7eaf1', borderRadius: 16, backgroundColor: '#ffffff'},
+  signOut: {alignItems: 'center', justifyContent: 'center', minHeight: 48, marginTop: 20, borderWidth: 1, borderColor: '#fecdca', borderRadius: 14, backgroundColor: '#ffffff'},
+  signOutText: {color: '#b42318', fontSize: 13, fontWeight: '900'},
+  footer: {marginTop: 16, color: '#929bad', fontSize: 11, textAlign: 'center'},
 }));

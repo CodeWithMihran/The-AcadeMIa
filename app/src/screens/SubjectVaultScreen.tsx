@@ -9,6 +9,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {StudyMaterial, StudyMaterialViewer} from '../components/StudyMaterialViewer';
 import {getApiErrorMessage, progressApi, subjectApi} from '../services/api';
 import {
@@ -257,10 +258,11 @@ export function SubjectVaultScreen({
       })
     : units;
 
+  const insets = useSafeAreaInsets();
   return (
     <View style={styles.screen}>
       {/* Classical App Header Bar */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, {paddingTop: insets.top, height: 52 + insets.top}]}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Back to subject catalog"
@@ -676,7 +678,7 @@ export function SubjectVaultScreen({
                                 isComplete && styles.checkButtonDone,
                               ]}>
                               {isPending ? (
-                                <ActivityIndicator size="small" color="#16794b" />
+                                <ActivityIndicator size="small" color="#2563eb" />
                               ) : (
                                 <Text
                                   style={[
@@ -748,7 +750,7 @@ export function SubjectVaultScreen({
                                 {isPending ? (
                                   <ActivityIndicator
                                     size="small"
-                                    color="#16794b"
+                                    color="#2563eb"
                                   />
                                 ) : (
                                   <Text

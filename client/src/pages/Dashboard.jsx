@@ -1,5 +1,5 @@
 import { TRACKS } from "../constants";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
@@ -30,11 +30,8 @@ export const Dashboard = () => {
   const loading = enabled && (subjectsQuery.isLoading || progressQuery.isLoading);
   const dataError = subjectsQuery.error || progressQuery.error;
   const error = dataError?.response?.data?.message || (dataError ? "Could not load all dashboard data." : "");
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    if (user && !user.onboardingCompleted) setShowOnboarding(true);
-  }, [user]);
+  const [manualShowOnboarding, setManualShowOnboarding] = useState(false);
+  const showOnboarding = Boolean(user && !user.onboardingCompleted) || manualShowOnboarding;
 
   const loadDashboardData = () => Promise.all([
     queryClient.invalidateQueries({ queryKey: queryKeys.studentSubjects(user) }),
@@ -53,7 +50,7 @@ export const Dashboard = () => {
       <OnboardingModal
         isOpen={showOnboarding}
         onClose={() => {
-          setShowOnboarding(false);
+          setManualShowOnboarding(false);
           loadDashboardData();
         }}
       />
@@ -77,7 +74,7 @@ export const Dashboard = () => {
             <Link to="/subjects" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-surface-inverse px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
               Browse subjects <ArrowRight className="h-4 w-4" />
             </Link>
-            <button type="button" onClick={() => setShowOnboarding(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-content-secondary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+            <button type="button" onClick={() => setManualShowOnboarding(true)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-content-secondary transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
               <Settings2 className="h-4 w-4 shrink-0" />Update study track
             </button>
           </div>
@@ -113,7 +110,7 @@ export const Dashboard = () => {
               <h3 className="mt-4 text-lg font-black text-content">No subjects in this workspace yet</h3>
               <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-content-muted">We couldn’t find subjects for {user?.branch || user?.targetExam || "your study track"}. Check your study profile or browse the available catalog.</p>
               <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
-                <button type="button" onClick={() => setShowOnboarding(true)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-surface-inverse px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700">Check my study profile</button>
+                <button type="button" onClick={() => setManualShowOnboarding(true)} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-surface-inverse px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700">Check my study profile</button>
                 <Link to="/subjects" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-xs font-bold text-content-secondary hover:bg-surface-muted">Browse subject catalog</Link>
               </div>
             </div>

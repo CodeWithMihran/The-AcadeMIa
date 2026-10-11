@@ -80,12 +80,12 @@ export function AdminUsersPanel({deletingUserId, onDelete}: Props): React.JSX.El
       />
       <View style={styles.resultsHeader}>
         <Text style={styles.caption}>{users.length} {users.length === 1 ? 'user' : 'users'} shown</Text>
-        {searching && <ActivityIndicator size="small" color="#16794b" accessibilityLabel="Searching users" />}
+        {searching && <ActivityIndicator size="small" color="#2563eb" accessibilityLabel="Searching users" />}
       </View>
 
       {loading ? (
         <View style={styles.stateCard} accessibilityRole="progressbar" accessibilityLabel="Loading user directory">
-          <ActivityIndicator size="small" color="#16794b" />
+          <ActivityIndicator size="small" color="#2563eb" />
           <Text style={styles.muted}>Loading users…</Text>
         </View>
       ) : error ? (

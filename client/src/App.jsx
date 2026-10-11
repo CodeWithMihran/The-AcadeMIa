@@ -37,7 +37,11 @@ const OAuthCallback = () => {
       // Google OAuth sets the session token in an HttpOnly cookie. Keep it out
       // of the URL, browser history, and referrer headers.
       const user = await refreshUser();
-      navigate(user ? '/dashboard' : '/?error=denied', { replace: true });
+      if (!user) {
+        navigate('/?error=denied', { replace: true });
+        return;
+      }
+      navigate(user.role === 'admin' ? '/admin' : '/dashboard', { replace: true });
     };
 
     handleAuthCallback().catch(() => navigate('/?error=failed', { replace: true }));

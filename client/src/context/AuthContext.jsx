@@ -40,6 +40,14 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     fetchCurrentUser();
+
+    const handleUnauthorized = () => {
+      setUser(null);
+      setAuthError("");
+    };
+
+    window.addEventListener('academia:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('academia:unauthorized', handleUnauthorized);
   }, [fetchCurrentUser]);
 
   const login = async (email, password) => {

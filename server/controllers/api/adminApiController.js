@@ -12,6 +12,7 @@ const communityWalletModel = require("../../models/community-wallet-model");
 const careerProgressModel = require("../../models/career-progress-model");
 const userActivityModel = require("../../models/user-activity-tracker-model");
 const mongoose = require("mongoose");
+const storage = require("../../utils/storage");
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -301,8 +302,9 @@ module.exports.deleteSubject = async (req, res) => {
         const deleted = await subjectModel.findByIdAndDelete(id);
         if (!deleted) return res.status(404).json({ success: false, message: "Subject not found." });
         // Cascade delete orphaned progress records
-        const notes = await communityNoteModel.find({ subject: id }).select("_id").lean();
+        const notes = await communityNoteModel.find({ subject: id }).select("_id storageKey storageType").lean();
         const noteIds = notes.map((note) => note._id);
+        await Promise.allSettled(notes.map(note => storage.deleteNoteFile(note.storageKey, note.storageType)));
         await Promise.all([
             progressModel.deleteMany({ subject: id }),
             careerProgressModel.deleteMany({ subject: id }),
@@ -387,8 +389,9 @@ module.exports.deleteUser = async (req, res) => {
 
         const deleted = await userModel.findByIdAndDelete(userId);
         if (!deleted) return res.status(404).json({ success: false, message: "User not found." });
-        const contributedNotes = await communityNoteModel.find({ contributor: id }).select("_id").lean();
+        const contributedNotes = await communityNoteModel.find({ contributor: id }).select("_id storageKey storageType").lean();
         const contributedNoteIds = contributedNotes.map((note) => note._id);
+        await Promise.allSettled(contributedNotes.map(note => storage.deleteNoteFile(note.storageKey, note.storageType)));
         await Promise.all([
             progressModel.deleteMany({ user: id }),
             careerProgressModel.deleteMany({ user: userId }),

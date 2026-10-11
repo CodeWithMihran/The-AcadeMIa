@@ -190,10 +190,11 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.
 
     // The app authenticates in the system browser. The deep link only carries
     // a random, one-time code; the app exchanges it for its JWT over the API.
+    const mobileCallbackUrl = process.env.GOOGLE_MOBILE_CALLBACK_URL || "theacademia://auth/callback";
     app.get("/auth/google/mobile/callback",
-        passport.authenticate("google", { failureRedirect: "theacademia://auth/callback?error=google_sign_in_failed", callbackURL: process.env.GOOGLE_MOBILE_CALLBACK_URL, state: true }),
+        passport.authenticate("google", { failureRedirect: "theacademia://auth/callback?error=google_sign_in_failed", callbackURL: mobileCallbackUrl, state: true }),
         async (req, res) => {
-            if (!process.env.GOOGLE_MOBILE_CALLBACK_URL || !req.session?.mobileGoogleAuth) {
+            if (!req.session?.mobileGoogleAuth) {
                 return res.redirect("theacademia://auth/callback?error=google_sign_in_state_invalid");
             }
             delete req.session.mobileGoogleAuth;
@@ -215,9 +216,6 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && process.
     );
 
     app.get("/api/auth/google/mobile/start", (req, res, next) => {
-        if (!process.env.GOOGLE_MOBILE_CALLBACK_URL) {
-            return res.status(503).send("Mobile Google sign-in is not configured on this server.");
-        }
         const codeChallenge = req.query.code_challenge;
         if (typeof codeChallenge !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(codeChallenge)) {
             return res.status(400).send("Secure Google sign-in could not be started. Update the app and try again.");

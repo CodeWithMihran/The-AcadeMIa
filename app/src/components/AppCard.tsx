@@ -78,10 +78,10 @@ const VARIANT_STYLES: Record<'default' | 'muted' | 'inverse' | 'accent', ViewSty
 };
 
 const DARK_VARIANT_STYLES: Record<'default' | 'muted' | 'inverse' | 'accent', ViewStyle> = {
-  default: {backgroundColor: '#1c1f26', borderColor: '#30343e'},
-  muted: {backgroundColor: '#242832', borderColor: '#30343e'},
-  inverse: {backgroundColor: '#111318', borderColor: '#282b32'},
-  accent: {backgroundColor: '#153425', borderColor: '#245d40'},
+  default: {backgroundColor: '#13161f', borderColor: '#252a38'},
+  muted: {backgroundColor: '#1a1e29', borderColor: '#252a38'},
+  inverse: {backgroundColor: '#0b0d12', borderColor: '#222736'},
+  accent: {backgroundColor: '#172554', borderColor: '#1e3a8a'},
 };
 
 const styles = createAdaptiveStyles(StyleSheet.create({

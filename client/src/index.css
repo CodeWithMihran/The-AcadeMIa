@@ -184,3 +184,39 @@ option { background-color: rgb(var(--surface)); color: rgb(var(--content)); }
 @media (prefers-reduced-motion: reduce) {
   .nav-dropdown-enter { animation-duration: 0.01ms; }
 }
+
+/* Brand Identity Typography & Coloring */
+.brand-title-dark {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+
+.brand-title-light {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.brand-mi-accent-dark {
+  background: linear-gradient(135deg, #38bdf8 0%, #60a5fa 50%, #818cf8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-weight: 900;
+  filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.4));
+}
+
+.brand-mi-accent-light {
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-weight: 900;
+}
+
+

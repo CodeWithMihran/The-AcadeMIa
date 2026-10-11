@@ -1,9 +1,9 @@
 import {useAppTheme} from '../context/ThemeContext';
 import {createAdaptiveStyles} from '../theme';
+import {AcademiaLogo} from '../components/AcademiaLogo';
 import React, {useEffect, useMemo, useState} from 'react';
 import {
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Pressable,
   Platform,
@@ -136,7 +136,7 @@ export function OnboardingScreen(): React.JSX.Element {
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'} automaticallyAdjustKeyboardInsets>
       <View style={styles.header}>
-        <Image source={require('../assets/academia-logo.png')} resizeMode="contain" style={styles.brandLogo} accessibilityLabel="The AcadeMIa logo" />
+        <AcademiaLogo height={58} style={styles.brandLogo} />
         <Text style={styles.brand}>The Acade<Text style={styles.accent}>MI</Text>a</Text>
       </View>
       <View style={styles.card}>
@@ -152,7 +152,7 @@ export function OnboardingScreen(): React.JSX.Element {
         </View>
 
         {track === 'UNIVERSITY' ? (
-          loading ? <ActivityIndicator style={styles.loader} color="#16794b" /> : (
+          loading ? <ActivityIndicator style={styles.loader} color="#2563eb" /> : (
             <>
               <Text style={styles.label}>UNIVERSITY</Text>
               {tenants.length ? (
@@ -245,11 +245,11 @@ const styles = createAdaptiveStyles(StyleSheet.create({
   root: {flex: 1, backgroundColor: '#ffffff'},
   page: {flexGrow: 1, paddingHorizontal: 24, paddingTop: 28, paddingBottom: 34, backgroundColor: '#ffffff'},
   header: {alignItems: 'center', marginBottom: 20},
-  brandLogo: {width: 60, height: 54, borderRadius: 7},
+  brandLogo: {},
   brand: {marginTop: 9, color: '#101828', fontSize: 20, fontWeight: '900'},
-  accent: {color: '#16794b'},
+  accent: {color: '#2563eb'},
   card: {width: '100%', maxWidth: 480, alignSelf: 'center', paddingHorizontal: 2, paddingVertical: 4},
-  eyebrow: {color: '#16794b', fontSize: 10, fontWeight: '900', letterSpacing: 1.2},
+  eyebrow: {color: '#2563eb', fontSize: 10, fontWeight: '900', letterSpacing: 1.2},
   title: {marginTop: 8, color: '#111827', fontSize: 23, fontWeight: '900'},
   description: {marginTop: 7, marginBottom: 20, color: '#687187', fontSize: 14, lineHeight: 21},
   label: {marginTop: 17, marginBottom: 8, color: '#737b8c', fontSize: 10, fontWeight: '900', letterSpacing: 0.8},
@@ -257,15 +257,15 @@ const styles = createAdaptiveStyles(StyleSheet.create({
   rowWrap: {flexDirection: 'row', flexWrap: 'wrap', gap: 8},
   optionList: {gap: 7},
   choice: {minHeight: 42, justifyContent: 'center', paddingHorizontal: 12, paddingVertical: 9, borderWidth: 1, borderColor: '#e1e5ee', borderRadius: 12, backgroundColor: '#fff'},
-  choiceSelected: {borderColor: '#16794b', backgroundColor: '#f0fdf4'},
+  choiceSelected: {borderColor: '#2563eb', backgroundColor: '#dbeafe'},
   choicePressed: {opacity: 0.8},
   choiceText: {color: '#515b70', fontSize: 12, fontWeight: '700'},
-  choiceTextSelected: {color: '#145c38'},
+  choiceTextSelected: {color: '#1d4ed8'},
   input: {minHeight: 48, paddingHorizontal: 13, borderWidth: 1, borderColor: '#dfe4ed', borderRadius: 12, color: '#111827', fontSize: 14},
   helper: {color: '#687187', fontSize: 13, lineHeight: 20},
   loader: {paddingVertical: 16},
   error: {marginTop: 17, padding: 11, borderRadius: 10, backgroundColor: '#fff1f1', color: '#b42318', fontSize: 13, lineHeight: 19},
-  submit: {minHeight: 52, alignItems: 'center', justifyContent: 'center', marginTop: 23, borderRadius: 13, backgroundColor: '#16794b'},
+  submit: {minHeight: 52, alignItems: 'center', justifyContent: 'center', marginTop: 23, borderRadius: 13, backgroundColor: '#2563eb'},
   submitLabel: {color: '#fff', fontSize: 12, fontWeight: '900', letterSpacing: 0.8},
   pressed: {opacity: 0.85},
   disabled: {opacity: 0.6},

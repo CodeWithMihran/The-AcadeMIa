@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { tenantService } from "../services/api";
+import { authService, tenantService } from "../services/api";
 import { AcademiaLogo } from "../components/AcademiaLogo";
 import {
   Activity,
@@ -23,11 +23,13 @@ import {
   GraduationCap,
   Layers3,
   LockKeyhole,
+  KeyRound,
   Play,
   Sparkles,
   Target,
   Trophy,
   Users,
+  X,
 } from "lucide-react";
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -108,7 +110,7 @@ const toneClasses = {
 };
 
 export const Home = () => {
-  const { login, register, isAuthenticated } = useAuth();
+  const { user, login, register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   const [isLoginTab, setIsLoginTab] = useState(true);
@@ -122,9 +124,70 @@ export const Home = () => {
   const [error, setError] = useState("");
   const [detectedTenant, setDetectedTenant] = useState(null);
 
+  // Password Recovery state
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotStep, setForgotStep] = useState(1); // 1 = request token, 2 = enter token & reset
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [resetToken, setResetToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMsg, setForgotMsg] = useState("");
+  const [forgotError, setForgotError] = useState("");
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotError("");
+    setForgotMsg("");
+    try {
+      const res = await authService.forgotPassword({ email: forgotEmail });
+      setForgotMsg(res.data.message || "Reset token generated. Check your email or console.");
+      if (res.data.devToken) {
+        setResetToken(res.data.devToken);
+        setForgotMsg(`Reset token ready: ${res.data.devToken} (15m validity)`);
+      }
+      setForgotStep(2);
+    } catch (err) {
+      setForgotError(err.response?.data?.message || "Failed to process password reset request.");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotError("");
+    setForgotMsg("");
+    try {
+      const res = await authService.resetPassword({
+        token: resetToken,
+        password: newPassword,
+        confirmPassword: confirmNewPassword
+      });
+      setForgotMsg(res.data.message || "Password successfully reset! You can now sign in.");
+      setTimeout(() => {
+        setShowForgotModal(false);
+        setForgotStep(1);
+        setForgotEmail("");
+        setResetToken("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+        setForgotMsg("");
+      }, 2500);
+    } catch (err) {
+      setForgotError(err.response?.data?.message || "Failed to reset password.");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (isAuthenticated) navigate("/dashboard");
-  }, [isAuthenticated, navigate]);
+    if (isAuthenticated) {
+      navigate(user?.role === "admin" ? "/admin" : "/dashboard");
+    }
+  }, [isAuthenticated, user?.role, navigate]);
 
   useEffect(() => {
     let active = true;
@@ -152,9 +215,15 @@ export const Home = () => {
     setError("");
     setLoading(true);
     try {
-      if (isLoginTab) await login(formData.email, formData.password);
-      else await register(formData);
-      navigate("/dashboard");
+      let loggedUser = null;
+      if (isLoginTab) {
+        const res = await login(formData.email, formData.password);
+        loggedUser = res?.user;
+      } else {
+        const res = await register(formData);
+        loggedUser = res?.user;
+      }
+      navigate(loggedUser?.role === "admin" ? "/admin" : "/dashboard");
     } catch (requestError) {
       setError(requestError.response?.data?.message || requestError.message || "Authentication failed");
     } finally {
@@ -360,49 +429,121 @@ export const Home = () => {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-line bg-app p-6 shadow-xl shadow-black/5 sm:p-10">
-            <div className="mb-8 flex gap-1.5 rounded-xl border border-line bg-surface-muted p-1.5" role="tablist" aria-label="Account access">
-              <button type="button" role="tab" aria-selected={isLoginTab} onClick={() => { setIsLoginTab(true); setError(""); }} className={`relative min-h-12 flex-1 rounded-lg px-3 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all duration-300 ${isLoginTab ? "bg-surface text-content shadow-sm" : "text-content-muted hover:text-content"}`}>Sign in</button>
-              <button type="button" role="tab" aria-selected={!isLoginTab} onClick={() => { setIsLoginTab(false); setError(""); }} className={`relative min-h-12 flex-1 rounded-lg px-3 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all duration-300 ${!isLoginTab ? "bg-surface text-content shadow-sm" : "text-content-muted hover:text-content"}`}>Create account</button>
+          <div className="rounded-3xl border border-line bg-surface p-6 shadow-xl shadow-black/5 sm:p-8 md:p-9">
+            <div className="mb-6 flex gap-1 rounded-xl border border-line bg-surface-muted p-1" role="tablist" aria-label="Account access">
+              <button type="button" role="tab" aria-selected={isLoginTab} onClick={() => { setIsLoginTab(true); setError(""); }} className={`relative min-h-10 flex-1 rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-200 ${isLoginTab ? "bg-surface text-content shadow-sm" : "text-content-muted hover:text-content"}`}>Sign in</button>
+              <button type="button" role="tab" aria-selected={!isLoginTab} onClick={() => { setIsLoginTab(false); setError(""); }} className={`relative min-h-10 flex-1 rounded-lg px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-200 ${!isLoginTab ? "bg-surface text-content shadow-sm" : "text-content-muted hover:text-content"}`}>Create account</button>
             </div>
 
-            {error && <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">{error}</div>}
+            {error && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs font-bold text-red-800 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">{error}</div>}
 
-            <button onClick={handleGoogleAuth} type="button" className="group inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-line bg-surface py-3 text-sm font-bold text-content-secondary transition-all hover:bg-surface-hover hover:text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-[0.98]">
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="h-4.5 w-4.5 transition-transform group-hover:scale-110" alt="" />
-              Continue with Google
-            </button>
+            <div className="flex justify-center">
+              <button onClick={handleGoogleAuth} type="button" className="group inline-flex min-h-10 w-full max-w-sm items-center justify-center gap-2.5 rounded-xl border border-line bg-surface-muted/60 px-4 py-2.5 text-xs font-bold text-content transition-all hover:bg-surface-hover hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-[0.99] shadow-sm">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:scale-110" alt="" />
+                <span>Continue with Google</span>
+              </button>
+            </div>
 
-            <div className="my-7 flex items-center gap-4 text-[10px] font-bold uppercase tracking-[.2em] text-content-faint">
-              <span className="h-px flex-1 bg-line" />Or use email<span className="h-px flex-1 bg-line" />
+            <div className="my-5 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[.2em] text-content-faint">
+              <span className="h-px flex-1 bg-line" />Or with email<span className="h-px flex-1 bg-line" />
             </div>
 
             {detectedTenant && (
-              <div role="status" className="mb-6 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-900">
-                <Building2 className="mt-0.5 h-4.5 w-4.5 shrink-0 text-emerald-600" />
+              <div role="status" className="mb-5 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-900 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300">
+                <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                 <div>
                   <p className="font-bold">Affiliated institution detected</p>
-                  <p className="mt-1 font-medium opacity-90">{detectedTenant.college} · {detectedTenant.tenant.shortCode}</p>
+                  <p className="mt-0.5 font-medium opacity-90">{detectedTenant.college} · {detectedTenant.tenant.shortCode}</p>
                 </div>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4.5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               {!isLoginTab && <Field label="Full name" id="account-name"><input id="account-name" type="text" autoComplete="name" required placeholder="Jane Doe" value={formData.name} onChange={event => setFormData({ ...formData, name: event.target.value })} className={inputClass} /></Field>}
               <Field label="Email address" id="account-email"><input id="account-email" type="email" autoComplete="email" required placeholder="student@college.edu or gmail" value={formData.email} onChange={event => setFormData({ ...formData, email: event.target.value })} className={inputClass} /></Field>
-              <Field label="Password" id="account-password"><input id="account-password" type="password" autoComplete={isLoginTab ? "current-password" : "new-password"} required placeholder="••••••••" value={formData.password} onChange={event => setFormData({ ...formData, password: event.target.value })} className={inputClass} /></Field>
+              <Field label="Password" id="account-password">
+                <input id="account-password" type="password" autoComplete={isLoginTab ? "current-password" : "new-password"} required placeholder="••••••••" value={formData.password} onChange={event => setFormData({ ...formData, password: event.target.value })} className={inputClass} />
+              </Field>
+              {isLoginTab && (
+                <div className="flex justify-end pt-0.5">
+                  <button type="button" onClick={() => { setShowForgotModal(true); setForgotEmail(formData.email); setForgotMsg(""); setForgotError(""); setForgotStep(1); }} className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline">
+                    Forgot password?
+                  </button>
+                </div>
+              )}
               {!isLoginTab && <Field label="Confirm password" id="confirm-password"><input id="confirm-password" type="password" autoComplete="new-password" required placeholder="••••••••" value={formData.confirmPassword} onChange={event => setFormData({ ...formData, confirmPassword: event.target.value })} className={inputClass} /></Field>}
-              <button type="submit" disabled={loading} className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-surface-inverse px-5 py-3.5 text-xs font-bold uppercase tracking-[.18em] text-white shadow-lg transition-all hover:bg-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-[0.98] disabled:cursor-wait disabled:opacity-70">
+              <button type="submit" disabled={loading} className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-surface-inverse px-5 py-3 text-xs font-bold uppercase tracking-[.15em] text-white shadow-md transition-all hover:bg-blue-600 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-[0.98] disabled:cursor-wait disabled:opacity-70">
                 {loading ? "Please wait…" : isLoginTab ? "Sign in to workspace" : "Create account"}{!loading && <ArrowRight className="h-4 w-4" />}
               </button>
             </form>
-            <p className="mt-6 flex items-start gap-2.5 text-[11px] font-medium leading-relaxed text-content-faint">
+            <p className="mt-5 flex items-start gap-2 text-[11px] font-medium leading-relaxed text-content-faint">
               <CircleHelp className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               After signing up, you’ll choose the university or exam track for your workspace.
             </p>
           </div>
         </div>
       </section>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="reset-modal-title">
+          <div className="relative w-full max-w-md rounded-3xl border border-line bg-surface p-6 shadow-2xl sm:p-8">
+            <button type="button" onClick={() => setShowForgotModal(false)} className="absolute right-5 top-5 rounded-xl p-2 text-content-muted hover:bg-surface-muted hover:text-content">
+              <X className="h-5 w-5" />
+            </button>
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+              <KeyRound className="h-6 w-6" />
+            </div>
+            <h3 id="reset-modal-title" className="text-xl font-black text-content">
+              {forgotStep === 1 ? "Reset your password" : "Enter new password"}
+            </h3>
+            <p className="mt-1.5 text-xs text-content-secondary">
+              {forgotStep === 1
+                ? "Enter your registered email address to generate your secure recovery token."
+                : "Enter the reset token and choose a new password."}
+            </p>
+
+            {forgotError && <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3.5 text-xs font-bold text-red-800">{forgotError}</div>}
+            {forgotMsg && <div role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs font-bold text-emerald-800">{forgotMsg}</div>}
+
+            {forgotStep === 1 ? (
+              <form onSubmit={handleForgotPassword} className="mt-5 space-y-4">
+                <Field label="Registered email address" id="forgot-email">
+                  <input id="forgot-email" type="email" required placeholder="you@college.edu or gmail" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} className={inputClass} />
+                </Field>
+                <div className="flex gap-2.5 pt-2">
+                  <button type="button" onClick={() => setShowForgotModal(false)} className="flex-1 rounded-xl border border-line py-3 text-xs font-bold text-content-secondary hover:bg-surface-muted">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={forgotLoading} className="flex-1 rounded-xl bg-blue-600 py-3 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60">
+                    {forgotLoading ? "Processing…" : "Continue"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPassword} className="mt-5 space-y-4">
+                <Field label="Reset Token (64 hex characters)" id="reset-token-input">
+                  <input id="reset-token-input" type="text" required placeholder="Paste token here" value={resetToken} onChange={e => setResetToken(e.target.value)} className={inputClass} />
+                </Field>
+                <Field label="New Password" id="new-password">
+                  <input id="new-password" type="password" required minLength={6} placeholder="At least 6 characters" value={newPassword} onChange={e => setNewPassword(e.target.value)} className={inputClass} />
+                </Field>
+                <Field label="Confirm New Password" id="confirm-new-password">
+                  <input id="confirm-new-password" type="password" required minLength={6} placeholder="Re-enter password" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} className={inputClass} />
+                </Field>
+                <div className="flex gap-2.5 pt-2">
+                  <button type="button" onClick={() => setForgotStep(1)} className="flex-1 rounded-xl border border-line py-3 text-xs font-bold text-content-secondary hover:bg-surface-muted">
+                    Back
+                  </button>
+                  <button type="submit" disabled={forgotLoading} className="flex-1 rounded-xl bg-blue-600 py-3 text-xs font-bold text-white hover:bg-blue-700 disabled:opacity-60">
+                    {forgotLoading ? "Saving…" : "Reset Password"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

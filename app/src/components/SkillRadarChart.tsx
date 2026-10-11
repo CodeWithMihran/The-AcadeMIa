@@ -14,7 +14,7 @@ interface Props {
   data: SkillRadarPoint[];
 }
 
-const COLORS = ['#16794b', '#e08a24', '#298a67', '#8a5be0', '#d04f76', '#18899c'];
+const COLORS = ['#2563eb', '#e08a24', '#3b82f6', '#8a5be0', '#d04f76', '#18899c'];
 
 /** A dependency-free, accessible radar plot sized for narrow phone screens. */
 export function SkillRadarChart({data}: Props): React.JSX.Element {

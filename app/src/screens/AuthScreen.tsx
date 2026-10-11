@@ -1,9 +1,9 @@
 import {useAppTheme} from '../context/ThemeContext';
 import {createAdaptiveStyles} from '../theme';
+import {AcademiaLogo} from '../components/AcademiaLogo';
 import React, {useRef, useState} from 'react';
 import {
   ActivityIndicator,
-  Image,
   KeyboardAvoidingView,
   Linking,
   NativeModules,
@@ -105,7 +105,7 @@ export function AuthScreen({navigation, route}: AuthScreenProps): React.JSX.Elem
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
         automaticallyAdjustKeyboardInsets>
-        <Image source={require('../assets/academia-logo.png')} resizeMode="contain" style={styles.brandLogo} accessibilityLabel="The AcadeMIa logo" />
+        <AcademiaLogo height={64} style={styles.brandLogo} />
         <Text style={styles.brandName}>The Acade<Text style={styles.brandAccent}>MI</Text>a</Text>
         <Text style={styles.brandSubtitle}>YOUR ACADEMIC WORKSPACE</Text>
 
@@ -238,19 +238,19 @@ function Field(props: FieldProps): React.JSX.Element {
 const styles = createAdaptiveStyles(StyleSheet.create({
   root: {flex: 1, backgroundColor: '#ffffff'},
   scrollContent: {flexGrow: 1, justifyContent: 'center', paddingHorizontal: 26, paddingTop: 28, paddingBottom: 32},
-  brandLogo: {alignSelf: 'center', width: 72, height: 64, borderRadius: 8},
+  brandLogo: {alignSelf: 'center'},
   brandName: {marginTop: 12, alignSelf: 'center', color: '#101828', fontSize: 22, fontWeight: '900'},
-  brandAccent: {color: '#16794b'},
+  brandAccent: {color: '#2563eb'},
   brandSubtitle: {marginTop: 4, marginBottom: 34, alignSelf: 'center', color: '#7e8799', fontSize: 9, fontWeight: '800', letterSpacing: 2},
   form: {width: '100%', maxWidth: 440, alignSelf: 'center', paddingHorizontal: 2},
-  eyebrow: {color: '#16794b', fontSize: 10, fontWeight: '900', letterSpacing: 1.4},
+  eyebrow: {color: '#2563eb', fontSize: 10, fontWeight: '900', letterSpacing: 1.4},
   title: {marginTop: 8, color: '#111827', fontSize: 25, fontWeight: '900', letterSpacing: -0.5},
   description: {marginTop: 8, marginBottom: 22, color: '#687187', fontSize: 14, lineHeight: 21},
   field: {marginBottom: 15},
   label: {marginBottom: 7, color: '#394256', fontSize: 12, fontWeight: '800'},
   input: {minHeight: 51, paddingHorizontal: 14, borderWidth: 1, borderColor: '#dfe4ed', borderRadius: 13, backgroundColor: '#fff', color: '#111827', fontSize: 15},
   error: {marginTop: 2, marginBottom: 14, padding: 11, borderRadius: 11, backgroundColor: '#fff1f1', color: '#b42318', fontSize: 13, lineHeight: 19},
-  submit: {minHeight: 52, alignItems: 'center', justifyContent: 'center', marginTop: 7, borderRadius: 14, backgroundColor: '#16794b'},
+  submit: {minHeight: 52, alignItems: 'center', justifyContent: 'center', marginTop: 7, borderRadius: 14, backgroundColor: '#2563eb'},
   submitLabel: {color: '#fff', fontSize: 13, fontWeight: '900', letterSpacing: 0.8},
   googleButton: {minHeight: 48, marginTop: 10, borderWidth: 1, borderColor: '#dfe4ed', borderRadius: 11, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center'},
   googleLabel: {color: '#101828', fontSize: 11, fontWeight: '900', letterSpacing: 0.6},
@@ -258,6 +258,6 @@ const styles = createAdaptiveStyles(StyleSheet.create({
   disabled: {opacity: 0.62},
   switchRow: {flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', columnGap: 5, rowGap: 4, marginTop: 19},
   switchText: {color: '#687187', fontSize: 13},
-  switchAction: {padding: 3, color: '#16794b', fontSize: 13, fontWeight: '800'},
+  switchAction: {padding: 3, color: '#2563eb', fontSize: 13, fontWeight: '800'},
   privacyNote: {marginTop: 20, color: '#8a93a4', fontSize: 11, lineHeight: 16, textAlign: 'center'},
 }));

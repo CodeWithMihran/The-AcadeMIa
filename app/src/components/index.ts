@@ -1,4 +1,5 @@
 export * from './AppCard';
+export * from './AcademiaLogo';
 export * from './AppHeader';
 export * from './BadgePill';
 export * from './EmptyState';

@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { createHash, timingSafeEqual } = require("crypto");
+const { createHash, timingSafeEqual, randomBytes } = require("crypto");
 const mongoose = require("mongoose");
 const userModel = require("../../models/user-model");
 const tenantModel = require("../../models/tenant-model");
@@ -7,6 +7,7 @@ const { normalizeBranch } = require("../../utils/branch");
 const { isBranchAvailableForTenant } = require("../../utils/tenantBranches");
 const { generateToken } = require("../../utils/generateToken");
 const MobileAuthCode = require("../../models/mobile-auth-code-model");
+const PasswordResetToken = require("../../models/password-reset-token-model");
 
 function ambassadorScopeUpdates(user, { track, tenant, college }) {
     const assignment = user?.campusAmbassador;
@@ -362,4 +363,106 @@ module.exports.logout = (req, res) => {
         success: true,
         message: "Logged out successfully."
     });
+};
+
+// 5. Request Password Reset Token
+module.exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body || {};
+        if (typeof email !== "string" || !email.trim()) {
+            return res.status(400).json({ success: false, message: "Enter your registered email address." });
+        }
+
+        const normalizedEmail = email.trim().toLowerCase();
+        const user = await userModel.findOne({ email: normalizedEmail });
+
+        // Security best practice: Do not leak whether the email exists
+        if (!user || !user.password) {
+            return res.status(200).json({
+                success: true,
+                message: "If an account exists with this email, password reset instructions have been generated."
+            });
+        }
+
+        // Generate 32-byte secure random token
+        const rawToken = randomBytes(32).toString("hex");
+        const tokenHash = createHash("sha256").update(rawToken).digest("hex");
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes validity
+
+        // Invalidate any older tokens for this user
+        await PasswordResetToken.deleteMany({ user: user._id });
+
+        await PasswordResetToken.create({
+            user: user._id,
+            tokenHash,
+            expiresAt
+        });
+
+        console.log(`[AcadeMIa Auth] Password reset requested for ${user.email}. Token (15m validity): ${rawToken}`);
+
+        return res.status(200).json({
+            success: true,
+            message: "If an account exists with this email, password reset instructions have been generated.",
+            // In local/dev environments, return the token so developers and testers can verify without an email provider
+            ...(process.env.NODE_ENV !== "production" ? { devToken: rawToken } : {})
+        });
+    } catch (err) {
+        console.error("Forgot Password Error:", err);
+        return res.status(500).json({ success: false, message: "Could not process password reset request." });
+    }
+};
+
+// 6. Reset Password with Token
+module.exports.resetPassword = async (req, res) => {
+    try {
+        const { token, password, confirmPassword } = req.body || {};
+
+        if (typeof token !== "string" || !/^[a-f0-9]{64}$/i.test(token.trim())) {
+            return res.status(400).json({ success: false, message: "Invalid or expired password reset token." });
+        }
+
+        if (typeof password !== "string" || !password || typeof confirmPassword !== "string") {
+            return res.status(400).json({ success: false, message: "Enter and confirm your new password." });
+        }
+
+        if (password !== confirmPassword) {
+            return res.status(400).json({ success: false, message: "Passwords do not match." });
+        }
+
+        if (password.length < 6 || Buffer.byteLength(password, "utf8") > 72) {
+            return res.status(400).json({ success: false, message: "Password must be between 6 and 72 characters." });
+        }
+
+        const tokenHash = createHash("sha256").update(token.trim()).digest("hex");
+        const resetRecord = await PasswordResetToken.findOne({
+            tokenHash,
+            expiresAt: { $gt: new Date() }
+        });
+
+        if (!resetRecord) {
+            return res.status(400).json({ success: false, message: "This password reset token has expired or is invalid. Please request a new one." });
+        }
+
+        const user = await userModel.findById(resetRecord.user);
+        if (!user) {
+            await PasswordResetToken.deleteOne({ _id: resetRecord._id });
+            return res.status(404).json({ success: false, message: "User account not found." });
+        }
+
+        // Hash new password and save
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(password, salt);
+        await user.save();
+
+        // Invalidate token immediately
+        await PasswordResetToken.deleteMany({ user: user._id });
+
+        return res.status(200).json({
+            success: true,
+            message: "Your password has been successfully reset. You can now log in with your new password."
+        });
+    } catch (err) {
+        console.error("Reset Password Error:", err);
+        return res.status(500).json({ success: false, message: "Could not reset your password." });
+    }
 };
