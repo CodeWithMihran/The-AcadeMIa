@@ -3,8 +3,11 @@ const path = require("path");
 const { randomUUID } = require("crypto");
 const { Readable } = require("stream");
 
-// Default local storage directory under server/storage/notes
-const LOCAL_STORAGE_DIR = path.resolve(__dirname, "../storage/notes");
+// Render's persistent disk should be mounted at /var/data and configured with
+// STORAGE_DIR=/var/data/notes. Local development keeps files under server/.
+const LOCAL_STORAGE_DIR = path.resolve(
+    process.env.STORAGE_DIR || path.resolve(__dirname, "../storage/notes")
+);
 if (!fs.existsSync(LOCAL_STORAGE_DIR)) {
     fs.mkdirSync(LOCAL_STORAGE_DIR, { recursive: true });
 }

@@ -7,8 +7,10 @@ const progressModel = require("../models/progress-model");
 
 async function seedAndMigrate() {
     try {
+        const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+        if (!mongoUri) throw new Error("MONGODB_URI (or MONGO_URI) is required in server/.env.");
         console.log("Connecting to MongoDB for migration...");
-        await mongoose.connect(process.env.MONGO_URI);
+        await mongoose.connect(mongoUri);
         console.log("MongoDB Connected Successfully.");
 
         // Convert legacy one-document-per-subject progress records before the

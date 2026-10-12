@@ -12,6 +12,7 @@ The AcadeMIa is an academic workspace for university students and JEE/NEET learn
 - [Run the website locally](#run-the-website-locally)
 - [Run the mobile app](#run-the-mobile-app)
 - [Environment configuration](#environment-configuration)
+- [Deploy website and API to Render](#deploy-website-and-api-to-render)
 - [Database setup and maintenance](#database-setup-and-maintenance)
 - [API overview](#api-overview)
 - [Security and privacy](#security-and-privacy)
@@ -216,17 +217,17 @@ Mobile scripts:
 
 ### Backend: `server/.env`
 
-The API requires MongoDB, JWT, and session secrets before it starts:
+The API requires MongoDB, JWT, and session secrets before it starts. `MONGODB_URI` is the preferred name; `MONGO_URI` remains supported for existing local setups:
 
 ```dotenv
-MONGO_URI=mongodb://127.0.0.1:27017/academia
+MONGODB_URI=mongodb://127.0.0.1:27017/theacademia
 JWT_KEY=replace-with-a-long-random-secret
 EXPRESS_SESSION_SECRET=replace-with-another-long-random-secret
 CLIENT_URL=http://127.0.0.1:5173
 PORT=3000
 ```
 
-`CLIENT_URL` is used for CORS and browser OAuth redirects. In production, set it to the deployed website origin and serve the API over HTTPS. `PORT` defaults to `3000`.
+`CLIENT_URL` is used for CORS and browser OAuth redirects. In production, set it to the deployed website origin and serve the API over HTTPS. `PORT` defaults to `3000` locally; Render supplies it in production.
 
 Optional settings:
 
@@ -237,9 +238,10 @@ GOOGLE_CLIENT_SECRET=
 GOOGLE_CALLBACK_URL=https://api.example.org/auth/google/callback
 
 # Mobile Google browser callback/deep-link exchange (provider setup is also required).
-GOOGLE_MOBILE_CALLBACK_URL=theacademia://auth/callback
+GOOGLE_MOBILE_CALLBACK_URL=https://api.example.org/auth/google/mobile/callback
 
-# Optional S3-compatible note storage; omit to use server-local disk.
+# Optional S3-compatible note storage. If omitted, configure STORAGE_DIR to a
+# persistent disk path in production; Render service filesystems are ephemeral.
 S3_BUCKET=
 S3_REGION=
 S3_ACCESS_KEY_ID=
@@ -267,6 +269,27 @@ The example production URL above is a placeholder; replace it before building a 
 
 The website uses same-origin `/api` in development through Vite’s proxy. For a separately hosted production API, create the appropriate client environment file and set `VITE_API_BASE_URL` to the API base URL ending in `/api`.
 
+## Deploy website and API to Render
+
+The repository includes [`render.yaml`](render.yaml) for a Render Blueprint deployment. It creates a Node web service for `server/` and a static site for `client/`, configures the API health check and SPA route fallback, and mounts a 1 GB persistent disk for student-uploaded contribution files. The persistent disk requires a paid Render service plan. Without persistent file storage, uploaded notes can disappear after a redeploy or instance replacement.
+
+### Before deployment
+
+1. **Rotate exposed credentials.** Database and Google secrets pasted into chat must be considered compromised. Change the Atlas database user's password and Google OAuth client secret before deployment; use only the replacements in Render’s secret fields. Do not put credentials in this repository, source code, or `render.yaml`.
+2. In MongoDB Atlas, create/use a dedicated database user with only the permissions the app needs, include a database name in the connection URI (for example `/theacademia`), and allow connections from the deployed API. Restrict network access to Render egress addresses where practical; avoid leaving broad access enabled.
+3. Connect this Git repository in Render and create a **Blueprint** from `render.yaml`. The blueprint uses the service names `the-academia-api` and `the-academia-web`, producing these default origins:
+   - Website: `https://the-academia-web.onrender.com`
+   - API: `https://the-academia-api.onrender.com`
+4. When prompted for values not stored in the blueprint, enter the **rotated** `MONGODB_URI`, Google client ID, and rotated Google client secret. Render generates `JWT_KEY` and `EXPRESS_SESSION_SECRET`. Set the website service’s `VITE_API_BASE_URL` to `https://the-academia-api.onrender.com/api`.
+5. In Google Cloud Console, configure the OAuth client as a web application. Add `https://the-academia-web.onrender.com` as an authorized JavaScript origin and these exact redirect URIs:
+   - `https://the-academia-api.onrender.com/auth/google/callback`
+   - `https://the-academia-api.onrender.com/auth/google/mobile/callback` (needed when enabling the existing mobile Google flow against this API)
+6. Deploy both services. The API health check is `https://the-academia-api.onrender.com/api/health`; it returns success only when MongoDB is connected. If you use custom domains, update `CLIENT_URL`, `VITE_API_BASE_URL`, and both Google callback settings to match, then redeploy.
+
+The mobile app is not built or hosted by Render. For a production app release, set `app/.env.production` to the deployed API URL ending in `/api`; keep that ignored local file out of Git and build the native release separately.
+
+The API stores contribution uploads under `/var/data/notes` on the Render persistent disk. The default remains `server/storage/notes` for local development. Keep the disk mounted at `/var/data` if changing the configured storage path.
+
 ## Database setup and maintenance
 
 Tenant setup:
@@ -279,7 +302,7 @@ This seeds the tenant and affiliated-college records bundled in the script. Revi
 
 Create or update an administrator:
 
-1. Set `MONGO_URI`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in `server/.env`.
+1. Set `MONGODB_URI` (or `MONGO_URI`), `ADMIN_EMAIL`, and `ADMIN_PASSWORD` in `server/.env`.
 2. Run:
 
    ```bash

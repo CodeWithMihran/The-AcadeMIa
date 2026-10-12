@@ -2,8 +2,12 @@ const path = require("path");
 const { randomBytes, createHash } = require("crypto");
 require("dotenv").config({ path: path.resolve(__dirname, ".env") });
 
-const requiredEnvironment = ["MONGO_URI", "JWT_KEY", "EXPRESS_SESSION_SECRET"];
+// MONGODB_URI is the deployment-facing name; retain MONGO_URI for existing
+// local setups and scripts while they are migrated.
+const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+const requiredEnvironment = ["JWT_KEY", "EXPRESS_SESSION_SECRET"];
 const missingEnvironment = requiredEnvironment.filter((name) => !process.env[name]?.trim());
+if (!mongoUri?.trim()) missingEnvironment.unshift("MONGODB_URI (or MONGO_URI)");
 if (missingEnvironment.length) {
     throw new Error(`Missing required server configuration: ${missingEnvironment.join(", ")}`);
 }
@@ -26,6 +30,16 @@ const app = express();
 
 // Required for reverse proxy (Render, AWS, Nginx)
 app.set("trust proxy", 1);
+
+// Render health checks and uptime monitors can verify the API and its DB
+// connection without touching authenticated endpoints.
+app.get("/api/health", (req, res) => {
+    const databaseReady = mongoose.connection.readyState === 1;
+    res.status(databaseReady ? 200 : 503).json({
+        success: databaseReady,
+        status: databaseReady ? "ok" : "database_unavailable"
+    });
+});
 
 // ------------------
 // Database Connection
@@ -53,7 +67,7 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URI,
+        mongoUrl,
         ttl: 24 * 60 * 60 // 1 day
     }),
     cookie: {
@@ -270,9 +284,9 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 async function startServer() {
     try {
-        await mongoose.connect(process.env.MONGO_URI);
+        await mongoose.connect(mongoUri);
         console.log("MongoDB Connected");
-        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+        app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
     } catch (error) {
         console.error("MongoDB connection failed; server was not started.", error.message);
         process.exitCode = 1;

@@ -41,8 +41,9 @@ const tenants = [
 ];
 
 async function seedTenants() {
-    if (!process.env.MONGO_URI) throw new Error("MONGO_URI is required in server/.env.");
-    await mongoose.connect(process.env.MONGO_URI);
+    const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+    if (!mongoUri) throw new Error("MONGODB_URI (or MONGO_URI) is required in server/.env.");
+    await mongoose.connect(mongoUri);
     for (const tenant of tenants) {
         const { shortCode, active = true, ...insertOnlyFields } = tenant;
         await tenantModel.updateOne(
